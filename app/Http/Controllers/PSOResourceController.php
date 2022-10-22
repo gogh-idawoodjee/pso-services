@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 
 class PSOResourceController extends Controller
@@ -15,6 +16,7 @@ class PSOResourceController extends Controller
      * Display a listing of the resource.
      *
      * @return Response
+     * @throws ValidationException
      */
     public function index(Request $request): Response
     {
@@ -51,7 +53,8 @@ class PSOResourceController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param int $id
+     * @param Request $request
+     * @param $resource_id
      * @return Response
      */
     public function show(Request $request, $resource_id)
