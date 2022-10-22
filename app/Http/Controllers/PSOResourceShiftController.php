@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\IFSPSOGarabageService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
+class PSOResourceShiftController extends Controller
+{
+    /**
+     * this will probably an API call to return all shifts with a choice of raw or formatted.
+     *
+     * @return Response
+     */
+    public function index()
+    {
+        //
+    }
+
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param $resource_id
+     * @return JsonResponse
+     */
+    public function update(Request $request, $resource_id)//: Response
+    {
+        $request->validate([
+            'shift_id' => 'required|alpha_dash',
+            'dataset_id' => 'required|string',
+            'rota_id' => 'required|string',
+            'token' => 'string',
+            'shift_type' => 'required|string',
+            'turn_manual_scheduling_on' => 'required|boolean',
+            'send_to_pso' => 'boolean',
+            'base_url' => ['string', 'required', 'not_regex:/prod|prd/i'],
+            'account_id' => 'string|required',
+            'username' => 'string',
+            'password' => 'string'
+        ]);
+
+        // auth and validation is required because there is a GET request done first on the resource
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf(!$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf(!$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf(!$request->token)
+        ])->validate();
+
+
+        // so here we're authenticated
+        $resource_init = new IFSPSOGarabageService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+
+        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource
+
+        // get all the shifts // can't we do this in the service???
+        $shifts = $resource_init->getResourceShiftsRaw();
+
+
+        // send all that back to the service and let it do the work
+        return $resource_init->setManualScheduling($request);
+
+    }
+
+}
