@@ -34,7 +34,7 @@ class PSOResourceEventController extends Controller
     public function store(Request $request, $resource_id)
     {
         //
-        Log::debug('made it');
+        Log::channel('papertrail')->info($request);
         $request->validate([
             'event_type' => 'required|in:AO,AF,BO,BF,CE,FIX,RO,RF',
             'lat' => 'numeric|between:-90,90|required_with:long|required_if:event_type,FIX',
