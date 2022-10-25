@@ -41,7 +41,7 @@ class PSOResourceEventController extends Controller
             'long' => 'numeric|between:-180,180|required_with:lat|required_if:event_type,FIX',
             'dataset_id' => 'required|string',
             'send_to_pso' => 'boolean',
-            'base_url' => ['string', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
             'account_id' => 'string|required_if:send_to_pso,true',
             'username' => 'string',
             'password' => 'string'

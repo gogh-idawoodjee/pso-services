@@ -28,7 +28,7 @@ class PSOResourceController extends Controller
             'username' => 'string',
             'account_id' => 'string|required',
             'password' => 'string',
-            'base_url' => ['string', 'required', 'not_regex:/prod|prd|pd/i'],
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd|pd/i'],
 
         ]);
 
