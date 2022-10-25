@@ -2,7 +2,7 @@
 
 namespace App\Http\Livewire\Getcrazy;
 
-use App\Services\IFSPSOGarabageService;
+use App\Services\IFSPSOResourceService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 use Carbon\Carbon;
@@ -22,7 +22,7 @@ class PsoResourceShow extends Component
     public function mount($resource_id)
     {
         $this->resource_id = $resource_id;
-        $resource = new IFSPSOGarabageService(null,null,null,null,null,null,'cb847e5e-8747-4a02-9322-76530ef38a19');
+        $resource = new IFSPSOResourceService(null,null,null,null,null,null,'cb847e5e-8747-4a02-9322-76530ef38a19');
         $this->resource = $resource->getResource($this->resource_id, 'W&C Prod','thetechnodro.me:950');
         $this->utilization = $resource->getResourceUtilization();
         $this->events = $resource->getResourceEvents();

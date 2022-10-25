@@ -2,9 +2,9 @@
 
 namespace App\Http\Livewire\Getcrazy;
 
-use App\Services\IFSPSOResourceService;
+
 use Livewire\Component;
-use App\Services\IFSPSOGarabageService;
+use App\Services\IFSPSOResourceService;
 
 class PsoResource extends Component
 {
@@ -13,7 +13,7 @@ class PsoResource extends Component
 
     public function mount()
     {
-        $resources = new IFSPSOGarabageService(null,null,null,null,null,null,'cb847e5e-8747-4a02-9322-76530ef38a19');
+        $resources = new IFSPSOResourceService(null,null,null,null,null,null,'cb847e5e-8747-4a02-9322-76530ef38a19');
         $this->resources = collect($resources->getScheduleableResources('W&C Prod','test'));
     }
 

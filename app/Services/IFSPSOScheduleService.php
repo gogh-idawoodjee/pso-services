@@ -10,13 +10,13 @@ class IFSPSOScheduleService extends IFSService
 
     private $pso_schedule;
 
-    public function getSchedule($dataset_id)
+    public function getSchedule($dataset_id, $base_url)
     {
 
         $this->pso_schedule = Http::withHeaders([
             'apiKey' => $this->token
         ])->get(
-            'https://' . $this->pso_environment->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+            'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
 //            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
             [
                 'includeInput' => 'true',
