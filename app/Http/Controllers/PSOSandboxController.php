@@ -8,11 +8,11 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
 use App\Services\IFSPSOScheduleService;
-use App\Services\IFSPSOGarabageService;
-use Illuminate\Support\Str;
+use App\Services\IFSPSOResourceService;
 
 
-class PSOScheduleController extends Controller
+
+class PSOSandboxController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +35,7 @@ class PSOScheduleController extends Controller
         */
 
         $dataset_id = "W&C Prod";
-        $resource = new IFSPSOGarabageService('cb847e5e-8747-4a02-9322-76530ef38a19');
+        $resource = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
         $test = $resource->getResource('21307', 'W&C Prod');
 //        return $test;
         $shifts = $resource->getResourceShiftsRaw();
@@ -138,7 +138,7 @@ class PSOScheduleController extends Controller
         $sched = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
         return $sched->getSchedule('W&C Prod');
 
-        $res = new IFSPSOGarabageService('cb847e5e-8747-4a02-9322-76530ef38a19');
+        $res = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
         return $res->getScheduleableResources('W&C Prod');
     }
 

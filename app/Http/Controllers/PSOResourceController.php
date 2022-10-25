@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\IFSPSOGarabageService;
+use App\Services\IFSPSOResourceService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
@@ -18,14 +18,17 @@ class PSOResourceController extends Controller
      * @return Response
      * @throws ValidationException
      */
-    public function index(Request $request): Response
+    public function index(Request $request)//: Response
     {
+
+
         $request->validate([
             'dataset_id' => 'required|string',
             'token' => 'string',
             'username' => 'string',
+            'account_id' => 'string|required',
             'password' => 'string',
-            'base_url' => ['string', 'required', 'not_regex:/prod|prd/i'],
+            'base_url' => ['string', 'required', 'not_regex:/prod|prd|pd/i'],
 
         ]);
 
@@ -42,9 +45,10 @@ class PSOResourceController extends Controller
         ])->validate();
 
         // need token if no user/pass, should default $requires_auth to true
-        $resource_init = new IFSPSOGarabageService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true, 'cb847e5e-8747-4a02-9322-76530ef38a19');
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return response(['resources' => collect($resource_init->getScheduleableResources($request->dataset_id, $request->token)),], 200)
+
+        return response(['resources' => collect($resource_init->getScheduleableResources($request)),], 200)
             ->header('Content-Type', 'application/json');
 
     }
@@ -70,7 +74,7 @@ class PSOResourceController extends Controller
 
         // todo - get the list of resources and validate resource against that?
 
-        $resource_init = new IFSPSOGarabageService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true, 'cb847e5e-8747-4a02-9322-76530ef38a19');
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true, 'cb847e5e-8747-4a02-9322-76530ef38a19');
 
         return response([
             'resource' => [
