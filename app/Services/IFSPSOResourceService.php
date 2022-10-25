@@ -27,7 +27,7 @@ class IFSPSOResourceService extends IFSService
             $pso_resource = Http::withHeaders(['apiKey' => $this->token])
                 ->timeout(5)
                 ->connectTimeout(5)
-                ->get('https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/resource?includeOutput=true&datasetId=' . urlencode($dataset_id) . '&resourceId=' . $resource_id);
+                ->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/resource?includeOutput=true&datasetId=' . urlencode($dataset_id) . '&resourceId=' . $resource_id);
         } catch (ConnectionException $e) {
             return collect('failed pretty hard');
         }
@@ -357,7 +357,7 @@ class IFSPSOResourceService extends IFSService
     private function sendRotaToDSEPayload($dataset_id, $rota_id, $token, $base_url)
     {
         return Http::withHeaders(['apiKey' => $token])
-            ->post('https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
                 $this->RotaToDSEPayload($dataset_id, $rota_id)
             );
 //
@@ -371,7 +371,7 @@ class IFSPSOResourceService extends IFSService
         return Http::timeout(5)
             ->withHeaders(['apiKey' => $token])
             ->connectTimeout(5)
-            ->post('https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
     }
 
     private function RAMRotaItemUpdatePayload($ram_update_payload, $rota_item_payload)

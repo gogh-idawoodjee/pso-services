@@ -29,7 +29,7 @@ class IFSAuthService
 //        $this->pso_env = config('ifs.pso.pso_environment');
 //        $this->pso_path = config('ifs.pso.pso_auth_endpoint_path');
 //        $this->pso_url = config('ifs.pso.' . $this->pso_env . '.base_url');
-        $this->pso_full_url = 'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session';
+        $this->pso_full_url = $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session';
         $this->account_id = $account_id;
         $this->username = $username;
         $this->password = $password;
