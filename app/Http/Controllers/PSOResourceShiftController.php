@@ -39,7 +39,7 @@ class PSOResourceShiftController extends Controller
             'shift_type' => 'required|string',
             'turn_manual_scheduling_on' => 'required|boolean',
             'send_to_pso' => 'boolean',
-            'base_url' => ['string', 'required', 'not_regex:/prod|prd/i'],
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'account_id' => 'string|required',
             'username' => 'string',
             'password' => 'string'
