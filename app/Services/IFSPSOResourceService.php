@@ -181,7 +181,7 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    public function setEvent($event_data, $resource_id)//: JsonResponse
+    public function setEvent($event_data, $resource_id): JsonResponse
     {
 
         // now we need to figure out if we need to auth or not // really this will have to be done at the controller to initialize this instance of the service

@@ -52,6 +52,12 @@ class IFSPSOActivityService extends IFSService
 
         $pso_resource = Http::patch('https://webhook.site/55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3', $activity_status_payload);
 
+        return response()->json([
+            'status' => 202,
+            'description' => 'not send to PSO',
+            'original_payload' => [$activity_status_payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
 
         return $activity_status_payload;
 //        $send_activity_status = Http::withHeaders(['apiKey' => $token])
