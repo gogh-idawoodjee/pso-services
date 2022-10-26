@@ -7,9 +7,11 @@ use Carbon\CarbonInterval;
 use DateInterval;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFSPSOResourceService extends IFSService
@@ -181,8 +183,11 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    public function setEvent($event_data, $resource_id): JsonResponse
+    public function setEvent(Request $event_data, $resource_id): JsonResponse
     {
+
+        $requestId = (string)Str::uuid();
+        Log::channel('papertrail')->info(['request_input' => ['request_id' => $requestId, 'payload' => $event_data->all()]]);
 
         // now we need to figure out if we need to auth or not // really this will have to be done at the controller to initialize this instance of the service
 
@@ -194,7 +199,7 @@ class IFSPSOResourceService extends IFSService
 
         if ($event_data->send_to_pso) {
 
-
+            Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
             $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
 
             if ($response->serverError()) {
@@ -219,6 +224,8 @@ class IFSPSOResourceService extends IFSService
         } else {
             return $this->apiResponse(202, "Payload not sent to PSO", $payload);
         }
+
+        Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
     }
 
 
