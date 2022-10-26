@@ -193,8 +193,10 @@ class IFSPSOResourceService extends IFSService
 
 
         if ($event_data->send_to_pso) {
-            $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
 
+
+            $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
+return $response;
 
             if ($response->serverError()) {
                 return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
