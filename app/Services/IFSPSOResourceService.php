@@ -181,7 +181,7 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    public function setEvent($event_data, $resource_id): JsonResponse
+    public function setEvent($event_data, $resource_id)//: JsonResponse
     {
 
         // now we need to figure out if we need to auth or not // really this will have to be done at the controller to initialize this instance of the service
@@ -196,7 +196,6 @@ class IFSPSOResourceService extends IFSService
 
 
             $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
-return $response;
 
             if ($response->serverError()) {
                 return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
@@ -206,8 +205,8 @@ return $response;
                 return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
 
-            if ($response->json('InternalId') != "-1") {
-                return $this->apiResponse(200, "Resource Event Created", $payload);
+            if ($response->json('Code') == 401) {
+                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
             }
 
             if ($response->status() == 500) {
