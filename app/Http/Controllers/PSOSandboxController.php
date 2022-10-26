@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Services\IFSPSOAssistService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -22,6 +23,9 @@ class PSOSandboxController extends Controller
     public function index()
     {
         //
+
+        $test= new IFSPSOAssistService('doobas');
+        return $test;
 
         /*
                 $schedule = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');

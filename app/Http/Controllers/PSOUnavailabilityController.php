@@ -3,45 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOResourceService;
-use Illuminate\Http\JsonResponse;
+use Carbon\CarbonInterval;
+use DateInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
-
-class PSOResourceEventController extends Controller
+class PSOUnavailabilityController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return void
-     */
-    public function index()
-    {
-        //
-    }
 
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
-     * @param $resource_id
-     * @return JsonResponse
-     * @throws ValidationException
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request, $resource_id)
     {
 
         $request->validate([
-            'event_type' => 'required|in:AO,AF,BO,BF,CE,FIX,RO,RF',
-            'lat' => 'numeric|between:-90,90|required_with:long|required_if:event_type,FIX',
-            'long' => 'numeric|between:-180,180|required_with:lat|required_if:event_type,FIX',
-            'dataset_id' => 'required|string',
+            'description' => 'string:2000',
+            'category_id' => 'string:32|required',
+            'duration' => 'numeric|between:0,24|required',
+            'time_zone' => 'numeric|between:-24,24|required',
+            'base_time' => 'date_format:d-m-Y\TH:i|required',
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'rota_id' => 'string|required_if:send_to_pso,true',
+            'dataset_id' => 'string|required',
             'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
             'username' => 'string',
             'password' => 'string'
         ]);
@@ -58,12 +51,33 @@ class PSOResourceEventController extends Controller
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
 
-        // dig out the resource; will need the token at this point in real life
-
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return $resource_init->setEvent($request, $resource_id);
+        return $resource_init->createUnavailability($request, $resource_id);
 
     }
 
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
 }

@@ -61,6 +61,7 @@ class PSOResourceShiftController extends Controller
 
 
         // so here we're authenticated
+        // send the details to the service to get and build
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource
