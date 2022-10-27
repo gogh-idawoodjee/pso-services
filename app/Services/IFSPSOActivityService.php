@@ -6,15 +6,14 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use JetBrains\PhpStorm\ArrayShape;
 
 
 class IFSPSOActivityService extends IFSService
 {
 
-    private $pso_activity;
     const COMMIT_STATUS = 30;
     private array $pso_statuses;
 
@@ -41,13 +40,14 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function getActivity($activity_id, $dataset_id)
+    public function getActivity($activity_id, $dataset_id): Collection
     {
+        //todo find out who's using this function if at all
 
-        $this->pso_activity = Http::withHeaders(['apiKey' => $this->token])
+        $pso_activity = Http::withHeaders(['apiKey' => $this->token])
             ->get('https://' . $this->pso_environment->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity?includeOutput=true&datasetId=' . urlencode($dataset_id) . '&activityId=' . $activity_id);
 
-        return $this->pso_activity;
+        return collect($pso_activity);
 
     }
 
@@ -62,12 +62,10 @@ class IFSPSOActivityService extends IFSService
         // this is the whole broadcast
         // chunk out just the suggested dispatch
 
-//        return $pso_sds_broadcast;
         $suggestions = collect($pso_sds_broadcast)->get('Suggested_Dispatch');
 
-        if (isset($suggestions->plan_id)) {
-            $newsuggestions[] = $suggestions;
-        } else {
+        // this is to check if the suggestions is an array of objects or an object
+        if (isset($suggestions->plan_id)) $newsuggestions[] = $suggestions; else {
             $newsuggestions = $suggestions;
         }
 
@@ -87,19 +85,12 @@ class IFSPSOActivityService extends IFSService
             'original_payload' => [$activity_status_payload]
         ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
-
-        return $activity_status_payload;
-//        $send_activity_status = Http::withHeaders(['apiKey' => $token])
-//            ->post('https://' . $this->pso_environment->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-//           $activity_status_payload
-//            );
-
-
     }
 
     public function updateActivityStatus($request, $status): JsonResponse
     {
 
+        // todo add this to a config file
         $statuses_requiring_resources = ['travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
             'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'];
 
@@ -124,7 +115,7 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description)
+    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
     {
         return [
             'dsScheduleData' => [
@@ -136,7 +127,7 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-    private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed, $reason)
+    private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed, $reason): array
     {
         $payload = [
             'activity_id' => "$activity_id",
@@ -159,7 +150,7 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    private function InputReferenceData($description, $dataset_id, $input_type)
+    private function InputReferenceData($description, $dataset_id, $input_type): array
     {
         return
             [
@@ -199,7 +190,7 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-    private function DeleteSLAPayloadPart($activity_id, $sla_type, $priority, $start_based)
+    private function DeleteSLAPayloadPart($activity_id, $sla_type, $priority, $start_based): array
     {
         return [
             'object_type_id' => 'Activity_SLA',

@@ -2,18 +2,17 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 
 class IFSPSOScheduleService extends IFSService
 {
 
-    private $pso_schedule;
-
-    public function getSchedule($dataset_id, $base_url)
+    public function getSchedule($dataset_id, $base_url): Collection
     {
 
-        $this->pso_schedule = Http::withHeaders([
+        $pso_schedule = Http::withHeaders([
             'apiKey' => $this->token
         ])->get(
             'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
@@ -24,7 +23,7 @@ class IFSPSOScheduleService extends IFSService
                 'datasetId' => $dataset_id
             ]);
 
-        return collect($this->pso_schedule->collect()->first());
+        return collect($pso_schedule->collect()->first());
 
     }
 

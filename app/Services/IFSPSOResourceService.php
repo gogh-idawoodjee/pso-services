@@ -26,7 +26,7 @@ class IFSPSOResourceService extends IFSService
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
-        $this->IFSPSOAssistService = new IFSPSOAssistService();
+        $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token);
     }
 
     public function getResource($resource_id, $dataset_id, $base_url): Collection
@@ -37,7 +37,7 @@ class IFSPSOResourceService extends IFSService
                 ->timeout(5)
                 ->connectTimeout(5)
                 ->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/resource?includeOutput=true&datasetId=' . urlencode($dataset_id) . '&resourceId=' . $resource_id);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             return collect('failed pretty hard');
         }
 
@@ -138,7 +138,7 @@ class IFSPSOResourceService extends IFSService
         return $this->utilization;
     }
 
-    public function getScheduleableResources($request)//: Collection
+    public function getScheduleableResources($request): Collection
     {
 
         $schedule = new IFSPSOScheduleService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
@@ -182,7 +182,7 @@ class IFSPSOResourceService extends IFSService
         })->map(function ($item) use ($shifts, $plans) {
             return collect($item)
                 ->put('route', $plans[$item['id']])
-                ->put('shiftcount', count($shifts[$item['id']]))
+                ->put('shift count', count($shifts[$item['id']]))
                 ->put('shift_max', collect($shifts[$item['id']])->max('shift_start_datetime'))
                 ->put('shift_min', collect($shifts[$item['id']])->min('shift_start_datetime'));
         });
@@ -243,7 +243,7 @@ class IFSPSOResourceService extends IFSService
         return [
             'dsScheduleData' => [
                 '@xmlns' => ('http://360Scheduling.com/Schema/dsScheduleData.xsd'),
-                'Input_Reference' => $this->IFSPSOAssistService->InputReferenceData("Set Resource Event", $dataset_id, "CHANGE"),
+                'Input_Reference' => $this->IFSPSOAssistService->InputReferenceData("Set Resource Event", $dataset_id, "CHANGE", null),
                 'Schedule_Event' => $schedule_event_payload,
 
             ]
@@ -254,13 +254,11 @@ class IFSPSOResourceService extends IFSService
     {
         return
             [
-
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'date_time_stamp' => Carbon::now()->toAtomString(),
                 'event_date_time' => Carbon::now()->toAtomString(),
                 'event_type_id' => strtoupper($event_type),
                 'resource_id' => "$resource_id"
-
             ];
     }
 
@@ -287,7 +285,14 @@ class IFSPSOResourceService extends IFSService
                 if ($response->json('InternalId') == "0") {
                     // then we send a Rota Update, so we can see the changes
                     // but maybe only do this if the payload above doesn't fail?
-                    $this->IFSPSOAssistService->sendRotaToDSEPayload($shift_data->dataset_id, $shift_data->rota_id, $this->token, $shift_data->base_url);
+                    $this->IFSPSOAssistService->sendRotaToDSEPayload(
+                        $shift_data->dataset_id,
+                        $shift_data->rota_id,
+                        $this->token,
+                        $shift_data->base_url,
+                        null,
+                        true
+                    );
 //                    $this->sendRotaToDSEPayload($shift_data->dataset_id, $shift_data->rota_id, $this->token, $shift_data->base_url);
                     return $this->apiResponse(200, "Rota Item Updated", $payload);
                 }
@@ -315,7 +320,7 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function apiResponse($code, $description, $payload)
+    private function apiResponse($code, $description, $payload): JsonResponse
     {
         return response()->json([
             'status' => $code,
@@ -325,34 +330,10 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-//    private function RotaToDSEPayload($dataset_id, $rota_id)
-//    {
-//        return $this->IFSPSOAssistService->RotaToDSEPayload($dataset_id, $rota_id);
-//    }
-//
-//    private function InputReferenceData($description, $dataset_id, $input_type)
-//    {
-//        return $this->IFSPSOAssistService->InputReferenceData($description, $dataset_id, $input_type);
-//    }
-//
-//    private function SourceData()
-//    {
-//        return $this->IFSPSOAssistService->SourceData();
-//    }
-//
-//
-//    private function SourceDataParameter($rota_id)
-//    {
-//        return $this->IFSPSOAssistService->SourceDataParameter($rota_id);
-//    }
-
-//    private function sendRotaToDSEPayload($dataset_id, $rota_id, $token, $base_url)
-//    {
-//        return $this->IFSPSOAssistService->sendRotaToDSEPayload($dataset_id, $rota_id, $token, $base_url);
-//    }
 
     private function sendPayloadToPSO($payload, $token, $base_url)
     {
+        // todo this should go into the helper elf as well
         return Http::timeout(5)
             ->withHeaders(['apiKey' => $token])
             ->connectTimeout(5)
@@ -371,7 +352,7 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function RAMUpdatePayload($dataset_id, $description)
+    private function RAMUpdatePayload($dataset_id, $description): array
     {
         return [
             'organisation_id' => '2',
@@ -412,7 +393,7 @@ class IFSPSOResourceService extends IFSService
         }
     }
 
-    public function createUnavailability(Request $request, $resource_id)
+    public function createUnavailability(Request $request, $resource_id): JsonResponse
     {
 
         $time_pattern_id = Str::uuid()->getHex();
@@ -433,7 +414,14 @@ class IFSPSOResourceService extends IFSService
 
             // if successful, send a rota update
 
-            $this->IFSPSOAssistService->sendRotaToDSEPayload($request->dataset_id, $request->rota_id, $this->token, $request->base_url);
+            $this->IFSPSOAssistService->sendRotaToDSEPayload(
+                $request->dataset_id,
+                $request->rota_id,
+                $this->token,
+                $request->base_url,
+                null,
+                true
+            );
 
         }
 
@@ -462,7 +450,7 @@ class IFSPSOResourceService extends IFSService
         ];
     }
 
-    private function RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload)
+    private function RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload): array
     {
         return [
             'DsModelling' => [

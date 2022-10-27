@@ -3,6 +3,7 @@
 use App\Http\Controllers\PSOActivityController;
 use App\Http\Controllers\PSOActivitySLAController;
 use App\Http\Controllers\PSOActivityStatusController;
+use App\Http\Controllers\PSOAssistController;
 use App\Http\Controllers\PSOCommitController;
 use App\Http\Controllers\PSOResourceController;
 use App\Http\Controllers\PSOResourceEventController;
@@ -28,6 +29,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::patch('/commit', [PSOCommitController::class, 'update']);
 
+Route::post('/load', [PSOAssistController::class, 'store']);
+Route::patch('/rotatodse', [PSOAssistController::class, 'update']);
+
 
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
 
@@ -37,6 +41,7 @@ Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::c
 
 Route::patch('/resource/{resource_id}/manualschedule', [PSOResourceShiftController::class, 'update']);
 Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
+
 Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
 Route::post('/resource/{resource_id}/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 Route::post('/resource/{resource_id}/unavailability/{unavailability_id}/delete', [PSOUnavailabilityController::class, 'destroy']);
