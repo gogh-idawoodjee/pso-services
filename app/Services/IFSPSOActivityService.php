@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -12,6 +13,30 @@ class IFSPSOActivityService extends IFSService
 
     private $pso_activity;
     const COMMIT_STATUS = 30;
+    private array $pso_statuses;
+
+
+    public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
+    {
+        parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
+        // todo move this to a config file
+        $this->pso_statuses = [
+            'travelling' => 50,
+            'ignore' => -1,
+            'committed' => 30,
+            'sent' => 32,
+            'unallocated' => 0,
+            'downloaded' => 35,
+            'accepted' => 40,
+            'waiting' => 55,
+            'onsite' => 60,
+            'pendingcompletion' => 65,
+            'visitcomplete' => 68,
+            'completed' => 70,
+            'incomplete' => 80
+        ];
+
+    }
 
     public function getActivity($activity_id, $dataset_id)
     {
@@ -27,7 +52,8 @@ class IFSPSOActivityService extends IFSService
     {
 
         // should be assumed that environment and auth for this service is pre-configured
-        // where are we gonig to get these values from?
+        // todo where are we going to get these values from?
+
         $dataset_id = 'W&C Prod';
 
         // this is the whole broadcast
@@ -44,7 +70,7 @@ class IFSPSOActivityService extends IFSService
 
         // build the individual status update
         foreach ($newsuggestions as $suggestion) {
-            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], self::COMMIT_STATUS, $suggestion['resource_id'], $suggestion['expected_start_datetime']);
+            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], self::COMMIT_STATUS, $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
         }
 
         // build the full payload
@@ -68,6 +94,32 @@ class IFSPSOActivityService extends IFSService
 
     }
 
+    public function updateActivityStatus($request, $status)
+    {
+
+        $statuses_requiring_resources = ['travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
+            'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'];
+
+        // build the payload
+        $pso_status = $this->pso_statuses[$status];
+
+        $activity_part_payload = $this->ActivityStatusPartPayload(
+            $request->activity_id,
+            $pso_status,
+            $request->resource_id,
+            $request->date_time_fixed, 'From the change status thingy');
+
+        $activity_status_payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
+
+        return response()->json([
+            'status' => 202,
+            'description' => 'not send to PSO',
+            'original_payload' => [$activity_status_payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+
+    }
+
 
     private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description)
     {
@@ -81,21 +133,26 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-    private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed)
+    private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed, $reason)
     {
-        return
-            [
-                'activity_id' => "$activity_id",
-                'status_id' => $status,
-                'date_time_status' => Carbon::now()->toAtomString(),
-                'date_time_stamp' => Carbon::now()->toAtomString(),
-                'date_time_earliest' => $date_time_fixed,
-                'visit_id' => 1,
-                'fixed' => true,
-                'resource_id' => "$resource_id",
-                'date_time_fixed' => $date_time_fixed,
-                'reason' => 'From the Commit Service Thingy'
-            ];
+        $payload = [
+            'activity_id' => "$activity_id",
+            'status_id' => $status,
+            'date_time_status' => Carbon::now()->toAtomString(),
+            'date_time_stamp' => Carbon::now()->toAtomString(),
+            'visit_id' => 1,
+            'fixed' => $status != -1 && $status != 0,
+            'reason' => $reason
+        ];
+
+        if ($status != -1 && $status != 0) {
+            $payload = Arr::add($payload, 'resource_id', "$resource_id");
+            $payload = Arr::add($payload, 'date_time_fixed', $date_time_fixed);
+            $payload = Arr::add($payload, 'date_time_earliest', $date_time_fixed);
+        }
+
+        return $payload;
+
     }
 
 

@@ -141,7 +141,6 @@ class IFSPSOResourceService extends IFSService
     public function getScheduleableResources($request)//: Collection
     {
 
-        ;
         $schedule = new IFSPSOScheduleService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         $overall_schedule = collect($schedule->getSchedule($request->dataset_id, $request->base_url)->collect());
