@@ -3,49 +3,50 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOActivityService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
-class PSOActivityStatusController extends Controller
+class PSOActivitySLAController extends Controller
 {
-
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param \Illuminate\Http\Request $request
      * @return Response
      */
     public function store(Request $request)
     {
         //
+
     }
 
 
     /**
      * Update the specified resource in storage.
      *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
      * @param Request $request
      * @param $activity_id
-     * @param $status
      * @return \Illuminate\Http\JsonResponse
-     * @throws ValidationException
+     * @throws \Illuminate\Validation\ValidationException
      */
-    public function update(Request $request, $activity_id, $status)
+    public function destroy(Request $request, $activity_id)
     {
-        Validator::make(['status' => $status], [
-            'status' => Rule::in([
-                'travelling', 'ignore', 'committed', 'sent', 'unallocated', 'downloaded', 'accepted', 'waiting', 'onsite',
-                'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'
-            ])
-        ])->validate();
-
+        //
         $request->merge(['activity_id' => $activity_id]);
-        $request->merge(['status' => $status]);
 
         $request->validate([
             'send_to_pso' => 'boolean',
@@ -56,8 +57,9 @@ class PSOActivityStatusController extends Controller
             'username' => 'string',
             'password' => 'string',
             'activity_id' => 'string|required',
-            'resource_id' => 'string|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
-            'date_time_fixed' => 'date|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
+            'sla_type_id' => 'string|required',
+            'prioirty' => 'numeric',
+            'start_based' => 'boolean'
         ]);
 
 
@@ -76,8 +78,7 @@ class PSOActivityStatusController extends Controller
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return $activity->updateActivityStatus($request, $status);
+        return $activity->deleteSLA($request);
 
     }
-
 }

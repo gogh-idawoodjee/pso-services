@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use JetBrains\PhpStorm\ArrayShape;
 
 
 class IFSPSOActivityService extends IFSService
@@ -48,7 +51,7 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function sendCommitActivity($pso_sds_broadcast)
+    public function sendCommitActivity($pso_sds_broadcast): JsonResponse
     {
 
         // should be assumed that environment and auth for this service is pre-configured
@@ -94,7 +97,7 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function updateActivityStatus($request, $status)
+    public function updateActivityStatus($request, $status): JsonResponse
     {
 
         $statuses_requiring_resources = ['travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
@@ -168,5 +171,46 @@ class IFSPSOActivityService extends IFSService
                 'dataset_id' => $dataset_id,
             ];
 
+    }
+
+    public function deleteSLA(Request $request): JsonResponse
+    {
+        // build the payload
+        $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
+        // build the full payload
+        $payload = $this->DeleteSLAPayloadFull($delete_sla_payload, $request->dataset_id);
+
+        return response()->json([
+            'status' => 202,
+            'description' => 'not send to PSO',
+            'original_payload' => [$payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+    }
+
+    private function DeleteSLAPayloadFull($sla_payload, $dataset_id): array
+    {
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $this->InputReferenceData("Deleting SLA from the thingy", $dataset_id, 'CHANGE'),
+                'Object_Deletion' => $sla_payload,//$this->ActivityStatusPartPayload($activity_id, $status, $resource_id, $fixed_resource, $date_time_fixed),
+
+            ]
+        ];
+    }
+
+    private function DeleteSLAPayloadPart($activity_id, $sla_type, $priority, $start_based)
+    {
+        return [
+            'object_type_id' => 'Activity_SLA',
+            'object_pk_name1' => 'activity_id',
+            'object_pk_name2' => 'sla_type_id',
+            'object_pk_name3' => 'priority',
+            'object_pk_name4' => 'start_based',
+            'object_pk1' => $activity_id,
+            'object_pk2' => $sla_type,
+            'object_pk3' => $priority ?: 1,
+            'object_pk4' => (bool)$start_based,
+        ];
     }
 }
