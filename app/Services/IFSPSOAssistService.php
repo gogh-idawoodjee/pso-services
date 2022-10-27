@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFSPSOAssistService extends IFSService
@@ -44,7 +45,8 @@ class IFSPSOAssistService extends IFSService
             $input_reference = Arr::add($input_reference, 'process_type', strtoupper($process_type));
         }
 
-        if ($appointment_window) {
+        if ($appointment_window != null) {
+            Log::info('appt: ' . $appointment_window);
             $input_reference = Arr::add($input_reference, 'appointment_window_duration', $appointment_window);
         }
 
@@ -124,7 +126,11 @@ class IFSPSOAssistService extends IFSService
         $description = $request->description ?: 'Init from the Thingy';
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
         $dse_duration = 'P' . $request->dse_duration . 'D';
-        $appointment_window = 'P' . $request->appointment_window . 'D';
+        if ($request->appointment_window) {
+            $appointment_window = 'P' . $request->appointment_window . 'D';
+        } else {
+            $appointment_window = null;
+        }
         $process_type = $request->process_type ?: 'APPOINTMENT';
         $rota_id = $request->rota_id ?: $request->dataset_id;
 
