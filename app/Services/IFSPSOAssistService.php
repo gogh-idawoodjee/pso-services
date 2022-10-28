@@ -86,6 +86,8 @@ class IFSPSOAssistService extends IFSService
                 return $this->apiResponse(200, "Payload sent to PSO", $payload);
             }
 
+            // todo some more http error validation here
+
         } else {
 
             return response()->json([

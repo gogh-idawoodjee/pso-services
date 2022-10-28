@@ -1,0 +1,33 @@
+<?php
+
+return [
+
+    'statuses' => [
+        'statuses_greater_than_alloc' => [
+            'travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
+            'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'],
+        'all' => [
+            'travelling' => 50,
+            'ignore' => -1,
+            'committed' => 30,
+            'sent' => 32,
+            'unallocated' => 0,
+            'downloaded' => 35,
+            'accepted' => 40,
+            'waiting' => 55,
+            'onsite' => 60,
+            'pendingcompletion' => 65,
+            'visitcomplete' => 68,
+            'completed' => 70,
+            'incomplete' => 80],
+        'commit_status' => 30
+    ],
+    'debug' => [
+        'webhook_uuid' => '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3',
+        'base_url' => env('BASE_URL', 'https://thetechnodro.me:950'),
+        'username' => env('PSO_USERNAME', 'admin'),
+        'dataset_id' => env('DATASET_ID', 'W&C Prod'),
+        'account_id' => env('ACCOUNT_ID', 'Default')
+
+    ]
+];

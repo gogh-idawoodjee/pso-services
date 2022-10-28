@@ -14,29 +14,9 @@ use Illuminate\Support\Str;
 class IFSPSOActivityService extends IFSService
 {
 
-    const COMMIT_STATUS = 30;
-    private array $pso_statuses;
-
-
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
-        // todo move this to a config file
-        $this->pso_statuses = [
-            'travelling' => 50,
-            'ignore' => -1,
-            'committed' => 30,
-            'sent' => 32,
-            'unallocated' => 0,
-            'downloaded' => 35,
-            'accepted' => 40,
-            'waiting' => 55,
-            'onsite' => 60,
-            'pendingcompletion' => 65,
-            'visitcomplete' => 68,
-            'completed' => 70,
-            'incomplete' => 80
-        ];
 
     }
 
@@ -51,13 +31,14 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function sendCommitActivity($pso_sds_broadcast): JsonResponse
+    public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false): JsonResponse
     {
 
         // should be assumed that environment and auth for this service is pre-configured
-        // todo where are we going to get these values from?
 
-        $dataset_id = 'W&C Prod';
+        $dataset_id = config('pso-services.debug.dataset_id');
+        $base_url = config('pso-services.debug.base_url');
+        $activity_part_payload = [];
 
         // this is the whole broadcast
         // chunk out just the suggested dispatch
@@ -71,49 +52,102 @@ class IFSPSOActivityService extends IFSService
 
         // build the individual status update
         foreach ($newsuggestions as $suggestion) {
-            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], self::COMMIT_STATUS, $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
+            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], config('pso-services.statuses.commit_status'), $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
         }
 
         // build the full payload
         $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
 
-        $pso_resource = Http::patch('https://webhook.site/55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3', $activity_status_payload);
+        $activity_status = Http::withHeaders(['apiKey' => $this->token])
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+                $activity_status_payload
+            );
 
-        return response()->json([
-            'status' => 202,
-            'description' => 'not send to PSO',
-            'original_payload' => [$activity_status_payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+        // todo log that we received it, sent it and the response from the server
+
+        if ($debug_mode) {
+            $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
+
+            return response()->json([
+                'status' => 200,
+                'description' => 'Service has sent payload to PSO',
+                'original_payload' => [$activity_status_payload]
+            ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+        }
 
     }
 
     public function updateActivityStatus($request, $status): JsonResponse
     {
 
-        // todo add this to a config file
-        $statuses_requiring_resources = ['travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
-            'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'];
-
         // build the payload
-        $pso_status = $this->pso_statuses[$status];
+        $pso_status = config('pso-services.statuses.all.' . $status);
 
         $activity_part_payload = $this->ActivityStatusPartPayload(
             $request->activity_id,
             $pso_status,
             $request->resource_id,
-            $request->date_time_fixed, 'From the change status thingy');
+            $request->date_time_fixed,
+            'From the change status thingy'
+        );
 
-        $activity_status_payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
+        $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
 
-        return response()->json([
-            'status' => 202,
-            'description' => 'not send to PSO',
-            'original_payload' => [$activity_status_payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
+        if ($request->send_to_pso) {
+
+            $response = $this->sendPayloadToPSO($payload, $this->token, $request->base_url);
+
+            if ($response->serverError()) {
+                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+            }
+
+            if ($response->json('InternalId') == "-1") {
+                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+            }
+
+            if ($response->json('InternalId') != "-1") {
+                return $this->apiResponse(200, "Payload sent to PSO", $payload);
+            }
+
+            if ($response->json('Code') == 401) {
+                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+            }
+
+            if ($response->status() == 500) {
+                return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+            }
+
+            if ($response->status() == 401) {
+                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+            }
+        } else {
+            return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+        }
+
+        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
 
     }
 
+    private function apiResponse($code, $description, $payload): JsonResponse
+    {
+        // todo this should go into the helper elf as well
+        return response()->json([
+            'status' => $code,
+            'description' => $description,
+            'original_payload' => [$payload]
+        ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+    }
+
+    private function sendPayloadToPSO($payload, $token, $base_url)
+    {
+        // todo this should go into the helper elf as well
+        return Http::timeout(5)
+            ->withHeaders(['apiKey' => $token])
+            ->connectTimeout(5)
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
+    }
 
     private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
     {

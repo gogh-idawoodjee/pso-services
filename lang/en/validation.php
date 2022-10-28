@@ -186,6 +186,8 @@ return [
         'shift_type' => 'PSO shift_type_id (shift category)',
         'turn_manual_scheduling_on' => 'turn_manual_scheduling_on',
         'token' => 'PSO Session Token',
+        'sla_type' => 'PSO sla_type_id',
+        'dse_duration' => 'DSE Duration',
     ],
 
 ];
