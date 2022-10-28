@@ -22,6 +22,7 @@ return [
             'incomplete' => 80],
         'commit_status' => 30
     ],
+
     'debug' => [
         'webhook_uuid' => '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3',
         'base_url' => env('BASE_URL', 'https://thetechnodro.me:950'),
