@@ -3,31 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOResourceService;
-use Carbon\CarbonInterval;
-use DateInterval;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PSOUnavailabilityController extends Controller
 {
 
-
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request, $resource_id)
+    public function store(Request $request, $resource_id): JsonResponse
     {
 
         $request->validate([
             'description' => 'string:2000',
             'category_id' => 'string|lt:32|required',
             'duration' => 'numeric|between:0,24|required',
-            'time_zone' => 'numeric|between:-24,24|required',
+            'time_zone' => 'numeric|between:-24,24', // now made optional
             'base_time' => 'date_format:d-m-Y\TH:i|required',
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
@@ -61,9 +60,9 @@ class PSOUnavailabilityController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function update(Request $request, $id)
     {
@@ -74,7 +73,7 @@ class PSOUnavailabilityController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function destroy($id)
     {
