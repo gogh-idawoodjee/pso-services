@@ -26,7 +26,8 @@ class IFSPSOResourceService extends IFSService
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
-        $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token);
+        $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
+
     }
 
     public function getResource($resource_id, $dataset_id, $base_url): Collection

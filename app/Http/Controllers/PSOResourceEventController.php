@@ -60,6 +60,7 @@ class PSOResourceEventController extends Controller
 
         // dig out the resource; will need the token at this point in real life
 
+
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         return $resource_init->setEvent($request, $resource_id);
