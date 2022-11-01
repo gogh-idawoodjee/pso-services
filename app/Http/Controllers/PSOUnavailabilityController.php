@@ -24,7 +24,7 @@ class PSOUnavailabilityController extends Controller
 
         $request->validate([
             'description' => 'string:2000',
-            'category_id' => 'string|lt:32|required',
+            'category_id' => 'string|required',
             'duration' => 'numeric|between:0,24|required',
             'time_zone' => 'numeric|between:-24,24', // now made optional
             'base_time' => 'date_format:d-m-Y\TH:i|required',

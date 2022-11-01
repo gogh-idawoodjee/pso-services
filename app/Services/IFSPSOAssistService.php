@@ -27,9 +27,11 @@ class IFSPSOAssistService extends IFSService
 
     public function InputReferenceData($description, $dataset_id, $input_type, $datetime, $dse_duration = null, $process_type = null, $appointment_window = null)
     {
+
+
         $input_reference =
             [
-                'datetime' => $datetime,
+                'datetime' => $datetime ?: Carbon::now()->toAtomString(),
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'description' => "$description",
                 'input_type' => strtoupper($input_type),

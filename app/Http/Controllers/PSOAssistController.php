@@ -22,6 +22,7 @@ class PSOAssistController extends Controller
     public function store(Request $request): JsonResponse
     {
         //
+
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
@@ -67,6 +68,7 @@ class PSOAssistController extends Controller
     public function update(Request $request): JsonResponse
     {
         //
+
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],

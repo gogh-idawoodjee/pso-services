@@ -399,6 +399,7 @@ class IFSPSOResourceService extends IFSService
 
         $time_pattern_id = Str::uuid()->getHex();
         $duration = 'PT' . $request->duration . 'H';
+        $tz = null;
         if ($request->time_zone) {
             $tz = '+' . $request->time_zone . ':00';
             if ($request->time_zone < 10 && $request->time_zone > -10) {
