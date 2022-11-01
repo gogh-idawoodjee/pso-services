@@ -209,30 +209,30 @@ class IFSPSOResourceService extends IFSService
             $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
 
             if ($response->serverError()) {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
 
             if ($response->json('InternalId') == "-1") {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
 
             if ($response->json('InternalId') != "-1") {
-                return $this->apiResponse(200, "Payload sent to PSO", $payload);
+                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO", $payload);
             }
 
             if ($response->json('Code') == 401) {
-                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
             }
 
             if ($response->status() == 500) {
-                return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
             }
 
             if ($response->status() == 401) {
-                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
             }
         } else {
-            return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+            return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
         }
 
         Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
@@ -295,39 +295,29 @@ class IFSPSOResourceService extends IFSService
                         true
                     );
 //                    $this->sendRotaToDSEPayload($shift_data->dataset_id, $shift_data->rota_id, $this->token, $shift_data->base_url);
-                    return $this->apiResponse(200, "Rota Item Updated", $payload);
+                    return $this->IFSPSOAssistService->apiResponse(200, "Rota Item Updated", $payload);
                 }
 
                 if ($response->json('Code') == 26) {
-                    return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
                 }
 
                 if ($response->json('Code') == 401) {
-                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
             } else {
                 if ($response->json('Code') == 26) {
-                    return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
                 }
 
                 if ($response->json('Code') == 401) {
-                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
-                return $this->apiResponse(500, "Some issues sending the payload", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Some issues sending the payload", $payload);
             }
         } else {
-            return $this->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
+            return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
         }
-
-    }
-
-    private function apiResponse($code, $description, $payload): JsonResponse
-    {
-        return response()->json([
-            'status' => $code,
-            'description' => $description,
-            'original_payload' => [$payload]
-        ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
     }
 
@@ -429,7 +419,7 @@ class IFSPSOResourceService extends IFSService
 
         }
 
-        return $this->apiResponse(202, 'Unavailability not sent to PSO', $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload));
+        return $this->IFSPSOAssistService->apiResponse(202, 'Unavailability not sent to PSO', $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload));
 
 
     }

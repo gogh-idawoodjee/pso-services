@@ -17,6 +17,7 @@ class IFSPSOActivityService extends IFSService
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
+        $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
 
     }
 
@@ -99,46 +100,36 @@ class IFSPSOActivityService extends IFSService
             $response = $this->sendPayloadToPSO($payload, $this->token, $request->base_url);
 
             if ($response->serverError()) {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
 
             if ($response->json('InternalId') == "-1") {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
 
             if ($response->json('InternalId') != "-1") {
-                return $this->apiResponse(200, "Payload sent to PSO", $payload);
+                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO", $payload);
             }
 
             if ($response->json('Code') == 401) {
-                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
             }
 
             if ($response->status() == 500) {
-                return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
             }
 
             if ($response->status() == 401) {
-                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
             }
         } else {
-            return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+            return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
         }
 
-        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+        return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
 
     }
 
-    private function apiResponse($code, $description, $payload): JsonResponse
-    {
-        // todo this should go into the helper elf as well
-        return response()->json([
-            'status' => $code,
-            'description' => $description,
-            'original_payload' => [$payload]
-        ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
-    }
 
     private function sendPayloadToPSO($payload, $token, $base_url)
     {

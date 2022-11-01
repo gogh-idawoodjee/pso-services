@@ -104,7 +104,7 @@ class IFSPSOAssistService extends IFSService
 //        $data = $sendRota->collect();
     }
 
-    private function apiResponse($code, $description, $payload): JsonResponse
+    public function apiResponse($code, $description, $payload): JsonResponse
     {
         // todo pull this into a helper elf
         return response()->json([
