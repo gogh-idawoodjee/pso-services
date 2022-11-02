@@ -57,7 +57,7 @@ class PSOActivityStatusController extends Controller
             'password' => 'string',
             'activity_id' => 'string|required',
             'resource_id' => 'string|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
-            'date_time_fixed' => 'date|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
+            'date_time_fixed' => 'date_format:Y-m-d\TH:i|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
         ]);
 
 

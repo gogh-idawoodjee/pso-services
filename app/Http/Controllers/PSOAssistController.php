@@ -115,11 +115,9 @@ class PSOAssistController extends Controller
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'dataset_id' => 'string|required',
             'account_id' => 'string|required',
-            'token' => 'string|required_without:username,password',
-            'username' => 'string|required_without:token',
-            'password' => 'string|required_without:token',
-            'mindate' => 'date',
-            'maxdate' => 'date'
+            'token' => 'string|required',
+            'mindate' => 'date_format:Y-m-d',
+            'maxdate' => 'date_format:Y-m-d'
         ]);
 
         $usage_data = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);

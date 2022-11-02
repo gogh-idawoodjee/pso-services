@@ -27,7 +27,7 @@ class PSOUnavailabilityController extends Controller
             'category_id' => 'string|required',
             'duration' => 'numeric|between:0,24|required',
             'time_zone' => 'numeric|between:-24,24', // now made optional
-            'base_time' => 'date_format:d-m-Y\TH:i|required',
+            'base_time' => 'date_format:Y-m-d\TH:i|required',
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
             'rota_id' => 'string|required_if:send_to_pso,true',

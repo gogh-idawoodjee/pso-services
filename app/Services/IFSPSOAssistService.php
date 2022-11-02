@@ -205,39 +205,53 @@ class IFSPSOAssistService extends IFSService
             ]);
 
 
-        $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
-
-            $type = match ($item['ScheduleDataUsageType']) {
-                0 => 'Resource_Count',
-                1 => 'Activity_Count',
-                2 => 'DSE_Window',
-                3 => 'ABE_Window',
-                4 => 'Dataset_Count',
-            };
-
-            return collect($item)->put('count_type', $type);
-        })->mapToGroups(function ($item, $key) {
-
-            return [$item['DatasetId'] => $item];
-        });
+        if (count($usage->collect()->first())) {
 
 
-        foreach ($mystuff as $dataset => $value) {
-            $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
-                return [$item['count_type'] => $item];
+            $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
 
+                $type = match ($item['ScheduleDataUsageType']) {
+                    0 => 'Resource_Count',
+                    1 => 'Activity_Count',
+                    2 => 'DSE_Window',
+                    3 => 'ABE_Window',
+                    4 => 'Dataset_Count',
+                };
+
+                return collect($item)->put('count_type', $type);
+            })->mapToGroups(function ($item, $key) {
+
+                return [$item['DatasetId'] => $item];
             });
-        }
 
-        $finaldata = [];
 
-        foreach ($newdata[$request->dataset_id] as $counttype) {
-            foreach ($counttype as $countdata) {
-                $finaldata[$countdata['count_type']][] = ['date' => $countdata['DatetimeStamp'], 'count' => $countdata['Value']];
+            foreach ($mystuff as $dataset => $value) {
+                $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+                    return [$item['count_type'] => $item];
+
+                });
             }
+
+            $finaldata = [];
+
+            foreach ($newdata[$request->dataset_id] as $counttype) {
+                foreach ($counttype as $countdata) {
+                    $finaldata[$countdata['count_type']][] = ['date' => $countdata['DatetimeStamp'], 'count' => $countdata['Value']];
+                }
+            }
+
+            return $this->apiResponse(
+                200,
+                'Usage Data',
+                [$request->dataset_id => $finaldata]
+            );
         }
 
-        return [$request->dataset_id => $finaldata];
+        return $this->apiResponse(
+            418,
+            "I'm not actually a teapot but no information was available from PSO",
+            ['please give me usage data' => ['for dataset' => $request->dataset_id, 'from' => $request->base_url]]
+        );
 
 
     }

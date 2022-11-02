@@ -27,6 +27,7 @@ return [
         'webhook_uuid' => '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3',
         'base_url' => env('BASE_URL', 'https://thetechnodro.me:950'),
         'username' => env('PSO_USERNAME', 'admin'),
+        'password' => env('PSO_PASSWORD', 'Ohyouthinkdarknessisyourally1!'),
         'dataset_id' => env('DATASET_ID', 'W&C Prod'),
         'account_id' => env('ACCOUNT_ID', 'Default')
 

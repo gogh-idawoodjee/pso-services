@@ -46,12 +46,13 @@ class PSOActivitySLAController extends Controller
     public function destroy(Request $request, $activity_id)
     {
         //
+
         $request->merge(['activity_id' => $activity_id]);
 
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
-            'dataset_id' => 'string|required',
+            'dataset_id' => 'string',
             'account_id' => 'string|required_if:send_to_pso,true',
             'token' => 'string',
             'username' => 'string',
