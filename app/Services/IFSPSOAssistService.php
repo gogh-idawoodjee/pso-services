@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFSPSOAssistService extends IFSService
@@ -252,9 +253,8 @@ class IFSPSOAssistService extends IFSService
 
     }
 
-    public function sendPayloadToPSO($payload, $token, $base_url)
+    public function sendPayloadToPSO($payload, $token, $base_url): PromiseInterface|Response
     {
-        // todo this should go into the helper elf as well
         return Http::timeout(5)
             ->withHeaders(['apiKey' => $token])
             ->connectTimeout(5)

@@ -5,16 +5,16 @@ namespace App\Http\Controllers;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PSOResourceShiftController extends Controller
 {
     /**
      * this will probably an API call to return all shifts with a choice of raw or formatted.
      *
-     * @return Response
+     * @return void
      */
     public function index()
     {
@@ -28,8 +28,9 @@ class PSOResourceShiftController extends Controller
      * @param Request $request
      * @param $resource_id
      * @return JsonResponse
+     * @throws ValidationException
      */
-    public function update(Request $request, $resource_id)//: Response
+    public function update(Request $request, $resource_id): JsonResponse
     {
         $request->validate([
             'shift_id' => 'required|alpha_dash',

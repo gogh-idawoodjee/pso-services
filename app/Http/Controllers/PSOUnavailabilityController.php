@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PSOUnavailabilityController extends Controller
 {
@@ -17,7 +18,7 @@ class PSOUnavailabilityController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(Request $request, $resource_id): JsonResponse
     {
@@ -72,11 +73,41 @@ class PSOUnavailabilityController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
-     * @return Response
+     * @param Request $request
+     * @param $unavailability_id
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function destroy($id)
+    public function destroy(Request $request, $unavailability_id): JsonResponse
     {
-        //
+
+        $request->merge(['unavailability_id' => $unavailability_id]);
+        $request->validate([
+            'send_to_pso' => 'boolean',
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'rota_id' => 'string|required_if:send_to_pso,true',
+            'dataset_id' => 'string|required',
+            'unavailability_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string'
+        ]);
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        return $resource_init->DeleteUnavailability($request);
     }
 }

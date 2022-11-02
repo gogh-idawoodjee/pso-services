@@ -32,7 +32,6 @@ class IFSPSOResourceService extends IFSService
 
     public function getResource($resource_id, $dataset_id, $base_url): Collection
     {
-
         try {
             $pso_resource = Http::withHeaders(['apiKey' => $this->token])
                 ->timeout(5)
@@ -194,7 +193,7 @@ class IFSPSOResourceService extends IFSService
     {
 
         $requestId = (string)Str::uuid();
-        Log::channel('papertrail')->info(['request_input' => ['request_id' => $requestId, 'payload' => $event_data->all()]]);
+        // Log::channel('papertrail')->info(['request_input' => ['request_id' => $requestId, 'payload' => $event_data->all()]]);
 
         // now we need to figure out if we need to auth or not // really this will have to be done at the controller to initialize this instance of the service
 
@@ -205,7 +204,7 @@ class IFSPSOResourceService extends IFSService
 
         if ($event_data->send_to_pso) {
 
-            Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
+            // Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
 
             if ($response->serverError()) {
@@ -235,7 +234,7 @@ class IFSPSOResourceService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
         }
 
-        Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
+//        Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
     }
 
 
@@ -396,7 +395,7 @@ class IFSPSOResourceService extends IFSService
 
         // send to PSO if needed
         if ($request->send_to_pso) {
-
+            // todo actually send this to PSO
             // if successful, send a rota update
 
             $this->IFSPSOAssistService->sendRotaToDSEPayload(
@@ -446,6 +445,134 @@ class IFSPSOResourceService extends IFSService
             ]
         ];
 
+    }
+
+    public function DeleteUnavailability(Request $request): JsonResponse
+    {
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Delete Unavailability from the Thingy');
+        $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
+        $payload = $this->RAMDataDeletePayload($ram_update_payload, $ram_data_update);
+
+        /*
+        if ($request->send_to_pso) {
+            // todo this whole thing should be a reusable method
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url);
+            // if successful, send a rota update
+            if ($response->json('InternalId') == "0") {
+                // update the rota
+                $this->IFSPSOAssistService->sendRotaToDSEPayload(
+                    $request->dataset_id,
+                    $request->rota_id,
+                    $this->token,
+                    $request->base_url,
+                    null,
+                    true
+                );
+                // send the good response
+                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Unavailability (probably) deleted", $payload);
+            } else {
+                if ($response->serverError()) {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('InternalId') == "-1") {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('Code') == 401) {
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+
+                if ($response->status() == 500) {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                }
+
+                if ($response->status() == 401) {
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+            }
+        }
+        return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
+        */
+        return $this->processPayload(
+            $request->send_to_pso,
+            $payload,
+            $this->token,
+            $request->base_url,
+            'Unavailablity (probably) deleted',
+            true,
+            $request->dataset_id,
+            $request->rota_id
+        );
+
+    }
+
+    private function RAMDataDeletePayloadPart($object_type, $pk, $pkname1 = 'id')
+    {
+        return [
+            'object_type_id' => $object_type,
+            'object_pk_name1' => $pkname1,
+            'object_pk1' => $pk,
+            'delete_row' => true
+        ];
+    }
+
+    private function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
+    {
+        return [
+            'DsModelling' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd',
+                'RAM_Update' => $ram_update_payload,
+                'RAM_Data_Update' => $ram_data_update
+
+            ]
+        ];
+
+    }
+
+    public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
+    {
+        if ($send_to_pso) {
+            // todo this whole thing is now a reusable method, let's move it to assist
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $token, $base_url);
+            // if successful, send a rota update
+            if ($response->json('InternalId') == "0") {
+                // update the rota
+                if ($requires_rota_update) {
+                    $this->IFSPSOAssistService->sendRotaToDSEPayload(
+                        $dataset_id,
+                        $rota_id,
+                        $token,
+                        $base_url,
+                        null,
+                        true
+                    );
+                }
+                // send the good response
+                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. " . $desc_200, $payload);
+            } else {
+                if ($response->serverError()) {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('InternalId') == "-1") {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('Code') == 401) {
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+
+                if ($response->status() == 500) {
+                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                }
+
+                if ($response->status() == 401) {
+                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+            }
+        }
+        return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
     }
 
 }

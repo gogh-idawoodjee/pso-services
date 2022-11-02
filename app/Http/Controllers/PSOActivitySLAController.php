@@ -3,17 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOActivityService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PSOActivitySLAController extends Controller
 {
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @return Response
      */
     public function store(Request $request)
@@ -26,7 +28,7 @@ class PSOActivitySLAController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param int $id
      * @return Response
      */
@@ -40,13 +42,11 @@ class PSOActivitySLAController extends Controller
      *
      * @param Request $request
      * @param $activity_id
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Validation\ValidationException
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function destroy(Request $request, $activity_id)
+    public function destroy(Request $request, $activity_id): JsonResponse
     {
-        //
-
         $request->merge(['activity_id' => $activity_id]);
 
         $request->validate([
@@ -75,7 +75,6 @@ class PSOActivitySLAController extends Controller
         Validator::make($request->all(), [
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
-
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 

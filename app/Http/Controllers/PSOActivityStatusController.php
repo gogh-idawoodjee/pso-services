@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\IFSPSOActivityService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
@@ -32,10 +33,10 @@ class PSOActivityStatusController extends Controller
      * @param Request $request
      * @param $activity_id
      * @param $status
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @throws ValidationException
      */
-    public function update(Request $request, $activity_id, $status)
+    public function update(Request $request, $activity_id, $status): JsonResponse
     {
         Validator::make(['status' => $status], [
             'status' => Rule::in([

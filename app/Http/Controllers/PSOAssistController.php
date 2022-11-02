@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOAssistService;
-
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -23,7 +21,6 @@ class PSOAssistController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        //
 
         $request->validate([
             'send_to_pso' => 'boolean',
@@ -58,7 +55,6 @@ class PSOAssistController extends Controller
         return $init->InitializePSO($request);
 
     }
-
 
     /**
      * Update the specified resource in storage.
@@ -108,7 +104,7 @@ class PSOAssistController extends Controller
         );
     }
 
-    public function index(Request $request)//: Response
+    public function index(Request $request): JsonResponse
     {
 
         $request->validate([

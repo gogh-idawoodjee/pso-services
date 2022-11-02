@@ -6,8 +6,6 @@ use App\Services\IFSPSOActivityService;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-
 
 class PSOCommitController extends Controller
 {
@@ -17,10 +15,10 @@ class PSOCommitController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update(Request $request)
+    public function update(Request $request): JsonResponse
     {
         // receive the payload
-        // stripout the nastiness
+        // strip out the nastiness
 
 
         if (!$request->all()) {
@@ -43,7 +41,7 @@ class PSOCommitController extends Controller
 
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // strip out the nastiness
 
