@@ -106,7 +106,7 @@ class IFSPSOAssistService extends IFSService
 
     public function apiResponse($code, $description, $payload): JsonResponse
     {
-        // todo pull this into a helper elf
+        // all other services will call this method for payloads
         return response()->json([
             'status' => $code,
             'description' => $description,
@@ -185,6 +185,59 @@ class IFSPSOAssistService extends IFSService
                 'original_payload' => [$payload]
             ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
+
+
+    }
+
+    public function getUsageData($request)
+    {
+
+        $mindate = $request->mininum_date ?: Carbon::now()->format('Y-m-d');
+        $maxdate = $request->maximum_date ?: Carbon::now()->add(1, 'day')->format('Y-m-d');
+
+        $usage = Http::withHeaders([
+            'apiKey' => $this->token
+        ])->get(
+            $request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
+            [
+                'minimumDateTime' => $mindate,
+                'maximumDateTime' => $maxdate
+            ]);
+
+
+        $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
+
+            $type = match ($item['ScheduleDataUsageType']) {
+                0 => 'Resource_Count',
+                1 => 'Activity_Count',
+                2 => 'DSE_Window',
+                3 => 'ABE_Window',
+                4 => 'Dataset_Count',
+            };
+
+            return collect($item)->put('count_type', $type);
+        })->mapToGroups(function ($item, $key) {
+
+            return [$item['DatasetId'] => $item];
+        });
+
+
+        foreach ($mystuff as $dataset => $value) {
+            $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+                return [$item['count_type'] => $item];
+
+            });
+        }
+
+        $finaldata = [];
+
+        foreach ($newdata[$request->dataset_id] as $counttype) {
+            foreach ($counttype as $countdata) {
+                $finaldata[$countdata['count_type']][] = ['date' => $countdata['DatetimeStamp'], 'count' => $countdata['Value']];
+            }
+        }
+
+        return [$request->dataset_id => $finaldata];
 
 
     }

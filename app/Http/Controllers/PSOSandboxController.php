@@ -10,7 +10,7 @@ use Carbon\CarbonInterval;
 
 use App\Services\IFSPSOScheduleService;
 use App\Services\IFSPSOResourceService;
-
+use Illuminate\Support\Facades\Http;
 
 
 class PSOSandboxController extends Controller
@@ -24,7 +24,70 @@ class PSOSandboxController extends Controller
     {
         //
 
-        $test= new IFSPSOAssistService('doobas');
+        $this->IFSPSOAssistService = new IFSPSOAssistService(
+            config('pso-services.debug.base_url'),
+            null,
+            config('pso-services.debug.username'),
+            config('pso-services.debug.password'),
+            "Default", true);
+
+        $usage = Http::withHeaders([
+            'apiKey' => $this->IFSPSOAssistService->token
+        ])->get(
+            config('pso-services.debug.base_url') . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
+            [
+                'minimumDateTime' => '2022-11-01',
+                'maximumDateTime' => '2022-11-02'
+            ]);
+
+        $data = collect($usage->collect()->first());
+//        return $data;
+
+        $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
+
+            $type = match ($item['ScheduleDataUsageType']) {
+                0 => 'Resource_Count',
+                1 => 'Activity_Count',
+                2 => 'DSE_Window',
+                3 => 'ABE_Window',
+                4 => 'Dataset_Count',
+            };
+
+            return collect($item)->put('count_type', $type);
+        })->mapToGroups(function ($item, $key) {
+
+            return [$item['DatasetId'] => $item];
+        });
+
+
+        foreach ($mystuff as $dataset => $value) {
+            $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+                return [$item['count_type'] => $item];
+
+            });
+        }
+        return $newdata;
+
+//        $newdata = $data->where('ScheduleDataUsageType', 0)->mapToGroups(function ($item, $key) {
+//            return [$item['DatasetId'] => $item];
+//        });
+
+        return $mystuff;
+
+        $pso_schedule = Http::withHeaders([
+            'apiKey' => $this->token
+        ])->get(
+            'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+//            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+            [
+                'includeInput' => 'true',
+                'includeOutput' => 'true',
+                'datasetId' => $dataset_id
+            ]);
+
+        return collect($pso_schedule->collect()->first());
+
+        $test = new IFSPSOAssistService('doobas');
         return $test;
 
         /*

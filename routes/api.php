@@ -32,7 +32,7 @@ Route::post('/commit/test', [PSOCommitController::class, 'store']);
 
 Route::post('/load', [PSOAssistController::class, 'store']);
 Route::patch('/rotatodse', [PSOAssistController::class, 'update']);
-
+Route::get('/usage', [PSOAssistController::class, 'index']);
 
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
 

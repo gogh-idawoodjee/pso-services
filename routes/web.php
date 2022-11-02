@@ -25,7 +25,7 @@ Route::get('/', function () {
 
 Route::get('/config/environment', [PSOEnvrionmentController::class, 'index']);
 Route::get('/getcrazy/schedule', PsoSchedule::class);
-Route::get('/getcrazy/schedulebreakdown', [PSOSandboxController::class, 'index']);
+Route::get('/getcrazy/sandbox', [PSOSandboxController::class, 'index']);
 //Route::get('/getcrazy/resource', [PSOResourceController::class, 'index']);
 Route::get('/getcrazy/resource', PsoResource::class);
 Route::get('/getcrazy/resource/{resource_id}', PsoResourceShow::class);

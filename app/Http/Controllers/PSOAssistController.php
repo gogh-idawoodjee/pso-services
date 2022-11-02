@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOAssistService;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -106,5 +108,23 @@ class PSOAssistController extends Controller
         );
     }
 
+    public function index(Request $request)//: Response
+    {
+
+        $request->validate([
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required',
+            'token' => 'string|required_without:username,password',
+            'username' => 'string|required_without:token',
+            'password' => 'string|required_without:token',
+            'mindate' => 'date',
+            'maxdate' => 'date'
+        ]);
+
+        $usage_data = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+
+        return $usage_data->getUsageData($request);
+    }
 
 }

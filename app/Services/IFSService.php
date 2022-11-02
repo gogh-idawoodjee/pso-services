@@ -9,7 +9,8 @@ class IFSService
 {
 
     protected PsoEnvironment $pso_environment;
-    protected $token;
+    // todo make sure this is protected again
+    public $token;
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
