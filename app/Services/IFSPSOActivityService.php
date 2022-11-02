@@ -21,16 +21,6 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function getActivity($activity_id, $dataset_id): Collection
-    {
-        //todo find out who's using this function if at all
-
-        $pso_activity = Http::withHeaders(['apiKey' => $this->token])
-            ->get('https://' . $this->pso_environment->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity?includeOutput=true&datasetId=' . urlencode($dataset_id) . '&activityId=' . $activity_id);
-
-        return collect($pso_activity);
-
-    }
 
     public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false): JsonResponse
     {
@@ -97,7 +87,7 @@ class IFSPSOActivityService extends IFSService
 
         if ($request->send_to_pso) {
 
-            $response = $this->sendPayloadToPSO($payload, $this->token, $request->base_url);
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url);
 
             if ($response->serverError()) {
                 return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
@@ -131,22 +121,13 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    private function sendPayloadToPSO($payload, $token, $base_url)
-    {
-        // todo this should go into the helper elf as well
-        return Http::timeout(5)
-            ->withHeaders(['apiKey' => $token])
-            ->connectTimeout(5)
-            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
-    }
-
     private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
     {
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
                 'Input_Reference' => $this->InputReferenceData($description, $dataset_id, "CHANGE"),
-                'Activity_Status' => $activity_status_payload,//$this->ActivityStatusPartPayload($activity_id, $status, $resource_id, $fixed_resource, $date_time_fixed),
+                'Activity_Status' => $activity_status_payload,
 
             ]
         ];

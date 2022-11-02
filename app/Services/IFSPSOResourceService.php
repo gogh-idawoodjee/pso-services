@@ -206,7 +206,7 @@ class IFSPSOResourceService extends IFSService
         if ($event_data->send_to_pso) {
 
             Log::channel('papertrail')->info(['request_output' => ['request_id' => $requestId, 'payload' => $payload]]);
-            $response = $this->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $event_data->base_url);
 
             if ($response->serverError()) {
                 return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
@@ -276,7 +276,7 @@ class IFSPSOResourceService extends IFSService
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
         if ($shift_data->send_to_pso) {
-            $response = $this->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
 
             // do the following only if it's not a 500 series
             if ($response->successful()) {
@@ -294,7 +294,7 @@ class IFSPSOResourceService extends IFSService
                         null,
                         true
                     );
-//                    $this->sendRotaToDSEPayload($shift_data->dataset_id, $shift_data->rota_id, $this->token, $shift_data->base_url);
+
                     return $this->IFSPSOAssistService->apiResponse(200, "Rota Item Updated", $payload);
                 }
 
@@ -321,15 +321,6 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-
-    private function sendPayloadToPSO($payload, $token, $base_url)
-    {
-        // todo this should go into the helper elf as well
-        return Http::timeout(5)
-            ->withHeaders(['apiKey' => $token])
-            ->connectTimeout(5)
-            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
-    }
 
     private function RAMRotaItemUpdatePayload($ram_update_payload, $rota_item_payload)
     {

@@ -48,7 +48,6 @@ class IFSPSOAssistService extends IFSService
         }
 
         if ($appointment_window != null) {
-            Log::info('appt: ' . $appointment_window);
             $input_reference = Arr::add($input_reference, 'appointment_window_duration', $appointment_window);
         }
 
@@ -98,19 +97,16 @@ class IFSPSOAssistService extends IFSService
                 'original_payload' => [$payload]
             ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
-//
-//
-//        $status = $sendRota->status();
-//        $data = $sendRota->collect();
+
     }
 
-    public function apiResponse($code, $description, $payload): JsonResponse
+    public function apiResponse($code, $description, $payload, $payload_desc = null): JsonResponse
     {
         // all other services will call this method for payloads
         return response()->json([
             'status' => $code,
             'description' => $description,
-            'original_payload' => [$payload]
+            $payload_desc ?: 'original_payload' => [$payload]
         ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
     }
@@ -169,7 +165,6 @@ class IFSPSOAssistService extends IFSService
                     $payload
                 );
 
-
             if ($rotatodse->json('InternalId') == "-1") {
                 return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
             }
@@ -205,7 +200,7 @@ class IFSPSOAssistService extends IFSService
             ]);
 
 
-        if (count($usage->collect()->first())) {
+        if ($usage->collect()->first()) {
 
 
             $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
@@ -243,7 +238,8 @@ class IFSPSOAssistService extends IFSService
             return $this->apiResponse(
                 200,
                 'Usage Data',
-                [$request->dataset_id => $finaldata]
+                [$request->dataset_id => $finaldata],
+                'usage_data'
             );
         }
 
@@ -254,5 +250,14 @@ class IFSPSOAssistService extends IFSService
         );
 
 
+    }
+
+    public function sendPayloadToPSO($payload, $token, $base_url)
+    {
+        // todo this should go into the helper elf as well
+        return Http::timeout(5)
+            ->withHeaders(['apiKey' => $token])
+            ->connectTimeout(5)
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
     }
 }
