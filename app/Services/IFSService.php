@@ -18,7 +18,6 @@ class IFSService
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
 
-
         $this->token = $token;
         $this->base_url = $base_url;
 

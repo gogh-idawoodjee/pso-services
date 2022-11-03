@@ -114,8 +114,7 @@ class PSOAssistController extends Controller
         ]);
 
         $usage_data = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
-        // auth is performed in this step ^
-        // the below should only be returned if auth returns true right?
+
         if ($usage_data->isAuthenticated()) {
             return $usage_data->getUsageData($request);
         }

@@ -89,14 +89,13 @@ class IFSPSOAssistService extends IFSService
 
             // todo some more http error validation here
 
-        } else {
-
-            return response()->json([
-                'status' => 202,
-                'description' => 'not send to PSO',
-                'original_payload' => [$payload]
-            ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
+        return response()->json([
+            'status' => 202,
+            'description' => 'not send to PSO',
+            'original_payload' => [$payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
 
     }
 
@@ -172,14 +171,13 @@ class IFSPSOAssistService extends IFSService
                 return $this->apiResponse(200, "Payload sent to PSO", $payload);
             }
 
-        } else {
-
-            return response()->json([
-                'status' => 202,
-                'description' => 'not send to PSO',
-                'original_payload' => [$payload]
-            ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
+
+        return response()->json([
+            'status' => 202,
+            'description' => 'not send to PSO',
+            'original_payload' => [$payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
 
     }
@@ -257,5 +255,49 @@ class IFSPSOAssistService extends IFSService
             ->withHeaders(['apiKey' => $token])
             ->connectTimeout(5)
             ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
+    }
+
+    public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
+    {
+        if ($send_to_pso) {
+            // todo this whole thing is now a reusable method, let's move it to assist
+            $response = $this->sendPayloadToPSO($payload, $token, $base_url);
+            // if successful, send a rota update
+            if ($response->json('InternalId') == "0") {
+                // update the rota
+                if ($requires_rota_update) {
+                    $this->sendRotaToDSEPayload(
+                        $dataset_id,
+                        $rota_id,
+                        $base_url,
+                        null,
+                        true
+                    );
+                }
+                // send the good response
+                return $this->apiResponse(200, "Payload sent to PSO. " . $desc_200, $payload);
+            } else {
+                if ($response->serverError()) {
+                    return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('InternalId') == "-1") {
+                    return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+                }
+
+                if ($response->json('Code') == 401) {
+                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+
+                if ($response->status() == 500) {
+                    return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                }
+
+                if ($response->status() == 401) {
+                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                }
+            }
+        }
+        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
     }
 }
