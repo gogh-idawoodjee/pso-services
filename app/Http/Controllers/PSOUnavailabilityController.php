@@ -53,15 +53,16 @@ class PSOUnavailabilityController extends Controller
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if ($resource_init->isAuthenticated()) {
-            return $resource_init->createUnavailability($request, $resource_id);
+
+        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
         }
-
-        return response()->json([
-            'status' => 401,
-            'description' => 'did not pass auth'
-        ]);
-
+        return $resource_init->createUnavailability($request, $resource_id);
+        
     }
 
 
@@ -115,13 +116,16 @@ class PSOUnavailabilityController extends Controller
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if ($resource_init->isAuthenticated()) {
-            return $resource_init->DeleteUnavailability($request);
+
+        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
         }
 
-        return response()->json([
-            'status' => 401,
-            'description' => 'did not pass auth'
-        ]);
+        return $resource_init->DeleteUnavailability($request);
+
     }
 }

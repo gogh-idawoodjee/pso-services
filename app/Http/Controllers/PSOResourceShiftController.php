@@ -65,17 +65,18 @@ class PSOResourceShiftController extends Controller
         // send the details to the service to get and build
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if ($resource_init->isAuthenticated()) {
-            $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource
 
-            // send all that back to the service and let it do the work
-            return $resource_init->setManualScheduling($request);
+        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
         }
+        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource
 
-        return response()->json([
-            'status' => 401,
-            'description' => 'did not pass auth'
-        ]);
+        // send all that back to the service and let it do the work
+        return $resource_init->setManualScheduling($request);
 
     }
 

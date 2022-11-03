@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\IFSPSOAppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
@@ -61,7 +62,8 @@ class PSOAppointmentController extends Controller
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
 
-        $appointment = new IFSPSOAppointmentService($request);
+        $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+        $appointment->getAppointment($request);
 
 
     }

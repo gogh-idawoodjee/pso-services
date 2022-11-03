@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Classes\PSOActivity;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateInterval;
@@ -29,6 +30,7 @@ class IFSPSOAppointmentService extends IFSService
     {
 
         $payload = null;
+        $activity = PSOActivity::create();
 
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso, $payload, $this->token, $request->base_url, 'Event Set and Rota Updated', false, $request->dataset_id,
