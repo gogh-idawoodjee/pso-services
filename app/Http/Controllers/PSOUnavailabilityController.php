@@ -17,6 +17,7 @@ class PSOUnavailabilityController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
+     * @param $resource_id
      * @return JsonResponse
      * @throws ValidationException
      */
@@ -63,9 +64,9 @@ class PSOUnavailabilityController extends Controller
      *
      * @param Request $request
      * @param int $id
-     * @return Response
+     * @return void
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): void
     {
         //
     }

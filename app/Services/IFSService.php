@@ -16,6 +16,8 @@ class IFSService
     {
 
         // has token, don't do anything
+
+        // todo validate token and return 401 if failed
         $this->token = $token;
         if (!$pso_environment) {
             $this->pso_environment = new PsoEnvironment();
