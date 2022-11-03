@@ -50,10 +50,18 @@ class PSOAssistController extends Controller
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
 
+
         $init = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return $init->InitializePSO($request);
+        if (!$init->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
 
+        }
+
+        return $init->InitializePSO($request);
     }
 
     /**
@@ -93,6 +101,14 @@ class PSOAssistController extends Controller
 
         $rotatodse = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
+        if (!$rotatodse->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+
         return $rotatodse->sendRotaToDSEPayload(
             $request->dataset_id,
             $request->rota_id,
@@ -114,6 +130,7 @@ class PSOAssistController extends Controller
         ]);
 
         $usage_data = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+
 
         if ($usage_data->isAuthenticated()) {
             return $usage_data->getUsageData($request);

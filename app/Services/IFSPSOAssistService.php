@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Classes\InputReference;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -60,6 +61,9 @@ class IFSPSOAssistService extends IFSService
     public function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
 
+        // todo first attempt at refactor using classes
+        $input_reference = (new InputReference("Update Rota from the Thingy", 'CHANGE', $dataset_id, $datetime))->toJson();
+
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
@@ -70,7 +74,7 @@ class IFSPSOAssistService extends IFSService
         ];
     }
 
-    public function sendRotaToDSEPayload($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null)
+    public function sendRotaToDSEPayload($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null): JsonResponse
     {
 
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);

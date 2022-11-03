@@ -334,9 +334,9 @@ class IFSPSOResourceService extends IFSService
             } else {
                 $this->shifts = $this->pso_resource['Shift'];
             }
-        } else {
-            $this->shifts = [];
         }
+        $this->shifts = [];
+
     }
 
     public function createUnavailability(Request $request, $resource_id): JsonResponse
@@ -450,6 +450,5 @@ class IFSPSOResourceService extends IFSService
         ];
 
     }
-
 
 }

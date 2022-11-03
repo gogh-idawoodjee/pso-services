@@ -44,14 +44,17 @@ class IFSService
 
     private function authenticatePSO($base_url, $account_id, $username, $password)
     {
-        try {
-            $response = Http::asForm()->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session', [
-                'accountId' => $account_id,
-                'username' => $username,
-                'password' => $password,
-            ]);
-        } catch (Exception $e) {
-            dd($e);
+        $response = [];
+        if ($base_url) {
+            try {
+                $response = Http::asForm()->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session', [
+                    'accountId' => $account_id,
+                    'username' => $username,
+                    'password' => $password,
+                ]);
+            } catch (Exception $e) {
+                dd($e);
+            }
         }
 
         if ($response->collect()->get('SessionToken')) {
@@ -61,7 +64,10 @@ class IFSService
 
     public function isAuthenticated()
     {
-        return $this->validateToken($this->base_url, $this->token);
+        if ($this->token) {
+            return $this->validateToken($this->base_url, $this->token);
+        }
+        return false;
     }
 
     private function validateToken($base_url, $token): bool
