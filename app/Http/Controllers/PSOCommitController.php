@@ -52,7 +52,15 @@ class PSOCommitController extends Controller
         }
 
         $commit = new IFSPSOActivityService(null, null, null, null, null, false, null);
-        return $commit->sendCommitActivity($content, true);
+
+        if ($commit->isAuthenticated()) {
+            return $commit->sendCommitActivity($content, true);
+        }
+
+        return response()->json([
+            'status' => 401,
+            'description' => 'did not pass auth'
+        ]);
 
 
     }

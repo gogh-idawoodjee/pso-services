@@ -65,7 +65,6 @@ class PSOAssistController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
-        //
 
         $request->validate([
             'send_to_pso' => 'boolean',
@@ -106,7 +105,6 @@ class PSOAssistController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-
         $request->validate([
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'dataset_id' => 'string|required',
@@ -117,8 +115,16 @@ class PSOAssistController extends Controller
         ]);
 
         $usage_data = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+        // auth is performed in this step ^
+        // the below should only be returned if auth returns true right?
+        if ($usage_data->isAuthenticated()) {
+            return $usage_data->getUsageData($request);
+        }
 
-        return $usage_data->getUsageData($request);
+        return response()->json([
+            'status' => 401,
+            'description' => 'did not pass auth'
+        ]);
     }
 
 }

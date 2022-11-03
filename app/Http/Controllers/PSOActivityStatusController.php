@@ -77,8 +77,14 @@ class PSOActivityStatusController extends Controller
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return $activity->updateActivityStatus($request, $status);
+        if ($activity->isAuthenticated()) {
+            return $activity->updateActivityStatus($request, $status);
+        }
 
+        return response()->json([
+            'status' => 401,
+            'description' => 'did not pass auth'
+        ]);
     }
 
 }

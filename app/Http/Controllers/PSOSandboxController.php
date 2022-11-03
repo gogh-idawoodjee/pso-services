@@ -24,82 +24,85 @@ class PSOSandboxController extends Controller
     {
         //
 
-        $this->IFSPSOAssistService = new IFSPSOAssistService(
+        $IFSPSOAssistService = new IFSPSOAssistService(
             config('pso-services.debug.base_url'),
             null,
-            config('pso-services.debug.username'),
+//            config('pso-services.debug.username'),
+            'admin',
             config('pso-services.debug.password'),
             "Default", true);
 
-        $usage = Http::withHeaders([
-            'apiKey' => $this->IFSPSOAssistService->token
-        ])->get(
-            config('pso-services.debug.base_url') . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
-            [
-                'minimumDateTime' => '2022-11-01',
-                'maximumDateTime' => '2022-11-02'
-            ]);
-
-        $data = collect($usage->collect()->first());
-//        return $data;
-
-        $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
-
-            $type = match ($item['ScheduleDataUsageType']) {
-                0 => 'Resource_Count',
-                1 => 'Activity_Count',
-                2 => 'DSE_Window',
-                3 => 'ABE_Window',
-                4 => 'Dataset_Count',
-            };
-
-            return collect($item)->put('count_type', $type);
-        })->mapToGroups(function ($item, $key) {
-
-            return [$item['DatasetId'] => $item];
-        });
-
-
-        foreach ($mystuff as $dataset => $value) {
-            $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
-                return [$item['count_type'] => $item];
-
-            });
-        }
-        return $newdata;
-
-//        $newdata = $data->where('ScheduleDataUsageType', 0)->mapToGroups(function ($item, $key) {
-//            return [$item['DatasetId'] => $item];
-//        });
-
-        return $mystuff;
-
-        $pso_schedule = Http::withHeaders([
-            'apiKey' => $this->token
-        ])->get(
-            'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-//            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-            [
-                'includeInput' => 'true',
-                'includeOutput' => 'true',
-                'datasetId' => $dataset_id
-            ]);
-
-        return collect($pso_schedule->collect()->first());
-
-        $test = new IFSPSOAssistService('doobas');
-        return $test;
-
+        return $IFSPSOAssistService->token;
         /*
-                $schedule = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
-                return $schedule->getResDetails();
-        //        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first())->get('Resources');
-                $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first());
-                return $resources;
-                foreach ($resources as $resource) {
-                    echo $resource['first_name'];
+                $usage = Http::withHeaders([
+                    'apiKey' => $this->IFSPSOAssistService->token
+                ])->get(
+                    config('pso-services.debug.base_url') . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
+                    [
+                        'minimumDateTime' => '2022-11-01',
+                        'maximumDateTime' => '2022-11-02'
+                    ]);
+
+                $data = collect($usage->collect()->first());
+        //        return $data;
+
+                $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
+
+                    $type = match ($item['ScheduleDataUsageType']) {
+                        0 => 'Resource_Count',
+                        1 => 'Activity_Count',
+                        2 => 'DSE_Window',
+                        3 => 'ABE_Window',
+                        4 => 'Dataset_Count',
+                    };
+
+                    return collect($item)->put('count_type', $type);
+                })->mapToGroups(function ($item, $key) {
+
+                    return [$item['DatasetId'] => $item];
+                });
+
+
+                foreach ($mystuff as $dataset => $value) {
+                    $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+                        return [$item['count_type'] => $item];
+
+                    });
                 }
-        */
+                return $newdata;
+
+        //        $newdata = $data->where('ScheduleDataUsageType', 0)->mapToGroups(function ($item, $key) {
+        //            return [$item['DatasetId'] => $item];
+        //        });
+
+                return $mystuff;
+
+                $pso_schedule = Http::withHeaders([
+                    'apiKey' => $this->token
+                ])->get(
+                    'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+        //            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+                    [
+                        'includeInput' => 'true',
+                        'includeOutput' => 'true',
+                        'datasetId' => $dataset_id
+                    ]);
+
+                return collect($pso_schedule->collect()->first());
+
+                $test = new IFSPSOAssistService('doobas');
+                return $test;
+
+                /*
+                        $schedule = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
+                        return $schedule->getResDetails();
+                //        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first())->get('Resources');
+                        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first());
+                        return $resources;
+                        foreach ($resources as $resource) {
+                            echo $resource['first_name'];
+                        }
+                */
 
         $dataset_id = "W&C Prod";
         $resource = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');

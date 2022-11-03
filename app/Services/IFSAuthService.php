@@ -53,7 +53,9 @@ class IFSAuthService
             dd($e);
         }
 //         todo find a cleaner way of doing this
-        return $this->pso_token = $response->collect()->get('SessionToken');
+        if ($response->collect()->get('SessionToken')) {
+            return $this->pso_token = $response->collect()->get('SessionToken');
+        }
     }
 
 
@@ -68,6 +70,16 @@ class IFSAuthService
 //
 ////        return $response->collect();
 //        return $this->fsm_token = $response->collect()->get('value');
+    }
+
+    public function validateToken($base_url, $token)
+    {
+        $response = Http::withHeaders(['apiKey' => $token])->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session');
+        if ($response->failed()) {
+            return false;
+        }
+        return true;
+
     }
 
     private function isAuthenticated()
