@@ -70,9 +70,8 @@ class IFSPSOAssistService extends IFSService
         ];
     }
 
-    public function sendRotaToDSEPayload($dataset_id, $rota_id, $token, $base_url, $date = null, $send_to_pso = null)
+    public function sendRotaToDSEPayload($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null)
     {
-        // todo fix the token in the param
 
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
         if ($send_to_pso) {
@@ -249,7 +248,6 @@ class IFSPSOAssistService extends IFSService
             "I'm not actually a teapot but no information was available from PSO",
             ['please give me usage data' => ['for dataset' => $request->dataset_id, 'from' => $request->base_url]]
         );
-
 
     }
 

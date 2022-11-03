@@ -96,7 +96,6 @@ class PSOAssistController extends Controller
         return $rotatodse->sendRotaToDSEPayload(
             $request->dataset_id,
             $request->rota_id,
-            $request->token,
             $request->base_url,
             $request->datetime,
             $request->send_to_pso

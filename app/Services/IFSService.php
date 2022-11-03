@@ -18,9 +18,7 @@ class IFSService
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
 
-        // has token, don't do anything
 
-        // todo validate token and return 401 if failed
         $this->token = $token;
         $this->base_url = $base_url;
 

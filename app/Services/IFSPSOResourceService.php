@@ -280,7 +280,7 @@ class IFSPSOResourceService extends IFSService
             // do the following only if it's not a 500 series
             if ($response->successful()) {
                 // todo clean this stuff up
-                // todo, we can actually do a get on the resource shift again, do a compare on the description and compare to the payload; if it's the same description, then we know for sure it worked
+                // todo, we can actually do a get on the resource again, find the shift, do a compare on the description and compare to the payload; if it's the same description, then we know for sure it worked
 
                 if ($response->json('InternalId') == "0") {
                     // then we send a Rota Update, so we can see the changes
@@ -288,7 +288,6 @@ class IFSPSOResourceService extends IFSService
                     $this->IFSPSOAssistService->sendRotaToDSEPayload(
                         $shift_data->dataset_id,
                         $shift_data->rota_id,
-                        $this->token,
                         $shift_data->base_url,
                         null,
                         true
@@ -392,24 +391,20 @@ class IFSPSOResourceService extends IFSService
         $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability from the Thingy');
         $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
+        $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
 
         // send to PSO if needed
-        if ($request->send_to_pso) {
-            // todo actually send this to PSO
-            // if successful, send a rota update
 
-            $this->IFSPSOAssistService->sendRotaToDSEPayload(
-                $request->dataset_id,
-                $request->rota_id,
-                $this->token,
-                $request->base_url,
-                null,
-                true
-            );
-
-        }
-
-        return $this->IFSPSOAssistService->apiResponse(202, 'Unavailability not sent to PSO', $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload));
+        return $this->processPayload(
+            $request->send_to_pso,
+            $payload,
+            $this->token,
+            $request->base_url,
+            'Unavailability sent to PSO',
+            true,
+            $request->dataset_id,
+            $request->rota_id
+        );
 
 
     }
@@ -542,7 +537,6 @@ class IFSPSOResourceService extends IFSService
                     $this->IFSPSOAssistService->sendRotaToDSEPayload(
                         $dataset_id,
                         $rota_id,
-                        $token,
                         $base_url,
                         null,
                         true
