@@ -3,6 +3,7 @@
 //use App\Http\Controllers\PSOActivityController;
 use App\Http\Controllers\PSOActivitySLAController;
 use App\Http\Controllers\PSOActivityStatusController;
+use App\Http\Controllers\PSOAppointmentController;
 use App\Http\Controllers\PSOAssistController;
 use App\Http\Controllers\PSOCommitController;
 use App\Http\Controllers\PSOResourceController;
@@ -39,6 +40,8 @@ Route::get('/usage', [PSOAssistController::class, 'index']);
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
 Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
 
+// appointment
+Route::post('/appointment', [PSOAppointmentController::class, 'store']);
 
 // resource (???)
 Route::patch('/resource/{resource_id}/manualschedule', [PSOResourceShiftController::class, 'update']);
