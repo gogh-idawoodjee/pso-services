@@ -37,6 +37,8 @@ class PSOActivityStatus extends Activity
             'date_time_stamp' => $this->date_time_stamp,
             'duration' => $this->duration
         ];
+
+        // todo add the merge thingy here
     }
 
 }

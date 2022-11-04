@@ -4,18 +4,18 @@ namespace App\Classes;
 
 use Carbon\Carbon;
 
+
 class PSOActivity extends Activity
 {
 
     private string $activity_class_id;
     private string $activity_type_id;
     private int $priority;
-    private bool $split_allowed;
+
     private string $description;
     private string $date_time_created;
     private string $date_time_open;
     private int $base_value;
-    private bool $interrupt;
     private array $activity_skill;
     private array $activity_region;
     private array $activity_sla;
@@ -26,26 +26,57 @@ class PSOActivity extends Activity
     public function __construct($activity_data, $is_ab_request = false)
     {
 
-        $this->activity_id = $is_ab_request ? $activity_data->task_id . '_appt' : $activity_data->task_id;
+
+        $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
         $this->activity_class_id = 'CALL';
-        $this->activity_type_id = $activity_data->task_type;
-        $this->priority = 100;
-        $this->split_allowed = json_encode($activity_data->split_allowed);
-        $this->description = $activity_data->description;
+
+        $this->activity_type_id = $activity_data->activity_type_id;
+        $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
+        $this->description = $activity_data->description ?: 'Appointment Request';
         $this->date_time_created = Carbon::now()->toAtomString();
         $this->date_time_open = Carbon::now()->toAtomString();
-        $this->base_value = $activity_data->schedule_value;
-        $this->interrupt = json_encode($activity_data->interrupt);
+        $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
+
+        // build the skills
+        if ($activity_data->skill) {
+            foreach ($activity_data->skill as $skill) {
+                $this->addActivitySkill(new PSOActivitySkill($skill));
+            }
+        }
+
+        // build the status
+        if ($is_ab_request) {
+            $this->activity_status = new PSOActivityStatus(-1, 1, $activity_data->duration);
+        } else {
+            $this->activity_status = new PSOActivityStatus($activity_data->duration, $activity_data->visit_id ?: 1, $activity_data->duration, $activity_data->fixed, $activity_data->resource_id);
+        }
+
+        // build the location
+        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long, $this->activity_id));
+
+        $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_start));
+
     }
 
-    public static function create(...$params)
+//    public static function create(Request $request, $is_ab_request)
+//    {
+//        return new static($request, $is_ab_request);
+//    }
+
+    public function FullActivityObject()
     {
-        return new static(...$params);
+        return [
+            'Activity' => $this->ActivityToJson(),
+            'Activity_Status' => $this->ActivityStatus(),
+            'Activity_Skill' => $this->activity_skill,
+            'Location' => $this->ActivityLocation(),
+            'Activity_SLA' => $this->ActivitySLAs()
+        ];
     }
 
     public function addActivitySkill(PSOActivitySkill $skill)
     {
-        $this->activity_skill[] = $skill;
+        $this->activity_skill[] = $skill->toJson($this->activity_id);
         return $this;
     }
 
@@ -93,9 +124,9 @@ class PSOActivity extends Activity
 
     public function ActivitySkills()
     {
-        clock()->info('calling method on Activity');
 
-        return $this->ActivityDataToJson($this->activity_skill);
+        return $this->activity_skill;
+
     }
 
     public function ActivityRegions()
@@ -112,12 +143,10 @@ class PSOActivity extends Activity
             'activity_type_id' => "$this->activity_type_id",
             'location_id' => $this->activity_id,
             'priority' => $this->priority,
-            'split_allowed' => $this->split_allowed,
             'description' => "$this->description",
             'date_time_created' => $this->date_time_created,
             'date_time_open' => $this->date_time_open,
             'base_value' => $this->base_value,
-            'interrupt' => $this->interrupt
         ];
     }
 

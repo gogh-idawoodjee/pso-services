@@ -2,17 +2,12 @@
 
 namespace App\Services;
 
+use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
-use DateInterval;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+
 
 class IFSPSOAppointmentService extends IFSService
 {
@@ -26,15 +21,57 @@ class IFSPSOAppointmentService extends IFSService
 
     }
 
-    public function getAppointment(Request $request): JsonResponse
+    public function getAppointment(Request $request)//: JsonResponse
     {
 
         $payload = null;
-        $activity = PSOActivity::create();
+        $activity = new PSOActivity($request, true);
+
+        // build the full activity object
+        $activity_payload = $activity->FullActivityObject();
+        $appointment_request_part_payload = $this->AppointmentRequestPayloadPart(
+            $activity->getActivityID(),
+            'EST',
+            $request->appointment_template_datetime,$request->appointment_template_duration
+        );
+
+        $input_ref = (new InputReference($request->description ?: 'Appointment Request', 'CHANGE', $request->dataset_id, $request->input_datetime))->toJson();
+
+        return $this->AppointmentRequestPayload($input_ref, $appointment_request_part_payload, $activity_payload);
+
 
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso, $payload, $this->token, $request->base_url, 'Event Set and Rota Updated', false, $request->dataset_id,
         );
+    }
+
+    private function AppointmentRequestPayloadPart($activity_id, $appointment_template_id, $appointment_template_datetime = null, $appointment_template_duration = null)
+    {
+        return [
+            'activity_id' => $activity_id,
+            'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
+            'appointment_template_duration' => $appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'),
+            'appointment_template_id' => $appointment_template_id,
+            'id' => Str::orderedUuid()->getHex()->toString(),
+            'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString()
+        ];
+    }
+
+    public function AppointmentRequestPayload($input_reference, $appointment_request, $activity_payload): array
+    {
+
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $input_reference,
+                'Appointment_Request' => $appointment_request,
+                'Activity' => $activity_payload['Activity'],
+                'Activity_Skill' => $activity_payload['Activity_Skill'],
+                'Activity_SLA' => $activity_payload['Activity_SLA'],
+                'Activity_Status' => $activity_payload['Activity_Status'],
+                'Location' => $activity_payload['Location'],
+            ]
+        ];
     }
 
 

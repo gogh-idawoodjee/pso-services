@@ -96,7 +96,7 @@ class IFSPSOAssistService extends IFSService
         }
         return response()->json([
             'status' => 202,
-            'description' => 'not send to PSO',
+            'description' => 'not sent to PSO',
             'original_payload' => [$payload]
         ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
@@ -179,7 +179,7 @@ class IFSPSOAssistService extends IFSService
 
         return response()->json([
             'status' => 202,
-            'description' => 'not send to PSO',
+            'description' => 'not sent to PSO',
             'original_payload' => [$payload]
         ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
@@ -233,7 +233,7 @@ class IFSPSOAssistService extends IFSService
 
             foreach ($newdata[$request->dataset_id] as $counttype) {
                 foreach ($counttype as $countdata) {
-                    $finaldata[$countdata['count_type']][] = ['date' => $countdata['DatetimeStamp'], 'count' => $countdata['Value']];
+                    $finaldata[$countdata['count_type']][] = ['date' => Carbon::createFromDate($countdata['DatetimeStamp'])->toDayDateTimeString(), 'count' => $countdata['Value']];
                 }
             }
 

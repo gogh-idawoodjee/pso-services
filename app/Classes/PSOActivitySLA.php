@@ -2,7 +2,6 @@
 
 namespace App\Classes;
 
-use Illuminate\Support\Facades\Date;
 
 class PSOActivitySLA extends Activity
 {
@@ -16,7 +15,7 @@ class PSOActivitySLA extends Activity
 
     public function __construct($sla_type_id, $datetime_start, $datetime_end, $priority = 2, $start_based = true)
     {
-        $this->priority = $priority ?? config('ifs.app_params.default_sla_priority');
+        $this->priority = $priority;
         $this->sla_type_id = $sla_type_id;
         $this->datetime_start = $datetime_start;
         $this->datetime_end = $datetime_end;

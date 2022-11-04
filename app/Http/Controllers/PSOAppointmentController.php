@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PSOAppointmentController extends Controller
 {
@@ -26,10 +27,10 @@ class PSOAppointmentController extends Controller
      *
      * @param Request $request
      * @return Response
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
-
 
         $request->validate([
             'send_to_pso' => 'boolean',
@@ -41,11 +42,17 @@ class PSOAppointmentController extends Controller
             'password' => 'string',
             'activity_id' => 'string|required',
             'activity_type_id' => 'string|required',
-            'duration' => 'integer|lt:1440|required:',
+            'duration' => 'integer|lt:1440|required',
+            'base_value' => 'integer|gt:0',
+            'visit_id' => 'integer|gt:0',
+            'priority' => 'integer',
             'sla_start' => 'date|before:sla_end|required',
             'sla_end' => 'date|after:sla_start|required',
             'sla_type_id' => 'string|required',
             'appointment_template_id' => 'string|required',
+            'appointment_template_duration' => 'integer|gte:0',
+            'appointment_template_datetime' => 'date|after:input_datetime',
+            'input_datetime' => 'date|before:appointment_template_datetime',
             'lat' => 'numeric|between:-90,90|required',
             'long' => 'numeric|between:-180,180|required'
         ]);
@@ -63,7 +70,7 @@ class PSOAppointmentController extends Controller
         ])->validate();
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-        $appointment->getAppointment($request);
+        return $appointment->getAppointment($request);
 
 
     }

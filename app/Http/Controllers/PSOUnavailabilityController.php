@@ -62,7 +62,7 @@ class PSOUnavailabilityController extends Controller
 
         }
         return $resource_init->createUnavailability($request, $resource_id);
-        
+
     }
 
 

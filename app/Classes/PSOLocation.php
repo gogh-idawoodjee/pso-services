@@ -15,17 +15,16 @@ class PSOLocation extends Activity
     {
         $this->latitude = $lat;
         $this->longitude = $long;
+
+
     }
 
     public function toJson($activity_id)
     {
         return [
             'id' => $activity_id,
-//            'latitude' => $this->activity_data->place[0]['address'][0]['lat'],
             'latitude' => $this->latitude,
-//            'longitude' => $this->activity_data->place[0]['address'][0]['long'],
             'longitude' => $this->longitude
-
         ];
     }
 
