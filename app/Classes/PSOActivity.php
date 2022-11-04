@@ -16,7 +16,7 @@ class PSOActivity extends Activity
     private string $date_time_created;
     private string $date_time_open;
     private int $base_value;
-    private array $activity_skill;
+    private array $activity_skill = [];
     private array $activity_region;
     private array $activity_sla;
     private PSOLocation $activity_location;
@@ -27,6 +27,7 @@ class PSOActivity extends Activity
     {
 
 
+//        $this->activity_skill = [];
         $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
         $this->activity_class_id = 'CALL';
 
@@ -54,7 +55,7 @@ class PSOActivity extends Activity
         // build the location
         $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long, $this->activity_id));
 
-        $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_start));
+        $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_end));
 
     }
 

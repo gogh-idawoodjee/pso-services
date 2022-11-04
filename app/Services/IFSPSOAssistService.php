@@ -100,18 +100,24 @@ class IFSPSOAssistService extends IFSService
             'original_payload' => [$payload]
         ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
-
     }
 
-    public function apiResponse($code, $description, $payload, $payload_desc = null): JsonResponse
+    public function apiResponse($code, $description, $payload, $payload_desc = null, $additional_data = null): JsonResponse
     {
         // all other services will call this method for payloads
+        if ($additional_data) {
+            return response()->json([
+                'status' => $code,
+                'description' => $description,
+                $additional_data['description'] => $additional_data['data'],
+                $payload_desc ?: 'original_payload' => [$payload]
+            ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+        }
         return response()->json([
             'status' => $code,
             'description' => $description,
             $payload_desc ?: 'original_payload' => [$payload]
         ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
     }
 
     private function SourceData(): array
@@ -253,20 +259,23 @@ class IFSPSOAssistService extends IFSService
 
     }
 
-    public function sendPayloadToPSO($payload, $token, $base_url): PromiseInterface|Response
+    public function sendPayloadToPSO($payload, $token, $base_url, $requires_pso_response = false): PromiseInterface|Response
     {
+        $endpoint_segment = $requires_pso_response ? 'appointment' : 'data';
+
         return Http::timeout(5)
             ->withHeaders(['apiKey' => $token])
             ->connectTimeout(5)
-            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data', $payload);
+            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
     }
 
     public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
     {
         if ($send_to_pso) {
-            // todo this whole thing is now a reusable method, let's move it to assist
+
             $response = $this->sendPayloadToPSO($payload, $token, $base_url);
-            // if successful, send a rota update
+
+
             if ($response->json('InternalId') == "0") {
                 // update the rota
                 if ($requires_rota_update) {
@@ -302,6 +311,7 @@ class IFSPSOAssistService extends IFSService
                 }
             }
         }
+
         return $this->apiResponse(202, "Payload not sent to PSO", $payload);
     }
 }
