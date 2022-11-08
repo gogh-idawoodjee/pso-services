@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\IFSPSOAppointmentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -12,13 +12,39 @@ use Illuminate\Validation\ValidationException;
 class PSOAppointmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * see if the appointment is still available
      *
-     * @return Response
+     * @return void
+     * @throws ValidationException
      */
-    public function index()
+    public function show(Request $request, $appointment_request_id)
     {
-        //
+        $request->validate([
+            'send_to_pso' => 'boolean',
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string',
+            'appointment_offer_id' => 'string|required'
+        ]);
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        $appointed = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        $appointed->checkAppointed($request, $appointment_request_id);
     }
 
 
@@ -26,7 +52,7 @@ class PSOAppointmentController extends Controller
      * request the appointment
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      * @throws ValidationException
      */
     public function store(Request $request)
@@ -79,22 +105,81 @@ class PSOAppointmentController extends Controller
      * accept the appointment slot.
      *
      * @param Request $request
-     * @param int $id
-     * @return Response
+     * @param $appointment_request_id
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $appointment_request_id)
     {
-        //
+        $request->validate([
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string',
+            'activity_id' => 'string|required',
+            'sla_priority' => 'integer',
+            'sla_start_based' => 'boolean',
+            'sla_start' => 'date|before:sla_end|required',
+            'sla_end' => 'date|after:sla_start|required',
+            'sla_type_id' => 'string|required',
+            'appointment_offer_id' => 'integer|gt:0|required'
+        ]);
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+        return $appointment->acceptAppointment($request,$appointment_request_id);
+
     }
 
     /**
      * reject the appointment slots.
      *
-     * @param int $id
-     * @return Response
+     * @param Request $request
+     * @param $appointment_request_id
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function destroy($id)
+    public function destroy(Request $request, $appointment_request_id)
     {
-        //
+        $request->validate([
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string',
+            'activity_id' => 'string|required'
+        ]);
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+        return $appointment->declineAppointment($request,$appointment_request_id);
+
     }
+
+
 }

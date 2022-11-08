@@ -14,6 +14,7 @@ class IFSPSOActivityService extends IFSService
 {
 
     private IFSPSOAssistService $IFSPSOAssistService;
+    private $activity_object;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -21,6 +22,26 @@ class IFSPSOActivityService extends IFSService
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
         $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
 
+    }
+
+
+    public function getActivity(Request $request, $activity_id)
+    {
+        $activity = Http::withHeaders(['apiKey' => $this->token])
+            ->get($request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity',
+                [
+                    'includeOutput' => true,
+                    'datasetId' => $request->dataset_id,
+                    'activityId' => $activity_id,
+                    'tableFilter' => 'Activity, SLA_Type, Activity_SLA, Location, Activity_Status'
+                ]
+            );
+        return $this->activity_object = $activity->collect();
+    }
+
+    public function activityExists()
+    {
+        return collect($this->activity_object->first())->has('Activity');
     }
 
 
@@ -172,18 +193,33 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function deleteSLA(Request $request): JsonResponse
+
+    public function deleteActivity(Request $request, $description = null)
+    {
+        $delete_activity_payload = $this->DeleteActivityPayloadPart($request->activity_id);
+        $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
+        // todo actually send this to PSO
+        return response()->json([
+            'status' => 202,
+            'description' => $description ?: 'not send to PSO',
+            'original_payload' => [$payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+    }
+
+    public function deleteSLA(Request $request, $description = null): JsonResponse
     {
         // build the payload
         $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
         // build the full payload
-        $payload = $this->DeleteSLAPayloadFull($delete_sla_payload, $request->dataset_id);
-
-        return response()->json([
-            'status' => 202,
-            'description' => 'not send to PSO',
-            'original_payload' => [$payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+        $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, 'SLA');
+//        $payload = $this->DeleteSLAPayloadFull($delete_sla_payload, $request->dataset_id); // refactored this to use to deleteobjectfull
+        // todo actually send this to PSO therefore it should be using sendpayloadtoPSO method
+        return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, $description);
+//        return response()->json([
+//            'status' => 202,
+//            'description' => $description ?: 'not send to PSO',
+//            'original_payload' => [$payload]
+//        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 
     private function DeleteSLAPayloadFull($sla_payload, $dataset_id): array
@@ -194,6 +230,18 @@ class IFSPSOActivityService extends IFSService
                 'Input_Reference' => $this->InputReferenceData("Deleting SLA from the thingy", $dataset_id, 'CHANGE'),
                 'Object_Deletion' => $sla_payload,//$this->ActivityStatusPartPayload($activity_id, $status, $resource_id, $fixed_resource, $date_time_fixed),
 
+            ]
+        ];
+    }
+
+
+    private function DeleteObjectFull($payload, $dataset_id, $description): array
+    {
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $this->InputReferenceData("Deleting " . $description . " from the thingy", $dataset_id, 'CHANGE'),
+                'Object_Deletion' => $payload
             ]
         ];
     }
