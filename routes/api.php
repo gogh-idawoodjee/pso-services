@@ -42,6 +42,9 @@ Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::c
 
 // appointment
 Route::post('/appointment', [PSOAppointmentController::class, 'store']);
+Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show']);
+Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'update']);
+Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']);
 
 // resource (???)
 Route::patch('/resource/{resource_id}/manualschedule', [PSOResourceShiftController::class, 'update']);
