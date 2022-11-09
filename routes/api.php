@@ -49,10 +49,12 @@ Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController
 // resource (???)
 Route::patch('/resource/{resource_id}/manualschedule', [PSOResourceShiftController::class, 'update']);
 Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
-Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
-Route::delete('/unavailability/{unavailability_id}/delete', [PSOUnavailabilityController::class, 'destroy']);
+
 Route::get('/resource/', [PSOResourceController::class, 'index']);
 Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show']);
 
+Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
+Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
+Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 
 //Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']); // doesn't exist yet

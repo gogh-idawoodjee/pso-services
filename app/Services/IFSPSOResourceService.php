@@ -375,6 +375,126 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+
+    public function updateUnavailability(Request $request, $unavailability_id)//: JsonResponse
+    {
+
+        // first do a get on the first one
+        // aw shit, can't do a get on unavailabilities
+        // but I can do a get on the resource?
+        // nope resource GET doesn't return unavailabilities
+        // then first we're going to do a get on the schedule
+
+        $unavailabilities = [$unavailability_id];
+        if ($request->unavailabilities) {
+            $unavailabilities = collect($request->unavailabilities)->push($unavailability_id);
+        }
+
+
+        try {
+            $schedule = Http::withHeaders([
+                'apiKey' => $this->token
+            ])->timeout(5)
+                ->connectTimeout(5)
+                ->get(
+                    $request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+                    [
+                        'includeInput' => 'true',
+                        'includeOutput' => 'true',
+                        'datasetId' => $request->dataset_id
+                    ]);
+        } catch (ConnectionException) {
+            return $this->IFSPSOAssistService->apiResponse(406, 'Something Failed Getting the Schedule, double check your dataset', $request->all());
+        }
+
+        //        return $schedule_data;
+
+        if (Arr::has($schedule->collect()->first(), 'Activity') && Arr::has($schedule->collect()->first(), 'Allocation')) {
+            $grouped_activities = collect($schedule->collect()->first()['Activity'])->mapWithKeys(function ($activity) {
+                return [$activity['id'] => $activity];
+            })->only($unavailabilities);
+
+
+            $grouped_allocations = collect($schedule->collect()->first()['Allocation'])->mapWithKeys(function ($allocation) {
+                return [$allocation['activity_id'] => $allocation];
+//            return $allocation;
+            })->only($unavailabilities);
+
+            if ($grouped_activities->count() == 0 || $grouped_allocations->count() == 0) {
+                // if none of those exist in the schedule return a 404
+                return $this->IFSPSOAssistService->apiResponse(404, 'no NAs found', ['NAs sent' => $unavailabilities]);
+            }
+        } else {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Schedule is Pretty Empty', ['NAs sent' => $unavailabilities]);
+        }
+
+
+        // all these NAs will share a single time pattern based on the input (if there is one)
+        $time_pattern_id = Str::uuid()->getHex();
+        $duration = $request->duration ? 'PT' . $request->duration . 'H' : $grouped_allocations->first()['duration'];
+        $tz = null;
+        if ($request->time_zone) {
+            $tz = '+' . $request->time_zone . ':00';
+            if ($request->time_zone < 10 && $request->time_zone > -10) {
+                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
+            }
+        } else {
+            $tz = Str::of($grouped_allocations->first()['activity_start'])->substr(20, 6);
+        }
+
+        $category_id = $request->category_id ?: $grouped_activities->first()['activity_type_id'];
+        $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated from the thingy on ' . Carbon::now()->toDayDateTimeString();
+
+        $base_time = ($request->base_time ? $request->base_time . ':00' : Str::of($grouped_allocations->first()['activity_start'])->substr(1, 19)) . $tz;
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability from the Thingy');
+        $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
+        foreach ($grouped_activities as $na) {
+            $ram_unavailability_payload[] = $this->RAMUnavailabilityPayloadPart(
+                $grouped_allocations[$na['id']]['resource_id'], $time_pattern_id, $category_id, $description);
+        }
+
+        $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
+
+        // send to PSO if needed
+        $desc200 = (count($ram_unavailability_payload) > 1 ? count($ram_unavailability_payload) . ' Unavailabilities' : count($ram_unavailability_payload) . ' Unavailability') . ' sent to PSO';
+
+
+        return $this->IFSPSOAssistService->processPayload(
+            $request->send_to_pso,
+            $payload,
+            $this->token,
+            $request->base_url,
+            $desc200,
+            true,
+            $request->dataset_id,
+            $request->rota_id
+        );
+
+        /*
+
+
+
+
+        $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
+        $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
+        $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
+*/
+        // send to PSO if needed
+
+//        return $this->IFSPSOAssistService->processPayload(
+//            $request->send_to_pso,
+//            $payload,
+//            $this->token,
+//            $request->base_url,
+//            'Unavailability sent to PSO',
+//            true,
+//            $request->dataset_id,
+//            $request->rota_id
+//        );
+
+
+    }
+
     private function RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $category_id, $description): array
     {
         return [

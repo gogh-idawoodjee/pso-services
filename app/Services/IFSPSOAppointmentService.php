@@ -145,7 +145,8 @@ class IFSPSOAppointmentService extends IFSService
                 'sla_type_id' => $activity->sla_type_id,
                 'priority' => $activity->prioirty,
                 'start_based' => $activity->start_based,
-                'dataset_id' => $request->dataset_id
+                'dataset_id' => $request->dataset_id,
+                'send_tp_pso' => true
             ]);
 
 
@@ -201,7 +202,6 @@ class IFSPSOAppointmentService extends IFSService
                 'base_url' => $request->base_url
             ]);
         // trash the old SLA
-//        return $activity_request_trash;
         $activity_to_trash->deleteSLA($activity_request_trash, "deleting activity sla - declined appointments");
 
         // generate the new SLA

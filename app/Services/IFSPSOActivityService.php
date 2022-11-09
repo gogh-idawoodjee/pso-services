@@ -198,12 +198,13 @@ class IFSPSOActivityService extends IFSService
     {
         $delete_activity_payload = $this->DeleteActivityPayloadPart($request->activity_id);
         $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
-        // todo actually send this to PSO
-        return response()->json([
-            'status' => 202,
-            'description' => $description ?: 'not send to PSO',
-            'original_payload' => [$payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
+//        return response()->json([
+//            'status' => 202,
+//            'description' => $description ?: 'not send to PSO',
+//            'original_payload' => [$payload]
+//        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 
     public function deleteSLA(Request $request, $description = null): JsonResponse
@@ -213,13 +214,8 @@ class IFSPSOActivityService extends IFSService
         // build the full payload
         $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, 'SLA');
 //        $payload = $this->DeleteSLAPayloadFull($delete_sla_payload, $request->dataset_id); // refactored this to use to deleteobjectfull
-        // todo actually send this to PSO therefore it should be using sendpayloadtoPSO method
         return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, $description);
-//        return response()->json([
-//            'status' => 202,
-//            'description' => $description ?: 'not send to PSO',
-//            'original_payload' => [$payload]
-//        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
     }
 
     private function DeleteSLAPayloadFull($sla_payload, $dataset_id): array

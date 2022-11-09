@@ -62,7 +62,7 @@ class IFSPSOAssistService extends IFSService
     {
 
         // todo first attempt at refactor using classes
-        $input_reference = (new InputReference("Update Rota from the Thingy", 'CHANGE', $dataset_id, $datetime))->toJson();
+//        $input_reference = (new InputReference("Update Rota from the Thingy", 'CHANGE', $dataset_id, $datetime))->toJson();
 
         return [
             'dsScheduleData' => [
@@ -276,7 +276,7 @@ class IFSPSOAssistService extends IFSService
             $response = $this->sendPayloadToPSO($payload, $token, $base_url);
 
 
-            if ($response->json('InternalId') == "0") {
+            if ($response->json('InternalId') > -1) {
                 // update the rota
                 if ($requires_rota_update) {
                     $this->sendRotaToDSEPayload(
@@ -288,7 +288,7 @@ class IFSPSOAssistService extends IFSService
                     );
                 }
                 // send the good response
-                return $this->apiResponse(200, "Payload sent to PSO. " . $desc_200, $payload);
+                return $this->apiResponse(200, ("Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : $desc_200)), $payload);
             } else {
                 if ($response->serverError()) {
                     return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
@@ -310,8 +310,9 @@ class IFSPSOAssistService extends IFSService
                     return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
             }
-        }
+        } else {
 
-        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+            return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+        }
     }
 }

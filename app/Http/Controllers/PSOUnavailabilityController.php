@@ -13,7 +13,7 @@ class PSOUnavailabilityController extends Controller
 {
 
     /**
-     * Store a newly created resource in storage.
+     * create an unavailability
      *
      * @param Request $request
      * @param $resource_id
@@ -67,15 +67,56 @@ class PSOUnavailabilityController extends Controller
 
 
     /**
-     * Update the specified resource in storage.
+     * updates one or more unavailabilities
      *
      * @param Request $request
-     * @param int $id
-     * @return void
+     * @param $unavailability_id
+     * @return JsonResponse
+     * @throws ValidationException
      */
-    public function update(Request $request, $id): void
+    public function update(Request $request, $unavailability_id)//: JsonResponse
     {
-        //
+
+//        $request->merge(['unavailability_id' => $unavailability_id]);
+        $request->validate([
+            'description' => 'string:2000',
+            'category_id' => 'string',
+            'duration' => 'numeric|between:0,24',
+            'time_zone' => 'numeric|between:-24,24', // now made optional
+            'base_time' => 'date_format:Y-m-d\TH:i',
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
+            'rota_id' => 'string|required',
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string'
+        ]);
+
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+
+        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+        return $resource_init->updateUnavailability($request, $unavailability_id);
+
     }
 
     /**

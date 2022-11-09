@@ -13,8 +13,8 @@ class PSOAppointmentController extends Controller
 {
     /**
      * see if the appointment is still available
-     *
-     * @return void
+     * still using HTTP POST instead of HTTP GET for show method
+     * @return JsonResponse
      * @throws ValidationException
      */
     public function show(Request $request, $appointment_request_id)
@@ -43,6 +43,14 @@ class PSOAppointmentController extends Controller
         ])->validate();
 
         $appointed = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        if (!$appointed->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
 
         $appointed->checkAppointed($request, $appointment_request_id);
     }
@@ -96,6 +104,15 @@ class PSOAppointmentController extends Controller
         ])->validate();
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        if (!$appointment->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+
         return $appointment->getAppointment($request);
 
 
@@ -139,8 +156,18 @@ class PSOAppointmentController extends Controller
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
 
+
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
-        return $appointment->acceptAppointment($request,$appointment_request_id);
+
+        if (!$appointment->isAuthenticated()) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+
+        return $appointment->acceptAppointment($request, $appointment_request_id);
 
     }
 
@@ -177,7 +204,15 @@ class PSOAppointmentController extends Controller
         ])->validate();
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
-        return $appointment->declineAppointment($request,$appointment_request_id);
+
+        if (!$appointment->isAuthenticated()) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+        return $appointment->declineAppointment($request, $appointment_request_id);
 
     }
 
