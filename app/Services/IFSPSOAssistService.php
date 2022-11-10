@@ -27,51 +27,19 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
-    // no longer used
-    /*
-    public function InputReferenceData($description, $dataset_id, $input_type, $datetime, $dse_duration = null, $process_type = null, $appointment_window = null)
-    {
-
-
-        $input_reference =
-            [
-                'datetime' => $datetime ?: Carbon::now()->toAtomString(),
-                'id' => Str::orderedUuid()->getHex()->toString(),
-                'description' => "$description",
-                'input_type' => strtoupper($input_type),
-                'organisation_id' => '2',
-                'dataset_id' => $dataset_id,
-            ];
-
-        if ($dse_duration) {
-            $input_reference = Arr::add($input_reference, 'duration', $dse_duration);
-        }
-
-        if ($process_type) {
-            $input_reference = Arr::add($input_reference, 'process_type', strtoupper($process_type));
-        }
-
-        if ($appointment_window != null) {
-            $input_reference = Arr::add($input_reference, 'appointment_window_duration', $appointment_window);
-        }
-
-
-        return $input_reference;
-
-    } */
 
     public function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
-
-        // todo first attempt at refactor using classes
-        $input_reference = (new InputReference("Update Rota from the Thingy",
+        $input_reference = (new InputReference(
+            "Update Rota from the Thingy",
             'CHANGE',
-            $dataset_id, $datetime))->toJson();
+            $dataset_id,
+            $datetime)
+        )->toJson();
 
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-//                'Input_Reference' => $this->InputReferenceData("Update Rota from the Thingy", $dataset_id, "CHANGE", $datetime ?: Carbon::now()->toAtomString()),
                 'Input_Reference' => $input_reference,
                 'Source_Data' => $this->SourceData(),
                 'Source_Data_Parameter' => $this->SourceDataParameter($rota_id ?: $dataset_id),
@@ -81,7 +49,6 @@ class IFSPSOAssistService extends IFSService
 
     public function sendRotaToDSEPayload($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null): JsonResponse
     {
-
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
         if ($send_to_pso) {
             $rotatodse = Http::withHeaders(['apiKey' => $this->token])
@@ -99,11 +66,8 @@ class IFSPSOAssistService extends IFSService
             // todo some more http error validation here
 
         }
-        return response()->json([
-            'status' => 202,
-            'description' => 'not sent to PSO',
-            'original_payload' => [$payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+        return $this->apiResponse(202, 'not sent to PSO', $payload);
 
     }
 
@@ -139,7 +103,7 @@ class IFSPSOAssistService extends IFSService
 
         $description = $request->description ?: 'Init from the Thingy';
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
-        $dse_duration = 'P' . $request->dse_duration . 'D';
+        $dse_duration = 'P' . $request->dse_duration . 'D'; // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
             $appointment_window = 'P' . $request->appointment_window . 'D';
         } else {
@@ -148,15 +112,6 @@ class IFSPSOAssistService extends IFSService
         $process_type = $request->process_type ?: 'APPOINTMENT';
         $rota_id = $request->rota_id ?: $request->dataset_id;
 
-//        $input_ref = $this->InputReferenceData(
-//            $description,
-//            $request->dataset_id,
-//            "LOAD",
-//            $datetime,
-//            $dse_duration,
-//            $process_type,
-//            $appointment_window
-//        );
 
         $input_ref = (new InputReference(
             $description,
@@ -198,12 +153,7 @@ class IFSPSOAssistService extends IFSService
 
         }
 
-        return response()->json([
-            'status' => 202,
-            'description' => 'not sent to PSO',
-            'original_payload' => [$payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
+        return $this->apiResponse(202, 'not sent to PSO', $payload);
 
     }
 
@@ -224,7 +174,6 @@ class IFSPSOAssistService extends IFSService
 
 
         if ($usage->collect()->first()) {
-
 
             $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
 

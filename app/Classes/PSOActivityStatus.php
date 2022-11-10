@@ -2,6 +2,7 @@
 
 namespace App\Classes;
 
+use App\Helpers\Helper;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 
@@ -17,15 +18,17 @@ class PSOActivityStatus extends Activity
     private ?string $resource_id;
     private ?string $reason;
 
-    public function __construct($status_id, $visit_id, $duration="0", $fixed = false, $resource_id = null,$reason=null,$date_time_fixed=null)
+    public function __construct($status_id, $visit_id, $duration = "0", $fixed = false, $resource_id = null, $reason = null, $date_time_fixed = null)
     {
         $this->status_id = $status_id;
         $this->date_time_status = Carbon::now()->toAtomString();
         $this->date_time_stamp = Carbon::now()->toAtomString();
         $this->visit_id = $visit_id ?: 1;
         $this->resource_id = $resource_id;
-        $this->duration = 'PT' . intdiv(($duration), 60) . 'H' . (($duration) % 60) . 'M';
+        $this->duration = Helper::setPSODuration($duration);
         $this->fixed = $fixed ?: ($status_id != -1 && $status_id != 0);
+        $this->date_time_fixed = $date_time_fixed;
+        $this->reason = $reason;
     }
 
     public function toJson($activity_id)
@@ -39,7 +42,7 @@ class PSOActivityStatus extends Activity
                 'fixed' => $this->fixed,
                 'date_time_stamp' => $this->date_time_stamp,
                 'duration' => $this->duration,
-                'reason'=>$this->reason
+                'reason' => $this->reason
             ];
 
         if ($this->status_id != -1 && $this->status_id != 0) {
@@ -48,9 +51,7 @@ class PSOActivityStatus extends Activity
             $status_json = Arr::add($status_json, 'date_time_earliest', $this->date_time_fixed);
         }
 
-
         return $status_json;
-        // todo add the merge thingy here
     }
 
 }

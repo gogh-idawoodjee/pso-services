@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 class PSOUnavailabilityController extends Controller
 {
 
-    // todo update this whole thing, duration should be a minutes value
 
     /**
      * create an unavailability
@@ -28,7 +27,7 @@ class PSOUnavailabilityController extends Controller
         $request->validate([
             'description' => 'string:2000',
             'category_id' => 'string|required',
-            'duration' => 'numeric|between:0,24|required',
+            'duration' => 'numeric|gt:0|required',
             'time_zone' => 'numeric|between:-24,24', // now made optional
             'base_time' => 'date_format:Y-m-d\TH:i|required',
             'send_to_pso' => 'boolean',

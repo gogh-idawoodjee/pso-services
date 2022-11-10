@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Classes\InputReference;
+use App\Helpers\Helper;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateInterval;
@@ -211,7 +212,6 @@ class IFSPSOResourceService extends IFSService
             $dataset_id))->toJson();
 
 
-
         return [
             'dsScheduleData' => [
                 '@xmlns' => ('http://360Scheduling.com/Schema/dsScheduleData.xsd'),
@@ -258,47 +258,47 @@ class IFSPSOResourceService extends IFSService
             $shift_data->dataset_id,
             $shift_data->rota_id
         );
-       /*  if ($shift_data->send_to_pso) {
-            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
+        /*  if ($shift_data->send_to_pso) {
+             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
 
-            // do the following only if it's not a 500 series
-            if ($response->successful()) {
+             // do the following only if it's not a 500 series
+             if ($response->successful()) {
 
-                // todo, we can actually do a get on the resource again, find the shift, do a compare on the description and compare to the payload; if it's the same description, then we know for sure it worked
+                 // todo, we can actually do a get on the resource again, find the shift, do a compare on the description and compare to the payload; if it's the same description, then we know for sure it worked
 
-                if ($response->json('InternalId') == "0") {
-                    // then we send a Rota Update, so we can see the changes
-                    // but maybe only do this if the payload above doesn't fail?
-                    $this->IFSPSOAssistService->sendRotaToDSEPayload(
-                        $shift_data->dataset_id,
-                        $shift_data->rota_id,
-                        $shift_data->base_url,
-                        null,
-                        true
-                    );
+                 if ($response->json('InternalId') == "0") {
+                     // then we send a Rota Update, so we can see the changes
+                     // but maybe only do this if the payload above doesn't fail?
+                     $this->IFSPSOAssistService->sendRotaToDSEPayload(
+                         $shift_data->dataset_id,
+                         $shift_data->rota_id,
+                         $shift_data->base_url,
+                         null,
+                         true
+                     );
 
-                    return $this->IFSPSOAssistService->apiResponse(200, "Rota Item Updated", $payload);
-                }
+                     return $this->IFSPSOAssistService->apiResponse(200, "Rota Item Updated", $payload);
+                 }
 
-                if ($response->json('Code') == 26) {
-                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-                }
+                 if ($response->json('Code') == 26) {
+                     return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                 }
 
-                if ($response->json('Code') == 401) {
-                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                }
-            } else {
-                if ($response->json('Code') == 26) {
-                    return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-                }
+                 if ($response->json('Code') == 401) {
+                     return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                 }
+             } else {
+                 if ($response->json('Code') == 26) {
+                     return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+                 }
 
-                if ($response->json('Code') == 401) {
-                    return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                }
-                return $this->IFSPSOAssistService->apiResponse(500, "Some issues sending the payload", $payload);
-            }
-        } */
-        //return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
+                 if ($response->json('Code') == 401) {
+                     return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
+                 }
+                 return $this->IFSPSOAssistService->apiResponse(500, "Some issues sending the payload", $payload);
+             }
+         } */
+        //return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double-check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
 
 
     }
@@ -345,6 +345,8 @@ class IFSPSOResourceService extends IFSService
 
     private function getShifts(): void
     {
+
+        $this->shifts = [];
         if (isset($this->pso_resource['Shift'])) {
             if (isset($this->pso_resource['Shift']['id'])) {
                 $this->shifts[] = $this->pso_resource['Shift'];
@@ -352,7 +354,6 @@ class IFSPSOResourceService extends IFSService
                 $this->shifts = $this->pso_resource['Shift'];
             }
         }
-        $this->shifts = [];
 
     }
 
@@ -360,14 +361,9 @@ class IFSPSOResourceService extends IFSService
     {
 
         $time_pattern_id = Str::uuid()->getHex();
-        $duration = 'PT' . $request->duration . 'H';
-        $tz = null;
-        if ($request->time_zone) {
-            $tz = '+' . $request->time_zone . ':00';
-            if ($request->time_zone < 10 && $request->time_zone > -10) {
-                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
-            }
-        }
+        $duration = Helper::setPSODuration($request->duration);
+
+        $tz = Helper::setTimeZone($request->time_zone);
 
         $base_time = $request->base_time . ':00' . $tz;
 
@@ -389,15 +385,13 @@ class IFSPSOResourceService extends IFSService
             $request->rota_id
         );
 
-
     }
-
 
     public function updateUnavailability(Request $request, $unavailability_id)//: JsonResponse
     {
 
         // first do a get on the first one
-        // aw shit, can't do a get on unavailabilities
+        // aw shit, can't do a get on unavailabilities,
         // but I can do a get on the resource?
         // nope resource GET doesn't return unavailabilities
         // then first we're going to do a get on the schedule
@@ -525,10 +519,10 @@ class IFSPSOResourceService extends IFSService
 
     public function DeleteUnavailability(Request $request): JsonResponse
     {
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Delete Unavailability from the Thingy');
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability from the Thingy');
 
-        $delete_data =[''];
-
+        $delete_data = [''];
+        // todo refactor this to delete class
         $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
         $payload = $this->RAMDataDeletePayload($ram_update_payload, $ram_data_update);
 

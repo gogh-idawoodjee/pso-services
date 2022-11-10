@@ -12,15 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class PSOResourceEventController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return void
-     */
-    public function index()
-    {
-        //
-    }
 
 
     /**

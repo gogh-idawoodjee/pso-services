@@ -59,7 +59,7 @@ class PSOActivitySLAController extends Controller
             'password' => 'string',
             'activity_id' => 'string|required',
             'sla_type_id' => 'string|required',
-            'prioirty' => 'numeric',
+            'priority' => 'numeric',
             'start_based' => 'boolean'
         ]);
 

@@ -61,8 +61,6 @@ class PSOResourceShiftController extends Controller
         ])->validate();
 
 
-        // so here we're authenticated
-        // send the details to the service to get and build
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
 
@@ -73,7 +71,7 @@ class PSOResourceShiftController extends Controller
             ]);
 
         }
-        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource
+        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource // technically we could do this from the method
 
         // send all that back to the service and let it do the work
         return $resource_init->setManualScheduling($request);

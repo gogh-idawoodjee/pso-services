@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PSOActivityController extends Controller
 {
@@ -18,6 +19,7 @@ class PSOActivityController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
@@ -79,7 +81,8 @@ class PSOActivityController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
+     * @param Request $request
+     * @param $activity_id
      * @return Response
      */
     public function destroy(Request $request, $activity_id)

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use App\Classes\PSOActivityStatus;
+use App\Helpers\Helper;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,14 +32,15 @@ class IFSPSOActivityService extends IFSService
 
     public function createActivity(Request $request)
     {
-        // todo this needs to go into a helper elf
-        $tz = null;
-        if ($request->time_zone) {
-            $tz = '+' . $request->time_zone . ':00';
-            if ($request->time_zone < 10 && $request->time_zone > -10) {
-                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
-            }
-        }
+        //  this needs to go into a helper elf
+//        $tz = null;
+//        if ($request->time_zone) {
+//            $tz = '+' . $request->time_zone . ':00';
+//            if ($request->time_zone < 10 && $request->time_zone > -10) {
+//                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
+//            }
+//        }
+        $tz = Helper::setTimeZone($request->time_zone);
 
         $relative_day = $request->activity_id ?: 1;
         $hours_to_add = ($request->window_size ?: 0) == 0 ? 8 : ($request->window_size ?: 0);
@@ -154,14 +156,14 @@ class IFSPSOActivityService extends IFSService
         $pso_status = config('pso-services.statuses.all.' . $status);
 
         $activity_part_payload = (
-            new PSOActivityStatus(
-                $status,
-                1,
-                0,
-                false,
-                $request->resource_id,
-                'Update Status from the thingy',
-                $request->date_time_fixed)
+        new PSOActivityStatus(
+            $status,
+            1,
+            0,
+            false,
+            $request->resource_id,
+            'Update Status from the thingy',
+            $request->date_time_fixed)
         )->toJson($request->activity_id);
 
 //        $activity_part_payload = $this->ActivityStatusPartPayload(
@@ -270,7 +272,7 @@ class IFSPSOActivityService extends IFSService
 
     public function deleteActivity(Request $request, $description = null)
     {
-        $delete_data =  ['object_type_id' => 'activity', 'object_pk_name1' => 'id', 'object_pk1' => $request->activity_id];
+        $delete_data = ['object_type_id' => 'activity', 'object_pk_name1' => 'id', 'object_pk1' => $request->activity_id];
 
         $delete_activity_payload = $this->DeleteObjectPart($delete_data);
         $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
@@ -289,11 +291,11 @@ class IFSPSOActivityService extends IFSService
             'object_pk_name2' => 'sla_type_id',
             'object_pk2' => $request->sla_type_id,
             'object_pk_name3' => 'priority',
-            'object_pk3' => $request->priority?:1,
+            'object_pk3' => $request->priority ?: 1,
             'object_pk_name4' => 'start_based',
             'object_pk4' => (bool)$request->start_based,
-            ]);
-$delete_sla_payload=$this->deleteActivity($delete_data);
+        ]);
+        $delete_sla_payload = $this->deleteActivity($delete_data);
         //        $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
         // build the full payload
         $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, 'SLA');
@@ -319,7 +321,7 @@ $delete_sla_payload=$this->deleteActivity($delete_data);
 
     private function DeleteObjectPart($delete_data)
     {
-
+        // todo this is becoming a class
         // this input expects an array of types + names + pks
 
         $additional_pk = [
