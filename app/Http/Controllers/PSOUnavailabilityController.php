@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 class PSOUnavailabilityController extends Controller
 {
 
+    // todo update this whole thing, duration should be a minutes value
+
     /**
      * create an unavailability
      *

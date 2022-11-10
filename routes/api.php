@@ -1,6 +1,7 @@
 <?php
 
 //use App\Http\Controllers\PSOActivityController;
+use App\Http\Controllers\PSOActivityController;
 use App\Http\Controllers\PSOActivitySLAController;
 use App\Http\Controllers\PSOActivityStatusController;
 use App\Http\Controllers\PSOAppointmentController;
@@ -39,6 +40,8 @@ Route::get('/usage', [PSOAssistController::class, 'index']);
 // activity
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
 Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
+Route::post('/activity/', [PSOActivityController::class, 'store']);
+
 
 // appointment
 Route::post('/appointment', [PSOAppointmentController::class, 'store']);

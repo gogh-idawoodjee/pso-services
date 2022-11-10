@@ -27,6 +27,8 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
+    // no longer used
+    /*
     public function InputReferenceData($description, $dataset_id, $input_type, $datetime, $dse_duration = null, $process_type = null, $appointment_window = null)
     {
 
@@ -56,18 +58,21 @@ class IFSPSOAssistService extends IFSService
 
         return $input_reference;
 
-    }
+    } */
 
     public function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
 
         // todo first attempt at refactor using classes
-//        $input_reference = (new InputReference("Update Rota from the Thingy", 'CHANGE', $dataset_id, $datetime))->toJson();
+        $input_reference = (new InputReference("Update Rota from the Thingy",
+            'CHANGE',
+            $dataset_id, $datetime))->toJson();
 
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-                'Input_Reference' => $this->InputReferenceData("Update Rota from the Thingy", $dataset_id, "CHANGE", $datetime ?: Carbon::now()->toAtomString()),
+//                'Input_Reference' => $this->InputReferenceData("Update Rota from the Thingy", $dataset_id, "CHANGE", $datetime ?: Carbon::now()->toAtomString()),
+                'Input_Reference' => $input_reference,
                 'Source_Data' => $this->SourceData(),
                 'Source_Data_Parameter' => $this->SourceDataParameter($rota_id ?: $dataset_id),
             ]
@@ -143,15 +148,25 @@ class IFSPSOAssistService extends IFSService
         $process_type = $request->process_type ?: 'APPOINTMENT';
         $rota_id = $request->rota_id ?: $request->dataset_id;
 
-        $input_ref = $this->InputReferenceData(
+//        $input_ref = $this->InputReferenceData(
+//            $description,
+//            $request->dataset_id,
+//            "LOAD",
+//            $datetime,
+//            $dse_duration,
+//            $process_type,
+//            $appointment_window
+//        );
+
+        $input_ref = (new InputReference(
             $description,
+            'LOAD',
             $request->dataset_id,
-            "LOAD",
             $datetime,
             $dse_duration,
             $process_type,
-            $appointment_window
-        );
+            $appointment_window)
+        )->toJson();
 
         return [
             'dsScheduleData' => [

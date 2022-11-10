@@ -222,6 +222,8 @@ class IFSPSOAppointmentService extends IFSService
         $payload = $this->AppointmentOfferResponsePayload($input_ref, $accept_payload);
         return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, 'appointment_offer_accepted');
 
+        // todo send the updated activity
+
     }
 
     private function AppointmentOfferResponsePayload($input_reference, $offer_response)

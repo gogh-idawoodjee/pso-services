@@ -11,6 +11,7 @@ class PSOActivity extends Activity
     private string $activity_class_id;
     private string $activity_type_id;
     private int $priority;
+    private bool $fixed;
 
     private string $description;
     private string $date_time_created;
@@ -27,7 +28,6 @@ class PSOActivity extends Activity
     {
 
 
-//        $this->activity_skill = [];
         $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
         $this->activity_class_id = 'CALL';
 
@@ -37,6 +37,8 @@ class PSOActivity extends Activity
         $this->date_time_created = Carbon::now()->toAtomString();
         $this->date_time_open = Carbon::now()->toAtomString();
         $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
+        $this->fixed = (bool)$activity_data->fixed;
+
 
         // build the skills
         if ($activity_data->skill) {
@@ -49,11 +51,11 @@ class PSOActivity extends Activity
         if ($is_ab_request) {
             $this->activity_status = new PSOActivityStatus(-1, 1, $activity_data->duration);
         } else {
-            $this->activity_status = new PSOActivityStatus($activity_data->duration, $activity_data->visit_id ?: 1, $activity_data->duration, $activity_data->fixed, $activity_data->resource_id);
+            $this->activity_status = new PSOActivityStatus($activity_data->status_id, $activity_data->visit_id ?: 1, $activity_data->duration, $this->fixed, $activity_data->resource_id);
         }
 
         // build the location
-        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long, $this->activity_id));
+        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long));
 
         $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_end));
 

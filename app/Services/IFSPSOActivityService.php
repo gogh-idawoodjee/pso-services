@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Classes\InputReference;
+use App\Classes\PSOActivity;
+use App\Classes\PSOActivityStatus;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -25,7 +29,50 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    public function getActivity(Request $request, $activity_id)
+    public function createActivity(Request $request)
+    {
+        // todo this needs to go into a helper elf
+        $tz = null;
+        if ($request->time_zone) {
+            $tz = '+' . $request->time_zone . ':00';
+            if ($request->time_zone < 10 && $request->time_zone > -10) {
+                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
+            }
+        }
+
+        $relative_day = $request->activity_id ?: 1;
+        $hours_to_add = ($request->window_size ?: 0) == 0 ? 8 : ($request->window_size ?: 0);
+
+
+        $activity_build_data = new Request([
+            'activity_id' => $request->activity_id ?: Str::orderedUuid()->getHex()->toString(),
+            'lat' => $request->lat,
+            'long' => $request->long,
+            'sla_start' => Carbon::now()->addDay($relative_day)->setTime(8, 0)->toDateTimeLocalString() . $tz,
+            'sla_end' => Carbon::now()->addDay($relative_day)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
+            'sla_type_id' => $request->sla_type_id,
+            'activity_type_id' => $request->activity_type_id,
+            'status_id' => 0,
+            'duration' => $request->duration
+        ]);
+
+        $activity = new PSOActivity($activity_build_data);
+
+        $input_ref = (new InputReference(
+            'Instant Activity Generator from the thingy',
+            'CHANGE',
+            $request->dataset_id,
+            $request->input_datetime
+        ))->toJson();
+
+        $payload = $this->ActivityFullPayload($input_ref, $activity->FullActivityObject());
+
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'quick activity sent to PSO');
+
+
+    }
+
+    public function getActivity(Request $request, $activity_id): Collection
     {
         $activity = Http::withHeaders(['apiKey' => $this->token])
             ->get($request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity',
@@ -39,7 +86,7 @@ class IFSPSOActivityService extends IFSService
         return $this->activity_object = $activity->collect();
     }
 
-    public function activityExists()
+    public function activityExists(): bool
     {
         return collect($this->activity_object->first())->has('Activity');
     }
@@ -66,7 +113,16 @@ class IFSPSOActivityService extends IFSService
 
         // build the individual status update
         foreach ($newsuggestions as $suggestion) {
-            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], config('pso-services.statuses.commit_status'), $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
+//            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], config('pso-services.statuses.commit_status'), $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
+            $activity_part_payload[] = (new PSOActivityStatus(
+                config('pso-services.statuses.commit_status'),
+                1,
+                0,
+                true,
+                $suggestion['resource_id'],
+                'From the Commit Service Thingy',
+                $suggestion['expected_start_datetime'])
+            )->toJson($suggestion['activity_id']);
         }
 
         // build the full payload
@@ -97,13 +153,24 @@ class IFSPSOActivityService extends IFSService
         // build the payload
         $pso_status = config('pso-services.statuses.all.' . $status);
 
-        $activity_part_payload = $this->ActivityStatusPartPayload(
-            $request->activity_id,
-            $pso_status,
-            $request->resource_id,
-            $request->date_time_fixed,
-            'From the change status thingy'
-        );
+        $activity_part_payload = (
+            new PSOActivityStatus(
+                $status,
+                1,
+                0,
+                false,
+                $request->resource_id,
+                'Update Status from the thingy',
+                $request->date_time_fixed)
+        )->toJson($request->activity_id);
+
+//        $activity_part_payload = $this->ActivityStatusPartPayload(
+//            $request->activity_id,
+//            $pso_status,
+//            $request->resource_id,
+//            $request->date_time_fixed,
+//            'From the change status thingy'
+//        );
 
         $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
 
@@ -143,21 +210,43 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-
-    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
+    private function ActivityFullPayload($input_reference, $activity_payload): array
     {
+
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-                'Input_Reference' => $this->InputReferenceData($description, $dataset_id, "CHANGE"),
+                'Input_Reference' => $input_reference,
+                'Activity' => $activity_payload['Activity'],
+                'Activity_Skill' => $activity_payload['Activity_Skill'],
+                'Activity_SLA' => $activity_payload['Activity_SLA'],
+                'Activity_Status' => $activity_payload['Activity_Status'],
+                'Location' => $activity_payload['Location'],
+            ]
+        ];
+    }
+
+
+    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
+    {
+        $input_ref = (new InputReference($description, 'Change', $dataset_id))->toJson();
+
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $input_ref,
                 'Activity_Status' => $activity_status_payload,
 
             ]
         ];
     }
 
+    // no longer needed
+    /*
     private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed, $reason): array
     {
+        // all instances of this should use PSOActivityStatus
+
         $payload = [
             'activity_id' => "$activity_id",
             'status_id' => $status,
@@ -176,72 +265,96 @@ class IFSPSOActivityService extends IFSService
 
         return $payload;
 
-    }
-
-
-    private function InputReferenceData($description, $dataset_id, $input_type): array
-    {
-        return
-            [
-                'datetime' => Carbon::now()->toAtomString(),
-                'id' => Str::orderedUuid()->getHex()->toString(),
-                'description' => "$description",
-                'input_type' => strtoupper($input_type),
-                'organisation_id' => '2',
-                'dataset_id' => $dataset_id,
-            ];
-
-    }
+    } */
 
 
     public function deleteActivity(Request $request, $description = null)
     {
-        $delete_activity_payload = $this->DeleteActivityPayloadPart($request->activity_id);
+        $delete_data =  ['object_type_id' => 'activity', 'object_pk_name1' => 'id', 'object_pk1' => $request->activity_id];
+
+        $delete_activity_payload = $this->DeleteObjectPart($delete_data);
         $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
 
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
-//        return response()->json([
-//            'status' => 202,
-//            'description' => $description ?: 'not send to PSO',
-//            'original_payload' => [$payload]
-//        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
     }
 
     public function deleteSLA(Request $request, $description = null): JsonResponse
     {
         // build the payload
-        $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
+        $delete_data = new Request([
+            'object_type_id' => 'Activity_SLA',
+            'object_pk_name1' => 'activity_id',
+            'object_pk1' => $request->activity_id,
+            'object_pk_name2' => 'sla_type_id',
+            'object_pk2' => $request->sla_type_id,
+            'object_pk_name3' => 'priority',
+            'object_pk3' => $request->priority?:1,
+            'object_pk_name4' => 'start_based',
+            'object_pk4' => (bool)$request->start_based,
+            ]);
+$delete_sla_payload=$this->deleteActivity($delete_data);
+        //        $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
         // build the full payload
         $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, 'SLA');
-//        $payload = $this->DeleteSLAPayloadFull($delete_sla_payload, $request->dataset_id); // refactored this to use to deleteobjectfull
+
         return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, $description);
 
-    }
-
-    private function DeleteSLAPayloadFull($sla_payload, $dataset_id): array
-    {
-        return [
-            'dsScheduleData' => [
-                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-                'Input_Reference' => $this->InputReferenceData("Deleting SLA from the thingy", $dataset_id, 'CHANGE'),
-                'Object_Deletion' => $sla_payload,//$this->ActivityStatusPartPayload($activity_id, $status, $resource_id, $fixed_resource, $date_time_fixed),
-
-            ]
-        ];
     }
 
 
     private function DeleteObjectFull($payload, $dataset_id, $description): array
     {
+
+        $input_ref = (new InputReference(("Deleting " . $description . " from the thingy"), 'CHANGE', $dataset_id))->toJson();
+
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-                'Input_Reference' => $this->InputReferenceData("Deleting " . $description . " from the thingy", $dataset_id, 'CHANGE'),
+                'Input_Reference' => $input_ref,
                 'Object_Deletion' => $payload
             ]
         ];
     }
 
+    private function DeleteObjectPart($delete_data)
+    {
+
+        // this input expects an array of types + names + pks
+
+        $additional_pk = [
+            'pk2' => [
+                'name' => 'object_pk_name2',
+                'pk' => 'object_pk2'
+            ],
+            'pk3' => [
+                'name' => 'object_pk_name3',
+                'pk' => 'object_pk3'
+            ],
+            'pk4' => [
+                'name' => 'object_pk_name4',
+                'pk' => 'object_pk4'
+            ],
+        ];
+
+        $delete_object =
+            [
+                'object_type_id' => $delete_data['object_type_id'],
+                'object_pk_name1' => $delete_data['object_pk_name1'],
+                'object_pk1' => $delete_data['object_pk1']
+            ];
+
+        foreach ($additional_pk as $pk) {
+            if (Arr::has($delete_data, $pk['name'])) {
+                $delete_object = Arr::add($delete_object, $pk['name'], $delete_data[$pk['pk']]);
+            }
+        }
+
+        return $delete_object;
+
+    }
+    // no longer needed
+    /*
     private function DeleteSLAPayloadPart($activity_id, $sla_type, $priority, $start_based): array
     {
         return [
@@ -256,4 +369,5 @@ class IFSPSOActivityService extends IFSService
             'object_pk4' => (bool)$start_based,
         ];
     }
+    */
 }

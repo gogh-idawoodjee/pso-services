@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Classes\InputReference;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateInterval;
@@ -205,10 +206,16 @@ class IFSPSOResourceService extends IFSService
 
     private function ScheduleEventPayload($dataset_id, $schedule_event_payload)
     {
+        $input_reference = (new InputReference("Set Resource Event",
+            'CHANGE',
+            $dataset_id))->toJson();
+
+
+
         return [
             'dsScheduleData' => [
                 '@xmlns' => ('http://360Scheduling.com/Schema/dsScheduleData.xsd'),
-                'Input_Reference' => $this->IFSPSOAssistService->InputReferenceData("Set Resource Event", $dataset_id, "CHANGE", null),
+                'Input_Reference' => $input_reference,
                 'Schedule_Event' => $schedule_event_payload,
 
             ]
@@ -240,8 +247,18 @@ class IFSPSOResourceService extends IFSService
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
 
-        // todo this should move to processPayload
-        if ($shift_data->send_to_pso) {
+
+        return $this->IFSPSOAssistService->processPayload(
+            true,
+            $payload,
+            $this->token,
+            $shift_data->base_url,
+            'Rota Item Updated',
+            true,
+            $shift_data->dataset_id,
+            $shift_data->rota_id
+        );
+       /*  if ($shift_data->send_to_pso) {
             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
 
             // do the following only if it's not a 500 series
@@ -280,8 +297,8 @@ class IFSPSOResourceService extends IFSService
                 }
                 return $this->IFSPSOAssistService->apiResponse(500, "Some issues sending the payload", $payload);
             }
-        }
-        return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
+        } */
+        //return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
 
 
     }
@@ -470,28 +487,6 @@ class IFSPSOResourceService extends IFSService
             $request->rota_id
         );
 
-        /*
-
-
-
-
-        $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
-        $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
-        $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
-*/
-        // send to PSO if needed
-
-//        return $this->IFSPSOAssistService->processPayload(
-//            $request->send_to_pso,
-//            $payload,
-//            $this->token,
-//            $request->base_url,
-//            'Unavailability sent to PSO',
-//            true,
-//            $request->dataset_id,
-//            $request->rota_id
-//        );
-
 
     }
 
@@ -531,6 +526,9 @@ class IFSPSOResourceService extends IFSService
     public function DeleteUnavailability(Request $request): JsonResponse
     {
         $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Delete Unavailability from the Thingy');
+
+        $delete_data =[''];
+
         $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
         $payload = $this->RAMDataDeletePayload($ram_update_payload, $ram_data_update);
 
@@ -550,6 +548,7 @@ class IFSPSOResourceService extends IFSService
 
     private function RAMDataDeletePayloadPart($object_type, $pk, $pkname1 = 'id')
     {
+        // todo make this generic, move delete to the created  service or maybe a delete object class
         return [
             'object_type_id' => $object_type,
             'object_pk_name1' => $pkname1,
