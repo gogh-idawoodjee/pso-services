@@ -29,6 +29,7 @@ class PSOResourceEventController extends Controller
             'event_type' => 'required|in:AO,AF,BO,BF,CE,FIX,RO,RF',
             'lat' => 'numeric|between:-90,90|required_with:long|required_if:event_type,FIX',
             'long' => 'numeric|between:-180,180|required_with:lat|required_if:event_type,FIX',
+            'event_date_time' => 'date',
             'dataset_id' => 'required|string',
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],

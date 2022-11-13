@@ -197,7 +197,7 @@ class IFSPSOResourceService extends IFSService
 
         // todo do we need to check if the resource exists? does it matter?
 
-        $schedule_event = $this->ScheduleEventPayloadPart($event_data->event_type, $resource_id);
+        $schedule_event = $this->ScheduleEventPayloadPart($event_data->event_type, $resource_id, $event_data->event_date_time);
         $payload = $this->ScheduleEventPayload($event_data->dataset_id, $schedule_event);
 
         return $this->IFSPSOAssistService->processPayload(
@@ -231,13 +231,13 @@ class IFSPSOResourceService extends IFSService
         ];
     }
 
-    private function ScheduleEventPayloadPart($event_type, $resource_id): array
+    private function ScheduleEventPayloadPart($event_type, $resource_id, $event_date_time): array
     {
         return
             [
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'date_time_stamp' => Carbon::now()->toAtomString(),
-                'event_date_time' => Carbon::now()->toAtomString(),
+                'event_date_time' => $event_date_time ?: Carbon::now()->toAtomString(),
                 'event_type_id' => strtoupper($event_type),
                 'resource_id' => "$resource_id"
             ];
@@ -266,7 +266,6 @@ class IFSPSOResourceService extends IFSService
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
 
-
         // do the check if we're sending to PSO
         if ($shift_data->send_to_pso) {
 
@@ -281,12 +280,12 @@ class IFSPSOResourceService extends IFSService
                 $shift_data->rota_id
             );
 
+
             // get the resource again
             $resource_init = new IFSPSOResourceService($shift_data->base_url, $this->token, null, null, null, true);
             $resource = $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
             $fresh_shifts = $resource_init->getResourceShiftsRaw();
             $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
-
 
             // compare the shift
             if ($description == $shift_in_question['description']) {
@@ -541,7 +540,8 @@ class IFSPSOResourceService extends IFSService
 
     // todo need a method to check if resource exists before performing a resource function
 
-    private function ResourceExists() {
+    private function ResourceExists()
+    {
 
     }
 

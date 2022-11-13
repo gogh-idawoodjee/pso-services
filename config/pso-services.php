@@ -38,7 +38,10 @@ return [
         'username' => env('PSO_USERNAME', 'admin'),
         'password' => env('PSO_PASSWORD', 'Ohyouthinkdarknessisyourally1!'),
         'dataset_id' => env('DATASET_ID', 'W&C Prod'),
-        'account_id' => env('ACCOUNT_ID', 'Default')
+        'account_id' => env('ACCOUNT_ID', 'Default'),
+        'debug_mode_on' => true
+    ],
+    'settings' => [
 
     ]
 ];
