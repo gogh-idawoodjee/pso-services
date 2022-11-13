@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Classes\InputReference;
+use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFSPSOResourceService extends IFSService
@@ -144,7 +146,7 @@ class IFSPSOResourceService extends IFSService
 
         $schedule = new IFSPSOScheduleService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        $overall_schedule = collect($schedule->getSchedule($request->dataset_id, $request->base_url)->collect());
+        $overall_schedule = collect($schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)->collect());
 
         $resources = collect($overall_schedule->get('Resources'));
         $shifts = collect($overall_schedule->get('Plan_Route'))->groupBy('resource_id');
@@ -193,13 +195,20 @@ class IFSPSOResourceService extends IFSService
     public function setEvent(Request $event_data, $resource_id): JsonResponse
     {
 
-        //$requestId = (string)Str::uuid();
+        // todo do we need to check if the resource exists? does it matter?
 
         $schedule_event = $this->ScheduleEventPayloadPart($event_data->event_type, $resource_id);
         $payload = $this->ScheduleEventPayload($event_data->dataset_id, $schedule_event);
 
         return $this->IFSPSOAssistService->processPayload(
-            $event_data->send_to_pso, $payload, $this->token, $event_data->base_url, 'Event Set and Rota Updated', true, $event_data->dataset_id, $event_data->rota_id
+            $event_data->send_to_pso,
+            $payload,
+            $this->token,
+            $event_data->base_url,
+            'Event Set and Rota Updated',
+            true,
+            $event_data->dataset_id,
+            $event_data->rota_id
 
         );
     }
@@ -222,7 +231,7 @@ class IFSPSOResourceService extends IFSService
         ];
     }
 
-    public function ScheduleEventPayloadPart($event_type, $resource_id): array
+    private function ScheduleEventPayloadPart($event_type, $resource_id): array
     {
         return
             [
@@ -234,22 +243,62 @@ class IFSPSOResourceService extends IFSService
             ];
     }
 
-    public function setManualScheduling($shift_data)
+    public function setManualScheduling($shift_data, $resource_id)
     {
+
+        if (!Arr::has($this->pso_resource, 'Resources')) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
+        }
 
         $shift_set = $this->getResourceShiftsRaw();
 
+        if (collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id))->isEmpty()) {
+            // don't bother doing anything if the shift doesn't exist
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Shift ID does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
+        }
+
         // build the json for the RAM_Rota_Item
         // the first param is looking at the list of shifts and finding the details on the one we're modifying
-        $ram_rota_item_payload = $this->RAMRotaItemPayload(collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id)), $shift_data->rota_id, $shift_data->turn_manual_scheduling_on, $shift_data->shift_type, "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " by the thingy tool.(" . Carbon::now()->toDateTimeString() . ")");
+        $description = "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " by the thingy tool.(" . Carbon::now()->toDateTimeString() . ")";
+        $ram_rota_item_payload = $this->RAMRotaItemPayload(collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id)), $shift_data->rota_id, $shift_data->turn_manual_scheduling_on, $shift_data->shift_type, $description);
         $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " by the thingy tool");
 
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
 
 
+        // do the check if we're sending to PSO
+        if ($shift_data->send_to_pso) {
+
+            $this->IFSPSOAssistService->processPayload(
+                $shift_data->send_to_pso,
+                $payload,
+                $this->token,
+                $shift_data->base_url,
+                'Rota Item Updated',
+                true,
+                $shift_data->dataset_id,
+                $shift_data->rota_id
+            );
+
+            // get the resource again
+            $resource_init = new IFSPSOResourceService($shift_data->base_url, $this->token, null, null, null, true);
+            $resource = $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
+            $fresh_shifts = $resource_init->getResourceShiftsRaw();
+            $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
+
+
+            // compare the shift
+            if ($description == $shift_in_question['description']) {
+                // if the description matches in the GET we can be certain it worked
+                Log::info('matched description');
+                return $this->IFSPSOAssistService->apiResponse(200, 'Rota Item Updated and Validated', $payload);
+
+            }
+        }
+        Log::info('regular response');
         return $this->IFSPSOAssistService->processPayload(
-            true,
+            $shift_data->send_to_pso,
             $payload,
             $this->token,
             $shift_data->base_url,
@@ -258,47 +307,9 @@ class IFSPSOResourceService extends IFSService
             $shift_data->dataset_id,
             $shift_data->rota_id
         );
-        /*  if ($shift_data->send_to_pso) {
-             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $shift_data->base_url);
 
-             // do the following only if it's not a 500 series
-             if ($response->successful()) {
 
-                 // todo, we can actually do a get on the resource again, find the shift, do a compare on the description and compare to the payload; if it's the same description, then we know for sure it worked
-
-                 if ($response->json('InternalId') == "0") {
-                     // then we send a Rota Update, so we can see the changes
-                     // but maybe only do this if the payload above doesn't fail?
-                     $this->IFSPSOAssistService->sendRotaToDSEPayload(
-                         $shift_data->dataset_id,
-                         $shift_data->rota_id,
-                         $shift_data->base_url,
-                         null,
-                         true
-                     );
-
-                     return $this->IFSPSOAssistService->apiResponse(200, "Rota Item Updated", $payload);
-                 }
-
-                 if ($response->json('Code') == 26) {
-                     return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-                 }
-
-                 if ($response->json('Code') == 401) {
-                     return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                 }
-             } else {
-                 if ($response->json('Code') == 26) {
-                     return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-                 }
-
-                 if ($response->json('Code') == 401) {
-                     return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                 }
-                 return $this->IFSPSOAssistService->apiResponse(500, "Some issues sending the payload", $payload);
-             }
-         } */
-        //return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO - if you see a lot of nulls, double-check your shift_id. If you want to send this to PSO, add send_to_pso = true in your input.", $payload);
+        Log::info('bottom');
 
 
     }
@@ -325,7 +336,6 @@ class IFSPSOResourceService extends IFSService
             'is_master_data' => true,
             'description' => $description
         ];
-
     }
 
 
@@ -354,7 +364,6 @@ class IFSPSOResourceService extends IFSService
                 $this->shifts = $this->pso_resource['Shift'];
             }
         }
-
     }
 
     public function createUnavailability(Request $request, $resource_id): JsonResponse
@@ -372,8 +381,6 @@ class IFSPSOResourceService extends IFSService
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
 
-        // send to PSO if needed
-
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso,
             $payload,
@@ -387,14 +394,10 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+
     public function updateUnavailability(Request $request, $unavailability_id)//: JsonResponse
     {
 
-        // first do a get on the first one
-        // aw shit, can't do a get on unavailabilities,
-        // but I can do a get on the resource?
-        // nope resource GET doesn't return unavailabilities
-        // then first we're going to do a get on the schedule
 
         $unavailabilities = [$unavailability_id];
         if ($request->unavailabilities) {
@@ -402,23 +405,12 @@ class IFSPSOResourceService extends IFSService
         }
 
 
-        try {
-            $schedule = Http::withHeaders([
-                'apiKey' => $this->token
-            ])->timeout(5)
-                ->connectTimeout(5)
-                ->get(
-                    $request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-                    [
-                        'includeInput' => 'true',
-                        'includeOutput' => 'true',
-                        'datasetId' => $request->dataset_id
-                    ]);
-        } catch (ConnectionException) {
+        $schedule = IFSPSOScheduleService::getSchedule($request->base_url, $request->dataset_id, $this->token);
+
+        if (!$schedule) {
             return $this->IFSPSOAssistService->apiResponse(406, 'Something Failed Getting the Schedule, double check your dataset', $request->all());
         }
 
-        //        return $schedule_data;
 
         if (Arr::has($schedule->collect()->first(), 'Activity') && Arr::has($schedule->collect()->first(), 'Allocation')) {
             $grouped_activities = collect($schedule->collect()->first()['Activity'])->mapWithKeys(function ($activity) {
@@ -428,7 +420,6 @@ class IFSPSOResourceService extends IFSService
 
             $grouped_allocations = collect($schedule->collect()->first()['Allocation'])->mapWithKeys(function ($allocation) {
                 return [$allocation['activity_id'] => $allocation];
-//            return $allocation;
             })->only($unavailabilities);
 
             if ($grouped_activities->count() == 0 || $grouped_allocations->count() == 0) {
@@ -439,19 +430,12 @@ class IFSPSOResourceService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(404, 'Schedule is Pretty Empty', ['NAs sent' => $unavailabilities]);
         }
 
-
         // all these NAs will share a single time pattern based on the input (if there is one)
         $time_pattern_id = Str::uuid()->getHex();
-        $duration = $request->duration ? 'PT' . $request->duration . 'H' : $grouped_allocations->first()['duration'];
-        $tz = null;
-        if ($request->time_zone) {
-            $tz = '+' . $request->time_zone . ':00';
-            if ($request->time_zone < 10 && $request->time_zone > -10) {
-                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
-            }
-        } else {
-            $tz = Str::of($grouped_allocations->first()['activity_start'])->substr(20, 6);
-        }
+
+        $duration = $request->duration ? Helper::setPSODuration($request->duration) : $grouped_allocations->first()['duration'];
+
+        $tz = Helper::setTimeZone($request->time_zone, true, $grouped_allocations);
 
         $category_id = $request->category_id ?: $grouped_activities->first()['activity_type_id'];
         $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated from the thingy on ' . Carbon::now()->toDayDateTimeString();
@@ -466,9 +450,7 @@ class IFSPSOResourceService extends IFSService
 
         $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
 
-        // send to PSO if needed
-        $desc200 = (count($ram_unavailability_payload) > 1 ? count($ram_unavailability_payload) . ' Unavailabilities' : count($ram_unavailability_payload) . ' Unavailability') . ' sent to PSO';
-
+        $desc200 = (count($ram_unavailability_payload) > 1 ? count($ram_unavailability_payload) . ' Unavailabilities' : count($ram_unavailability_payload) . ' Unavailability') . ' updated';
 
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso,
@@ -480,7 +462,6 @@ class IFSPSOResourceService extends IFSService
             $request->dataset_id,
             $request->rota_id
         );
-
 
     }
 
@@ -521,11 +502,16 @@ class IFSPSOResourceService extends IFSService
     {
         $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability from the Thingy');
 
-        $delete_data = [''];
-        // todo refactor this to delete class
-        $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
-        $payload = $this->RAMDataDeletePayload($ram_update_payload, $ram_data_update);
+        //        $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
+        $ram_data_update = (new PSODeleteObject(
+            'RAM_Unavailability', 'id', '$request->unavailability_id',
+            null, null,
+            null, null,
+            null, null,
+            true)
+        )->toJson();
 
+        $payload = $this->RAMDataDeletePayload($ram_update_payload, $ram_data_update);
 
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso,
@@ -540,17 +526,6 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function RAMDataDeletePayloadPart($object_type, $pk, $pkname1 = 'id')
-    {
-        // todo make this generic, move delete to the created  service or maybe a delete object class
-        return [
-            'object_type_id' => $object_type,
-            'object_pk_name1' => $pkname1,
-            'object_pk1' => $pk,
-            'delete_row' => true
-        ];
-    }
-
     private function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
     {
         return [
@@ -561,6 +536,12 @@ class IFSPSOResourceService extends IFSService
 
             ]
         ];
+
+    }
+
+    // todo need a method to check if resource exists before performing a resource function
+
+    private function ResourceExists() {
 
     }
 

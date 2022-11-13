@@ -5,11 +5,11 @@ namespace App\Services;
 use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use App\Classes\PSOActivityStatus;
+use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -32,17 +32,11 @@ class IFSPSOActivityService extends IFSService
 
     public function createActivity(Request $request)
     {
-        //  this needs to go into a helper elf
-//        $tz = null;
-//        if ($request->time_zone) {
-//            $tz = '+' . $request->time_zone . ':00';
-//            if ($request->time_zone < 10 && $request->time_zone > -10) {
-//                $tz = $request->time_zone < 0 ? '-0' . abs($request->time_zone) . ':00' : '+0' . abs($request->time_zone) . ':00';
-//            }
-//        }
+
         $tz = Helper::setTimeZone($request->time_zone);
 
-        $relative_day = $request->activity_id ?: 1;
+        $relative_day = $request->relative_day ?: 1;
+        $relative_day_end = $request->relative_day_end ?: $relative_day;
         $hours_to_add = ($request->window_size ?: 0) == 0 ? 8 : ($request->window_size ?: 0);
 
 
@@ -51,11 +45,14 @@ class IFSPSOActivityService extends IFSService
             'lat' => $request->lat,
             'long' => $request->long,
             'sla_start' => Carbon::now()->addDay($relative_day)->setTime(8, 0)->toDateTimeLocalString() . $tz,
-            'sla_end' => Carbon::now()->addDay($relative_day)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
+            'sla_end' => Carbon::now()->addDay($relative_day_end)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
             'sla_type_id' => $request->sla_type_id,
             'activity_type_id' => $request->activity_type_id,
             'status_id' => 0,
-            'duration' => $request->duration
+            'duration' => $request->duration,
+            'description' => $request->description ?: 'Instant Activity from the thingy',
+            'skill' => $request->skill,
+            'region' => $request->region
         ]);
 
         $activity = new PSOActivity($activity_build_data);
@@ -71,10 +68,9 @@ class IFSPSOActivityService extends IFSService
 
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'quick activity sent to PSO');
 
-
     }
 
-    public function getActivity(Request $request, $activity_id): Collection
+    public function getActivity(Request $request, $activity_id)//: Collection
     {
         $activity = Http::withHeaders(['apiKey' => $this->token])
             ->get($request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity',
@@ -85,7 +81,7 @@ class IFSPSOActivityService extends IFSService
                     'tableFilter' => 'Activity, SLA_Type, Activity_SLA, Location, Activity_Status'
                 ]
             );
-        return $this->activity_object = $activity->collect();
+        return $this->activity_object = $activity->collect()->first();
     }
 
     public function activityExists(): bool
@@ -151,8 +147,7 @@ class IFSPSOActivityService extends IFSService
 
     public function updateActivityStatus($request, $status): JsonResponse
     {
-
-        // build the payload
+        // why did I type this?
         $pso_status = config('pso-services.statuses.all.' . $status);
 
         $activity_part_payload = (
@@ -166,55 +161,14 @@ class IFSPSOActivityService extends IFSService
             $request->date_time_fixed)
         )->toJson($request->activity_id);
 
-//        $activity_part_payload = $this->ActivityStatusPartPayload(
-//            $request->activity_id,
-//            $pso_status,
-//            $request->resource_id,
-//            $request->date_time_fixed,
-//            'From the change status thingy'
-//        );
-
         $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
 
-
-        if ($request->send_to_pso) {
-
-            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url);
-
-            if ($response->serverError()) {
-                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-            }
-
-            if ($response->json('InternalId') == "-1") {
-                return $this->IFSPSOAssistService->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-            }
-
-            if ($response->json('InternalId') != "-1") {
-                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO", $payload);
-            }
-
-            if ($response->json('Code') == 401) {
-                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-            }
-
-            if ($response->status() == 500) {
-                return $this->IFSPSOAssistService->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-            }
-
-            if ($response->status() == 401) {
-                return $this->IFSPSOAssistService->apiResponse(401, "Unable to authenticate with provided token", $payload);
-            }
-        } else {
-            return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
-        }
-
-        return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO", $payload);
+        $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change from the thingy');
 
     }
 
     private function ActivityFullPayload($input_reference, $activity_payload): array
     {
-
         return [
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
@@ -224,6 +178,7 @@ class IFSPSOActivityService extends IFSService
                 'Activity_SLA' => $activity_payload['Activity_SLA'],
                 'Activity_Status' => $activity_payload['Activity_Status'],
                 'Location' => $activity_payload['Location'],
+                'Location_Region' => $activity_payload['Location_Region'],
             ]
         ];
     }
@@ -243,64 +198,34 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-    // no longer needed
-    /*
-    private function ActivityStatusPartPayload($activity_id, $status, $resource_id, $date_time_fixed, $reason): array
-    {
-        // all instances of this should use PSOActivityStatus
-
-        $payload = [
-            'activity_id' => "$activity_id",
-            'status_id' => $status,
-            'date_time_status' => Carbon::now()->toAtomString(),
-            'date_time_stamp' => Carbon::now()->toAtomString(),
-            'visit_id' => 1,
-            'fixed' => $status != -1 && $status != 0,
-            'reason' => $reason
-        ];
-
-        if ($status != -1 && $status != 0) {
-            $payload = Arr::add($payload, 'resource_id', "$resource_id");
-            $payload = Arr::add($payload, 'date_time_fixed', $date_time_fixed);
-            $payload = Arr::add($payload, 'date_time_earliest', $date_time_fixed);
-        }
-
-        return $payload;
-
-    } */
-
 
     public function deleteActivity(Request $request, $description = null)
     {
-        $delete_data = ['object_type_id' => 'activity', 'object_pk_name1' => 'id', 'object_pk1' => $request->activity_id];
 
-        $delete_activity_payload = $this->DeleteObjectPart($delete_data);
+        $delete_activity_payload = (new PSODeleteObject(
+            'Activity',
+            'id', $request->activity_id
+        ))->toJson();
         $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
 
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
 
     }
 
-    public function deleteSLA(Request $request, $description = null): JsonResponse
+    public function deleteSLA(Request $request, $description = null)//: JsonResponse
     {
-        // build the payload
-        $delete_data = new Request([
-            'object_type_id' => 'Activity_SLA',
-            'object_pk_name1' => 'activity_id',
-            'object_pk1' => $request->activity_id,
-            'object_pk_name2' => 'sla_type_id',
-            'object_pk2' => $request->sla_type_id,
-            'object_pk_name3' => 'priority',
-            'object_pk3' => $request->priority ?: 1,
-            'object_pk_name4' => 'start_based',
-            'object_pk4' => (bool)$request->start_based,
-        ]);
-        $delete_sla_payload = $this->deleteActivity($delete_data);
-        //        $delete_sla_payload = $this->DeleteSLAPayloadPart($request->activity_id, $request->sla_type_id, $request->priority, $request->start_based);
-        // build the full payload
+
+        $delete_sla_payload = (new PSODeleteObject(
+            'Activity_SLA',
+            'activity_id', $request->activity_id,
+            'sla_type_id', $request->sla_type_id,
+            'priority', $request->priority ?: 1,
+            'start_based', (bool)$request->start_based
+        ))->toJson();
+
         $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, 'SLA');
 
-        return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, $description);
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
 
     }
 
@@ -308,7 +233,11 @@ class IFSPSOActivityService extends IFSService
     private function DeleteObjectFull($payload, $dataset_id, $description): array
     {
 
-        $input_ref = (new InputReference(("Deleting " . $description . " from the thingy"), 'CHANGE', $dataset_id))->toJson();
+        $input_ref = (
+        new InputReference(("Deleting " . $description . " from the thingy"),
+            'CHANGE',
+            $dataset_id))
+            ->toJson();
 
         return [
             'dsScheduleData' => [
@@ -319,57 +248,4 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-    private function DeleteObjectPart($delete_data)
-    {
-        // todo this is becoming a class
-        // this input expects an array of types + names + pks
-
-        $additional_pk = [
-            'pk2' => [
-                'name' => 'object_pk_name2',
-                'pk' => 'object_pk2'
-            ],
-            'pk3' => [
-                'name' => 'object_pk_name3',
-                'pk' => 'object_pk3'
-            ],
-            'pk4' => [
-                'name' => 'object_pk_name4',
-                'pk' => 'object_pk4'
-            ],
-        ];
-
-        $delete_object =
-            [
-                'object_type_id' => $delete_data['object_type_id'],
-                'object_pk_name1' => $delete_data['object_pk_name1'],
-                'object_pk1' => $delete_data['object_pk1']
-            ];
-
-        foreach ($additional_pk as $pk) {
-            if (Arr::has($delete_data, $pk['name'])) {
-                $delete_object = Arr::add($delete_object, $pk['name'], $delete_data[$pk['pk']]);
-            }
-        }
-
-        return $delete_object;
-
-    }
-    // no longer needed
-    /*
-    private function DeleteSLAPayloadPart($activity_id, $sla_type, $priority, $start_based): array
-    {
-        return [
-            'object_type_id' => 'Activity_SLA',
-            'object_pk_name1' => 'activity_id',
-            'object_pk_name2' => 'sla_type_id',
-            'object_pk_name3' => 'priority',
-            'object_pk_name4' => 'start_based',
-            'object_pk1' => $activity_id,
-            'object_pk2' => $sla_type,
-            'object_pk3' => $priority ?: 1,
-            'object_pk4' => (bool)$start_based,
-        ];
-    }
-    */
 }

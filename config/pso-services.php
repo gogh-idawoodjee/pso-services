@@ -27,8 +27,9 @@ return [
         'activity' => [
             'base_value' => env('DEFAULT_BASE_VALUE', 1000),
             'priority' => env('DEFAULT_PRIORITY', 1),
-            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7),
-        ]
+            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7)
+        ],
+        'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
     ],
 
     'debug' => [

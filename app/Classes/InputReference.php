@@ -14,8 +14,8 @@ class InputReference
     private string $input_type;
     private string $dataset_id;
     private ?string $process_type;
-    private ?int $dse_duration;
-    private ?int $appointment_window;
+    private ?string $dse_duration;
+    private ?string $appointment_window;
 
 
     public function __construct($description, $input_type, $dataset_id, $datetime = null, $dse_duration = null, $process_type = null, $appointment_window = null)

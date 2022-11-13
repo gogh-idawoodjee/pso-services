@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Classes\InputReference;
+use App\Helpers\Helper;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -28,7 +29,7 @@ class IFSPSOAssistService extends IFSService
     }
 
 
-    public function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
+    private function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
         $input_reference = (new InputReference(
             "Update Rota from the Thingy",
@@ -47,27 +48,11 @@ class IFSPSOAssistService extends IFSService
         ];
     }
 
-    public function sendRotaToDSEPayload($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null): JsonResponse
+    public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null): JsonResponse
     {
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
-        if ($send_to_pso) {
-            $rotatodse = Http::withHeaders(['apiKey' => $this->token])
-                ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-                    $payload
-                );
 
-            if ($rotatodse->json('InternalId') == "-1") {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-            }
-            if ($rotatodse->json('InternalId') != "-1") {
-                return $this->apiResponse(200, "Payload sent to PSO", $payload);
-            }
-
-            // todo some more http error validation here
-
-        }
-
-        return $this->apiResponse(202, 'not sent to PSO', $payload);
+        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota from teh Thingy');
 
     }
 
@@ -103,13 +88,13 @@ class IFSPSOAssistService extends IFSService
 
         $description = $request->description ?: 'Init from the Thingy';
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
-        $dse_duration = 'P' . $request->dse_duration . 'D'; // this doesn't need the helper elf we're expecting a solid number of days only here
+        $dse_duration = Helper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
-            $appointment_window = 'P' . $request->appointment_window . 'D';
+            $appointment_window = Helper::setPSODurationDays($request->appointment_window);
         } else {
             $appointment_window = null;
         }
-        $process_type = $request->process_type ?: 'APPOINTMENT';
+        $process_type = $request->process_type ?: config('pso-services.defaults.process_type');
         $rota_id = $request->rota_id ?: $request->dataset_id;
 
 
@@ -138,20 +123,8 @@ class IFSPSOAssistService extends IFSService
 
         $payload = $this->initializePSOPayload($request);
 
-        if ($request->send_to_pso) {
-            $rotatodse = Http::withHeaders(['apiKey' => $this->token])
-                ->post($request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-                    $payload
-                );
+        $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
 
-            if ($rotatodse->json('InternalId') == "-1") {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-            }
-            if ($rotatodse->json('InternalId') != "-1") {
-                return $this->apiResponse(200, "Payload sent to PSO", $payload);
-            }
-
-        }
 
         return $this->apiResponse(202, 'not sent to PSO', $payload);
 
@@ -175,7 +148,7 @@ class IFSPSOAssistService extends IFSService
 
         if ($usage->collect()->first()) {
 
-            $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
+            $mystuff = collect($usage->collect()->first())->map(function ($item) {
 
                 $type = match ($item['ScheduleDataUsageType']) {
                     0 => 'Resource_Count',
@@ -193,7 +166,7 @@ class IFSPSOAssistService extends IFSService
 
 
             foreach ($mystuff as $dataset => $value) {
-                $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+                $newdata[$dataset] = collect($value)->mapToGroups(function ($item) {
                     return [$item['count_type'] => $item];
 
                 });
@@ -218,7 +191,7 @@ class IFSPSOAssistService extends IFSService
         return $this->apiResponse(
             418,
             "I'm not actually a teapot but no information was available from PSO",
-            ['please give me usage data' => ['for dataset' => $request->dataset_id, 'from' => $request->base_url]]
+            ['you asked for usage data' => ['for dataset' => $request->dataset_id, 'from' => $request->base_url]]
         );
 
     }
@@ -239,11 +212,10 @@ class IFSPSOAssistService extends IFSService
 
             $response = $this->sendPayloadToPSO($payload, $token, $base_url);
 
-
             if ($response->json('InternalId') > -1) {
                 // update the rota
                 if ($requires_rota_update) {
-                    $this->sendRotaToDSEPayload(
+                    $this->sendRotaToDSE(
                         $dataset_id,
                         $rota_id,
                         $base_url,

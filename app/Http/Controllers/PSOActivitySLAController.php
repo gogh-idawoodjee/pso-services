@@ -45,7 +45,7 @@ class PSOActivitySLAController extends Controller
      * @return JsonResponse
      * @throws ValidationException
      */
-    public function destroy(Request $request, $activity_id): JsonResponse
+    public function destroy(Request $request, $activity_id)//: JsonResponse
     {
         $request->merge(['activity_id' => $activity_id]);
 

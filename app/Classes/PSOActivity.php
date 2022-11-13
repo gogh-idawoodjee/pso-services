@@ -18,7 +18,7 @@ class PSOActivity extends Activity
     private string $date_time_open;
     private int $base_value;
     private array $activity_skill = [];
-    private array $activity_region;
+    private array $activity_region = [];
     private array $activity_sla;
     private PSOLocation $activity_location;
     private PSOActivityStatus $activity_status;
@@ -47,6 +47,13 @@ class PSOActivity extends Activity
             }
         }
 
+        // build the regions
+        if ($activity_data->region) {
+            foreach ($activity_data->region as $region) {
+                $this->addActivityRegion(new PSOActivityRegion($region));
+            }
+        }
+
         // build the status
         if ($is_ab_request) {
             $this->activity_status = new PSOActivityStatus(-1, 1, $activity_data->duration);
@@ -61,19 +68,17 @@ class PSOActivity extends Activity
 
     }
 
-//    public static function create(Request $request, $is_ab_request)
-//    {
-//        return new static($request, $is_ab_request);
-//    }
 
     public function FullActivityObject()
     {
+
         return [
             'Activity' => $this->ActivityToJson(),
             'Activity_Status' => $this->ActivityStatus(),
             'Activity_Skill' => $this->activity_skill,
             'Location' => $this->ActivityLocation(),
-            'Activity_SLA' => $this->ActivitySLAs()
+            'Activity_SLA' => $this->ActivitySLAs(),
+            'Location_Region' => $this->activity_region
         ];
     }
 
@@ -91,7 +96,7 @@ class PSOActivity extends Activity
 
     public function addActivityRegion(PSOActivityRegion $region)
     {
-        $this->activity_region[] = $region;
+        $this->activity_region[] = $region->toJson($this->activity_id);
         return $this;
 
     }
@@ -132,11 +137,6 @@ class PSOActivity extends Activity
 
     }
 
-    public function ActivityRegions()
-    {
-        return $this->ActivityDataToJson($this->activity_region);
-
-    }
 
     public function ActivityToJson()
     {

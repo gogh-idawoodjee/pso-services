@@ -6,9 +6,7 @@ namespace App\Classes;
 class PSOActivitySkill extends Activity
 {
 
-
     private string $skill_id;
-
 
     public function __construct($skill_id)
     {

@@ -206,7 +206,7 @@ class PSOSandboxController extends Controller
 
         return $this->resource;
         $sched = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
-        return $sched->getSchedule('W&C Prod');
+        return $sched->getScheduleAsCollection('W&C Prod');
 
         $res = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
         return $res->getScheduleableResources('W&C Prod');

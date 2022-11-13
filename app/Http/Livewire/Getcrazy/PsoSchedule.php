@@ -36,7 +36,7 @@ class PsoSchedule extends Component
     public function getSchedule()
     {
         $schedule = new IFSPSOScheduleService($this->selectedEnvironment);
-        $this->scheduleOutput = ($schedule->getSchedule($this->selectedDataset)->collect());
+        $this->scheduleOutput = ($schedule->getScheduleAsCollection($this->selectedDataset)->collect());
     }
 
     function render()

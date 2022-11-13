@@ -21,7 +21,6 @@ class PSOResourceController extends Controller
     public function index(Request $request)//: Response
     {
 
-
         $request->validate([
             'dataset_id' => 'required|string',
             'token' => 'string',

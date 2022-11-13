@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 class PSOUnavailabilityController extends Controller
 {
 
-
     /**
      * create an unavailability
      *
@@ -82,13 +81,14 @@ class PSOUnavailabilityController extends Controller
         $request->validate([
             'description' => 'string:2000',
             'category_id' => 'string',
+            'send_to_pso' => 'boolean',
             'duration' => 'numeric|between:0,24',
             'time_zone' => 'numeric|between:-24,24', // now made optional
             'base_time' => 'date_format:Y-m-d\TH:i',
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'rota_id' => 'string|required',
             'dataset_id' => 'string|required',
-            'account_id' => 'string|required_if:send_to_pso,true',
+            'account_id' => 'string|required',
             'token' => 'string',
             'username' => 'string',
             'password' => 'string'
@@ -106,7 +106,7 @@ class PSOUnavailabilityController extends Controller
             'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
         ])->validate();
 
-        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
 
         if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
@@ -164,7 +164,6 @@ class PSOUnavailabilityController extends Controller
                 'status' => 401,
                 'description' => 'did not pass auth'
             ]);
-
         }
 
         return $resource_init->DeleteUnavailability($request);

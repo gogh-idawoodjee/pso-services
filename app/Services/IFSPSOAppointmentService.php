@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use App\Classes\PSOActivitySLA;
+use App\Helpers\Helper;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 
@@ -26,11 +28,11 @@ class IFSPSOAppointmentService extends IFSService
     public function getAppointment(Request $request)//: JsonResponse
     {
 
-
         $activity = new PSOActivity($request, true);
 
         // should this go into AppointmentRequestPayloadPart or stay here?
-        $appointment_duration = 'P' . ($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration')) . 'D';
+//        $appointment_duration = 'P' . ($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration')) . 'D';
+        $appointment_duration = Helper::setPSODurationDays($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
         // build the full activity object
         $activity_payload = $activity->FullActivityObject();
         $appointment_request_part_payload = $this->AppointmentRequestPayloadPart(
@@ -114,9 +116,11 @@ class IFSPSOAppointmentService extends IFSService
         if ($request->send_to_pso) {
             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url, true);
 
-            // todo may need to validate if this returns correctly or fails
+            $summary_check = $response->collect()->first();
+            if (!Arr::has($summary_check, 'Appointment_Summary')) {
+                return $this->IFSPSOAssistService->apiResponse('404', 'Appointment Request does not exist', $payload);
+            }
             $summary = collect($response->collect()->first()['Appointment_Summary']);
-
             $additional_data = [
                 'description' => 'appointment_summary',
                 'data' => [
@@ -125,36 +129,31 @@ class IFSPSOAppointmentService extends IFSService
                     'full_summary' => $summary->toJson()
                 ]
             ];
-
             return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Slot Validated", $payload, 'appointment_summary_slot_check', $additional_data);
-
         }
-
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointed_check');
 
     }
 
-    public function declineAppointment(Request $request, $appointment_request_id): JsonResponse
+    public function declineAppointment(Request $request, $appointment_request_id)//: JsonResponse
     {
         // lookup the activity
-        $activity = [];
-        $activity_to_trash = new IFSPSOActivityService($request->base_url, $this->token, null, null, $request->account_id, true);
+        $activity = new IFSPSOActivityService($request->base_url, $this->token, null, null, $request->account_id, true);
+        $activity->getActivity($request, $request->activity_id);
+
+        if (!$activity->activityExists()) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Activity does not exist in PSO', ['activity_id' => $request->activity_id]);
+        }
+
         $activity_request = new Request(
             [
                 'activity_id' => $request->activity_id,
-                'sla_type_id' => $activity->sla_type_id,
-                'priority' => $activity->prioirty,
-                'start_based' => $activity->start_based,
                 'dataset_id' => $request->dataset_id,
-                'send_tp_pso' => true
+                'base_url' => $request->base_url,
+                'send_to_pso' => true
             ]);
 
-
-        // trash the activity
-        $activity_to_trash->deleteActivity($activity_request, "deleting temp activity - declined appointments");
-
-        // trash the SLA
-        $activity_to_trash->deleteSLA($activity_request, "deleting activity sla - declined appointments");
+        $activity->deleteActivity($activity_request, "deleting temp activity - declined appointments");
 
         // decline the appointment
         $decline_payload = $this->AppointmentOfferResponsePayloadPart($appointment_request_id, -1, true);
@@ -176,53 +175,43 @@ class IFSPSOAppointmentService extends IFSService
                 'base_url' => $request->base_url
             ]);
         $activity_data = $activity->getActivity($activity_request_get, $request->activity_id);
-//        return $activity_data;
 
-        if ($activity->activityExists()) {
-            // parameters needed to trash the activity SLA
-            $activity_data_get = [
-                'sla_type_id' => collect($activity_data->first())['Activity_SLA']['sla_type_id'],
-                'priority' => collect($activity_data->first())['Activity_SLA']['priority'],
-                'start_based' => collect($activity_data->first())['Activity_SLA']['start_based'],
-
-            ];
-//            return $activity_data_get['priority'];
-        } else {
-            return $this->IFSPSOAssistService->apiResponse(404, 'No Such Activity', $request->activity_id, 'activity_id');
+        if (!$activity->activityExists()) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'No matching activity exists. Cannot perform appointment accept.', $request->activity_id, 'activity_id');
         }
 
-        $activity_to_trash = new IFSPSOActivityService($request->base_url, $this->token, null, null, $request->account_id, true);
-        $activity_request_trash = new Request(
+        $activity_request = new Request(
             [
                 'activity_id' => $request->activity_id,
-                'sla_type_id' => $activity_data_get['sla_type_id'],
-                'priority' => $activity_data_get['priority'],
-                'start_based' => $activity_data_get['start_based'],
                 'dataset_id' => $request->dataset_id,
-                'base_url' => $request->base_url
+                'base_url' => $request->base_url,
+                'send_to_pso' => true
             ]);
-        // trash the old SLA
-        $activity_to_trash->deleteSLA($activity_request_trash, "deleting activity sla - declined appointments");
+
+        $activity->deleteActivity($activity_request, "deleting temp activity - declined appointments");
 
         // generate the new SLA
-        $new_sla = new PSOActivitySLA($request->sla_type_id, $request->sla_start, $request->sla_end, $request->sla_priority, $request->sla_start_based);
+        $new_sla = (new PSOActivitySLA($request->sla_type_id, $request->sla_start, $request->sla_end, $request->sla_priority, $request->sla_start_based))->toJson($request->activity_id);
         // send the SLA
         $input_ref = (new InputReference($request->description ?: 'Updated Activity SLA', 'CHANGE', $request->dataset_id))->toJson();
-        $payload = [
-            'dsScheduleData' => [
-                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-                'Input_Reference' => $input_ref,
-                'Activity_SLA' => $new_sla->toJson($request->activity_id)
-            ]];
-        $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, 'updated_sla');
+        $this->IFSPSOAssistService->processPayload(true, $this->ActivitySLAPayload($input_ref, $new_sla), $this->token, $request->base_url, 'updated_sla');
 
         // accept the slot
         $accept_payload = $this->AppointmentOfferResponsePayloadPart($appointment_request_id, $request->appointment_offer_id, true);
         $input_ref = (new InputReference($request->description ?: 'Accepted Appointment Slot', 'CHANGE', $request->dataset_id))->toJson();
-        $payload = $this->AppointmentOfferResponsePayload($input_ref, $accept_payload);
-        return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, 'appointment_offer_accepted');
+        $this->IFSPSOAssistService->processPayload(true, $this->AppointmentOfferResponsePayload($input_ref, $accept_payload), $this->token, $request->base_url, 'appointment_offer_accepted');
 
-        // todo send the updated activity
+        // create the new activity
+        // damn we need all the stuff, skills, regions, location etc because we trashed the original
+        // todo, do this later.
+        $activity_data_new = [
+            'activity_id' => $request->activity_id, // will have to do some logic here around _appt suffix
+            'activity_type_id' => $activity_data['Activity']['activity_type_id'],
+            'description' => $activity_data['Activity']['description'],
+            'description' => $activity_data['Activity']['priority'],
+            'description' => $activity_data['Activity']['base_value']
+        ];
+        $new_activity = new PSOActivity();
 
     }
 
@@ -261,6 +250,21 @@ class IFSPSOAppointmentService extends IFSService
                 'Location' => $activity_payload['Location'],
             ]
         ];
+    }
+
+    /**
+     * @param array $input_ref
+     * @param array $new_sla
+     * @return array[]
+     */
+    private function ActivitySLAPayload(array $input_ref, array $new_sla): array
+    {
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $input_ref,
+                'Activity_SLA' => $new_sla
+            ]];
     }
 
 

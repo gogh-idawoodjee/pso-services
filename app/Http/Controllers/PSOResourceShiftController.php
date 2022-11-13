@@ -30,7 +30,7 @@ class PSOResourceShiftController extends Controller
      * @return JsonResponse
      * @throws ValidationException
      */
-    public function update(Request $request, $resource_id): JsonResponse
+    public function update(Request $request, $resource_id)//: JsonResponse
     {
         $request->validate([
             'shift_id' => 'required|alpha_dash',
@@ -71,10 +71,12 @@ class PSOResourceShiftController extends Controller
             ]);
 
         }
-        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url); // do we need this? seems like we do, it initializes $this->pso_resource // technically we could do this from the method
+        // do we need this? seems like we do, it initializes $this->pso_resource
+        // // technically we could do this from the method
+        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url);
 
         // send all that back to the service and let it do the work
-        return $resource_init->setManualScheduling($request);
+        return $resource_init->setManualScheduling($request, $resource_id);
 
     }
 
