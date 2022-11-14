@@ -42,6 +42,6 @@ return [
         'debug_mode_on' => true
     ],
     'settings' => [
-
+        'validate_object_existence' => true,
     ]
 ];

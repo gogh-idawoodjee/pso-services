@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,6 @@ class PSOResourceShiftController extends Controller
      * @param Request $request
      * @param $resource_id
      * @return JsonResponse
-     * @throws ValidationException
      */
     public function update(Request $request, $resource_id)//: JsonResponse
     {
@@ -48,21 +48,9 @@ class PSOResourceShiftController extends Controller
 
         // auth and validation is required because there is a GET request done first on the resource
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf(!$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf(!$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf(!$request->token)
-        ])->validate();
-
+        Helper::ValidateSendToPSO($request);
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-
 
         if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
             return response()->json([

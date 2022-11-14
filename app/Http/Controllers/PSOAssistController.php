@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use App\Services\IFSPSOAssistService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+
 use Illuminate\Validation\ValidationException;
 
 class PSOAssistController extends Controller
@@ -38,18 +38,7 @@ class PSOAssistController extends Controller
             'datetime' => 'date'
         ]);
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
+        Helper::ValidateSendToPSO($request);
 
         $init = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
@@ -87,17 +76,7 @@ class PSOAssistController extends Controller
             'datetime' => 'date'
         ]);
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
+        Helper::ValidateSendToPSO($request);
 
         $rotatodse = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 

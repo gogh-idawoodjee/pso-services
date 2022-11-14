@@ -33,6 +33,28 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+    public function getResourceForWebApp($resource_id, $dataset_id, $base_url)
+    {
+
+        if (!$this->ResourceExists())
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['resource_id' => $resource_id]);
+
+        $payload = [
+            'resource' => [
+                'raw' => $this->getResource($resource_id, $dataset_id, $base_url), // todo clean this up, make it look nicer and more formatted
+                'utilization' => $this->getResourceUtilization(),
+                'events' => $this->getResourceEvents(),
+                'locations' => $this->getResourceLocations(),
+                'shifts' => $this->getResourceShiftsFormatted(),
+            ]
+        ];
+
+        return response($payload, 200)
+            ->header('Content-Type', 'application/json');
+
+
+    }
+
     public function getResource($resource_id, $dataset_id, $base_url): Collection
     {
         try {
@@ -195,10 +217,14 @@ class IFSPSOResourceService extends IFSService
     public function setEvent(Request $event_data, $resource_id): JsonResponse
     {
 
-        // todo do we need to check if the resource exists? does it matter?
+        $this->getResource($resource_id, $event_data->dataset_id, $event_data->base_url);
 
         $schedule_event = $this->ScheduleEventPayloadPart($event_data->event_type, $resource_id, $event_data->event_date_time);
         $payload = $this->ScheduleEventPayload($event_data->dataset_id, $schedule_event);
+
+        if (!$this->ResourceExists() && config('pso-services.settings.validate_object_existence')) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', $payload);
+        }
 
         return $this->IFSPSOAssistService->processPayload(
             $event_data->send_to_pso,
@@ -246,9 +272,7 @@ class IFSPSOResourceService extends IFSService
     public function setManualScheduling($shift_data, $resource_id)
     {
 
-        if (!Arr::has($this->pso_resource, 'Resources')) {
-            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
-        }
+        if (!$this->ResourceExists()) return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
 
         $shift_set = $this->getResourceShiftsRaw();
 
@@ -280,7 +304,6 @@ class IFSPSOResourceService extends IFSService
                 $shift_data->rota_id
             );
 
-
             // get the resource again
             $resource_init = new IFSPSOResourceService($shift_data->base_url, $this->token, null, null, null, true);
             $resource = $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
@@ -290,12 +313,11 @@ class IFSPSOResourceService extends IFSService
             // compare the shift
             if ($description == $shift_in_question['description']) {
                 // if the description matches in the GET we can be certain it worked
-                Log::info('matched description');
                 return $this->IFSPSOAssistService->apiResponse(200, 'Rota Item Updated and Validated', $payload);
 
             }
         }
-        Log::info('regular response');
+
         return $this->IFSPSOAssistService->processPayload(
             $shift_data->send_to_pso,
             $payload,
@@ -306,10 +328,6 @@ class IFSPSOResourceService extends IFSService
             $shift_data->dataset_id,
             $shift_data->rota_id
         );
-
-
-        Log::info('bottom');
-
 
     }
 
@@ -538,11 +556,12 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    // todo need a method to check if resource exists before performing a resource function
-
     private function ResourceExists()
     {
-
+        if (!Arr::has($this->pso_resource, 'Resources')) {
+            return false;
+        }
+        return true;
     }
 
 }

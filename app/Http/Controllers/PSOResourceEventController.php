@@ -2,20 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 
 class PSOResourceEventController extends Controller
 {
-
-
     /**
-     * Store a newly created resource in storage.
+     * Create a new resource event
      *
      * @param Request $request
      * @param $resource_id
@@ -38,30 +35,15 @@ class PSOResourceEventController extends Controller
             'password' => 'string'
         ]);
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        // dig out the resource; will need the token at this point in real life
-
+        Helper::ValidateSendToPSO($request);
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-
 
         if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
             ]);
-
         }
 
         return $resource_init->setEvent($request, $resource_id);

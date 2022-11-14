@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use App\Services\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+
 use Illuminate\Validation\ValidationException;
 
 class PSOActivityController extends Controller
@@ -18,7 +18,6 @@ class PSOActivityController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
-     * @throws ValidationException
      */
     public function store(Request $request)
     {
@@ -42,17 +41,8 @@ class PSOActivityController extends Controller
             'password' => 'string'
         ]);
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
+        Helper::ValidateSendToPSO($request);
 
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
@@ -85,7 +75,6 @@ class PSOActivityController extends Controller
      * @param Request $request
      * @param $activity_id
      * @return JsonResponse
-     * @throws ValidationException
      */
     public function destroy(Request $request, $activity_id)
     {
@@ -103,17 +92,8 @@ class PSOActivityController extends Controller
 
         $request->merge(['activity_id' => $activity_id]);
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
+        Helper::ValidateSendToPSO($request);
 
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 

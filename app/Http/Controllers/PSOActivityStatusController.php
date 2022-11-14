@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use App\Services\IFSPSOActivityService;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -62,21 +61,9 @@ class PSOActivityStatusController extends Controller
         ]);
 
 
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
-        ])->validate();
-
+        Helper::ValidateSendToPSO($request);
 
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-
 
         if (!$activity->isAuthenticated() && $request->send_to_pso) {
             return response()->json([

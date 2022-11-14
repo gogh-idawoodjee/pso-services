@@ -16,7 +16,6 @@ use Illuminate\Support\Str;
 class IFSPSOAssistService extends IFSService
 {
 
-
     private function SourceDataParameter($rota_id)
     {
         return
@@ -52,7 +51,7 @@ class IFSPSOAssistService extends IFSService
     {
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
 
-        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota from teh Thingy');
+        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota from the Thingy');
 
     }
 
@@ -123,10 +122,8 @@ class IFSPSOAssistService extends IFSService
 
         $payload = $this->initializePSOPayload($request);
 
-        $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
+        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize From the Thingy');
 
-
-        return $this->apiResponse(202, 'not sent to PSO', $payload);
 
     }
 
@@ -246,9 +243,9 @@ class IFSPSOAssistService extends IFSService
                     return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
             }
-        } else {
-
-            return $this->apiResponse(202, "Payload not sent to PSO", $payload);
         }
+
+        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+
     }
 }

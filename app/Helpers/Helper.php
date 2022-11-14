@@ -2,7 +2,11 @@
 
 namespace App\Helpers;
 
+use App\Services\IFSPSOResourceService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class Helper
 {
@@ -32,4 +36,31 @@ class Helper
     {
         return 'P' . $duration . 'D';
     }
+
+    public static function ValidateSendToPSO(Request $request)
+    {
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+        ])->validate();
+    }
+
+    public static function authenticatePSO($pso_service_object, Request $request)
+    {
+        if (!$pso_service_object->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+        }
+
+    }
+
 }
