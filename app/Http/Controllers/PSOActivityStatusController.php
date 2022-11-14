@@ -6,7 +6,6 @@ use App\Helpers\Helper;
 use App\Services\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +17,7 @@ class PSOActivityStatusController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return void
      */
     public function store(Request $request)
     {
@@ -39,6 +38,7 @@ class PSOActivityStatusController extends Controller
     {
         Validator::make(['status' => $status], [
             'status' => Rule::in([
+                // todo can we use the keys from the pso-services.statuses.all?
                 'travelling', 'ignore', 'committed', 'sent', 'unallocated', 'downloaded', 'accepted', 'waiting', 'onsite',
                 'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'
             ])
@@ -59,7 +59,6 @@ class PSOActivityStatusController extends Controller
             'resource_id' => 'string|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
             'date_time_fixed' => 'date_format:Y-m-d\TH:i|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
         ]);
-
 
         Helper::ValidateSendToPSO($request);
 

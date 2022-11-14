@@ -9,9 +9,8 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
+
 
 class IFSPSOAssistService extends IFSService
 {
@@ -26,7 +25,6 @@ class IFSPSOAssistService extends IFSService
                 'parameter_value' => "$rota_id",
             ];
     }
-
 
     private function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
@@ -145,7 +143,7 @@ class IFSPSOAssistService extends IFSService
 
         if ($usage->collect()->first()) {
 
-            $mystuff = collect($usage->collect()->first())->map(function ($item) {
+            $usage_values = collect($usage->collect()->first())->map(function ($item) {
 
                 $type = match ($item['ScheduleDataUsageType']) {
                     0 => 'Resource_Count',
@@ -156,31 +154,31 @@ class IFSPSOAssistService extends IFSService
                 };
 
                 return collect($item)->put('count_type', $type);
-            })->mapToGroups(function ($item, $key) {
+            })->mapToGroups(function ($item) {
 
                 return [$item['DatasetId'] => $item];
             });
 
-
-            foreach ($mystuff as $dataset => $value) {
-                $newdata[$dataset] = collect($value)->mapToGroups(function ($item) {
+            $grouped_values = [];
+            foreach ($usage_values as $dataset => $value) {
+                $grouped_values[$dataset] = collect($value)->mapToGroups(function ($item) {
                     return [$item['count_type'] => $item];
 
                 });
             }
 
-            $finaldata = [];
+            $formatted_data = [];
 
-            foreach ($newdata[$request->dataset_id] as $counttype) {
+            foreach ($grouped_values[$request->dataset_id] as $counttype) {
                 foreach ($counttype as $countdata) {
-                    $finaldata[$countdata['count_type']][] = ['date' => Carbon::createFromDate($countdata['DatetimeStamp'])->toDayDateTimeString(), 'count' => $countdata['Value']];
+                    $formatted_data[$countdata['count_type']][] = ['date' => Carbon::createFromDate($countdata['DatetimeStamp'])->toDayDateTimeString(), 'count' => $countdata['Value']];
                 }
             }
 
             return $this->apiResponse(
                 200,
                 'Usage Data',
-                [$request->dataset_id => $finaldata],
+                [$request->dataset_id => $formatted_data],
                 'usage_data'
             );
         }

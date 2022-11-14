@@ -1,12 +1,12 @@
-<?php // Code within app\Helpers\Helper.php
+<?php
 
 namespace App\Helpers;
 
-use App\Services\IFSPSOResourceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class Helper
 {
@@ -37,6 +37,9 @@ class Helper
         return 'P' . $duration . 'D';
     }
 
+    /**
+     * @throws ValidationException
+     */
     public static function ValidateSendToPSO(Request $request)
     {
         Validator::make($request->all(), [
@@ -52,15 +55,5 @@ class Helper
         ])->validate();
     }
 
-    public static function authenticatePSO($pso_service_object, Request $request)
-    {
-        if (!$pso_service_object->isAuthenticated() && $request->send_to_pso) {
-            return response()->json([
-                'status' => 401,
-                'description' => 'did not pass auth'
-            ]);
-        }
-
-    }
 
 }

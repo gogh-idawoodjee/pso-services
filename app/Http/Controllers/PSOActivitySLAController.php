@@ -6,7 +6,6 @@ use App\Helpers\Helper;
 use App\Services\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 use Illuminate\Validation\ValidationException;
 
@@ -16,7 +15,7 @@ class PSOActivitySLAController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return void
      */
     public function store(Request $request)
     {
@@ -30,7 +29,7 @@ class PSOActivitySLAController extends Controller
      *
      * @param Request $request
      * @param int $id
-     * @return Response
+     * @return void
      */
     public function update(Request $request, $id)
     {
@@ -63,19 +62,15 @@ class PSOActivitySLAController extends Controller
             'start_based' => 'boolean'
         ]);
 
-
         Helper::ValidateSendToPSO($request);
 
-
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-
 
         if (!$activity->isAuthenticated() && $request->send_to_pso) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
             ]);
-
         }
 
         return $activity->deleteSLA($request);

@@ -6,8 +6,6 @@ use App\Helpers\Helper;
 use App\Services\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-
 use Illuminate\Validation\ValidationException;
 
 class PSOActivityController extends Controller
@@ -18,6 +16,7 @@ class PSOActivityController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
@@ -43,7 +42,6 @@ class PSOActivityController extends Controller
 
         Helper::ValidateSendToPSO($request);
 
-
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         if (!$activity->isAuthenticated() && $request->send_to_pso) {
@@ -62,7 +60,7 @@ class PSOActivityController extends Controller
      *
      * @param Request $request
      * @param int $id
-     * @return Response
+     * @return void
      */
     public function update(Request $request, $id)
     {
@@ -75,6 +73,7 @@ class PSOActivityController extends Controller
      * @param Request $request
      * @param $activity_id
      * @return JsonResponse
+     * @throws ValidationException
      */
     public function destroy(Request $request, $activity_id)
     {

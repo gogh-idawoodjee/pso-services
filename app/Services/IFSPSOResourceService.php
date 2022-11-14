@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFSPSOResourceService extends IFSService
@@ -306,7 +305,7 @@ class IFSPSOResourceService extends IFSService
 
             // get the resource again
             $resource_init = new IFSPSOResourceService($shift_data->base_url, $this->token, null, null, null, true);
-            $resource = $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
+            $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
             $fresh_shifts = $resource_init->getResourceShiftsRaw();
             $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
 
@@ -460,6 +459,7 @@ class IFSPSOResourceService extends IFSService
         $base_time = ($request->base_time ? $request->base_time . ':00' : Str::of($grouped_allocations->first()['activity_start'])->substr(1, 19)) . $tz;
         $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability from the Thingy');
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
+        $ram_unavailability_payload = [];
         foreach ($grouped_activities as $na) {
             $ram_unavailability_payload[] = $this->RAMUnavailabilityPayloadPart(
                 $grouped_allocations[$na['id']]['resource_id'], $time_pattern_id, $category_id, $description);

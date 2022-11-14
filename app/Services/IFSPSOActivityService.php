@@ -10,7 +10,6 @@ use App\Helpers\Helper;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -44,8 +43,8 @@ class IFSPSOActivityService extends IFSService
             'activity_id' => $request->activity_id ?: Str::orderedUuid()->getHex()->toString(),
             'lat' => $request->lat,
             'long' => $request->long,
-            'sla_start' => Carbon::now()->addDay($relative_day)->setTime(8, 0)->toDateTimeLocalString() . $tz,
-            'sla_end' => Carbon::now()->addDay($relative_day_end)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
+            'sla_start' => Carbon::now()->addDays($relative_day)->setTime(8, 0)->toDateTimeLocalString() . $tz,
+            'sla_end' => Carbon::now()->addDays($relative_day_end)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
             'sla_type_id' => $request->sla_type_id,
             'activity_type_id' => $request->activity_type_id,
             'status_id' => 0,
@@ -147,12 +146,12 @@ class IFSPSOActivityService extends IFSService
 
     public function updateActivityStatus($request, $status): JsonResponse
     {
-        // why did I type this?
+
         $pso_status = config('pso-services.statuses.all.' . $status);
 
         $activity_part_payload = (
         new PSOActivityStatus(
-            $status,
+            $pso_status,
             1,
             0,
             false,
@@ -163,7 +162,7 @@ class IFSPSOActivityService extends IFSService
 
         $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
 
-        $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change from the thingy');
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change from the thingy');
 
     }
 

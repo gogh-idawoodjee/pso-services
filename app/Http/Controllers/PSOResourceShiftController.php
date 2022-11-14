@@ -6,8 +6,6 @@ use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PSOResourceShiftController extends Controller
@@ -29,6 +27,7 @@ class PSOResourceShiftController extends Controller
      * @param Request $request
      * @param $resource_id
      * @return JsonResponse
+     * @throws ValidationException
      */
     public function update(Request $request, $resource_id)//: JsonResponse
     {
@@ -61,7 +60,7 @@ class PSOResourceShiftController extends Controller
         }
         // do we need this? seems like we do, it initializes $this->pso_resource
         // // technically we could do this from the method
-        $resource = $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url);
+        $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url);
 
         // send all that back to the service and let it do the work
         return $resource_init->setManualScheduling($request, $resource_id);

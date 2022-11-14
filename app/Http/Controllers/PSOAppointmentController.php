@@ -6,8 +6,6 @@ use App\Helpers\Helper;
 use App\Services\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PSOAppointmentController extends Controller
@@ -43,7 +41,7 @@ class PSOAppointmentController extends Controller
 
         }
 
-        $appointed->checkAppointed($request, $appointment_request_id);
+        return $appointed->checkAppointed($request, $appointment_request_id);
     }
 
 
