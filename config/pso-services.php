@@ -45,6 +45,7 @@ return [
         'validate_object_existence' => true,
         'enable_commit_service_log' => true,
         'service_name' => 'the thingy',
+        'use_system_date_format' => false,
         'enable_debug' => false
     ]
 ];

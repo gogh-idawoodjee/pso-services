@@ -140,7 +140,7 @@ class IFSPSOAssistService extends IFSService
         if (!$keys->contains($request->dataset_id)) {
             return $this->apiResponse(404, 'Dataset not found in this environment', ['dataset_id_requested' => $request->dataset_id, 'datasets_available' => $keys]);
         }
-        
+
         if ($usage->collect()->first()) {
 
             $usage_values = collect($usage->collect()->first())->map(function ($item) {
@@ -171,7 +171,11 @@ class IFSPSOAssistService extends IFSService
 
             foreach ($grouped_values[$request->dataset_id] as $counttype) {
                 foreach ($counttype as $countdata) {
-                    $formatted_data[$countdata['count_type']][] = ['date' => Carbon::createFromDate($countdata['DatetimeStamp'])->toDayDateTimeString(), 'count' => $countdata['Value']];
+                    $formatted_data[$countdata['count_type']][] = [
+                        'date' => config('pso-services.settings.use_system_date_format') ? Carbon::createFromDate($countdata['DatetimeStamp'])->toDateTimeString() : Carbon::createFromDate($countdata['DatetimeStamp'])->calendar(),
+                        'count' => $countdata['Value']
+                    ];
+
                 }
             }
 
