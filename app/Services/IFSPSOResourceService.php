@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
+
 class IFSPSOResourceService extends IFSService
 {
 
@@ -50,7 +51,7 @@ class IFSPSOResourceService extends IFSService
 
         $resource_regions = [];
         $regions = [];
-        if (collect($resource_raw['Resource_Region'])) {
+        if (collect($resource_raw['Resource_Region'])->count()) {
             if (collect($resource_raw['Resource_Region'])->has('region_id')) {
                 $resource_regions = [collect($resource_raw['Resource_Region'])];
                 $regions = [collect($resource_raw['Region'])];
@@ -65,7 +66,7 @@ class IFSPSOResourceService extends IFSService
 
         $resource_locations = [];
 
-        if (collect($location)) {
+        if (collect($location)->count()) {
             if ($location->has('id')) {
                 $resource_locations = [$location];
             } else {
@@ -103,7 +104,7 @@ class IFSPSOResourceService extends IFSService
 
         $resource_skills = [];
         $skills = [];
-        if (collect($resource_raw['Resource_Skill'])) {
+        if (collect($resource_raw['Resource_Skill'])->count()) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
                 $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
@@ -282,7 +283,7 @@ class IFSPSOResourceService extends IFSService
             if (!isset($item['manual_scheduling_only'])) {
                 $shifts->put('manual_scheduling_only', false);
             } else {
-                $shifts->put('manual_scheduling_isset', 'checked');
+                $shifts->put('manual_scheduling_isset', true); // this may need to be renamed to 'checked' if used in VueJS
             }
 
             $shifts->pull('start_datetime');
