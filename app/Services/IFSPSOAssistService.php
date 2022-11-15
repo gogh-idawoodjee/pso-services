@@ -29,7 +29,7 @@ class IFSPSOAssistService extends IFSService
     private function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
     {
         $input_reference = (new InputReference(
-            "Update Rota from the Thingy",
+            "Update Rota from " . config('pso-services.settings.service_name'),
             'CHANGE',
             $dataset_id,
             $datetime)
@@ -49,7 +49,7 @@ class IFSPSOAssistService extends IFSService
     {
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
 
-        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota from the Thingy');
+        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota via ' . config('pso-services.settings.service_name'));
 
     }
 
@@ -83,7 +83,7 @@ class IFSPSOAssistService extends IFSService
     private function initializePSOPayload(Request $request): array
     {
 
-        $description = $request->description ?: 'Init from the Thingy';
+        $description = $request->description ?: 'Init via ' . config('pso-services.settings.service_name');
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
         $dse_duration = Helper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
@@ -117,12 +117,8 @@ class IFSPSOAssistService extends IFSService
 
     public function InitializePSO(Request $request)
     {
-
         $payload = $this->initializePSOPayload($request);
-
-        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize From the Thingy');
-
-
+        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize via ' . config('pso-services.settings.service_name'));
     }
 
     public function getUsageData($request)

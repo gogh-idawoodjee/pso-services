@@ -50,7 +50,7 @@ class IFSPSOActivityService extends IFSService
             'activity_type_id' => $request->activity_type_id,
             'status_id' => 0,
             'duration' => $request->duration,
-            'description' => $request->description ?: 'Instant Activity from the thingy',
+            'description' => $request->description ?: 'Instant Activity from ' . config('pso-services.settings.service_name'),
             'skill' => $request->skill,
             'region' => $request->region
         ]);
@@ -58,7 +58,7 @@ class IFSPSOActivityService extends IFSService
         $activity = new PSOActivity($activity_build_data);
 
         $input_ref = (new InputReference(
-            'Instant Activity Generator from the thingy',
+            'Instant Activity Generator from ' . config('pso-services.settings.service_name'),
             'CHANGE',
             $request->dataset_id,
             $request->input_datetime
@@ -117,7 +117,7 @@ class IFSPSOActivityService extends IFSService
                 0,
                 true,
                 $suggestion['resource_id'],
-                'From the Commit Service Thingy',
+                'From the Commit Service via ' . config('pso-services.settings.service_name'),
                 $suggestion['expected_start_datetime'])
             )->toJson($suggestion['activity_id']);
         }
@@ -166,13 +166,13 @@ class IFSPSOActivityService extends IFSService
             0,
             false,
             $request->resource_id,
-            'Update Status from the thingy',
+            'Update Status from ' . config('pso-services.settings.service_name'),
             $request->date_time_fixed)
         )->toJson($request->activity_id);
 
-        $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change from the thingy');
+        $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change via ' . config('pso-services.settings.service_name'));
 
-        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change from the thingy');
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change via ' . config('pso-services.settings.service_name'));
 
     }
 
@@ -243,7 +243,7 @@ class IFSPSOActivityService extends IFSService
     {
 
         $input_ref = (
-        new InputReference(("Deleting " . $description . " from the thingy"),
+        new InputReference(("Deleting " . $description . " via " . config('pso-services.settings.service_name')),
             'CHANGE',
             $dataset_id))
             ->toJson();

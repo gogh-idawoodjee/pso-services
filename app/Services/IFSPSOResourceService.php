@@ -172,11 +172,6 @@ class IFSPSOResourceService extends IFSService
         $resources = collect($overall_schedule->get('Resources'));
         $shifts = collect($overall_schedule->get('Plan_Route'))->groupBy('resource_id');
         $events = collect($overall_schedule->get('Schedule_Event'));
-        // not currently needed
-        // just adds the resource_id property to teh resource object
-//        $mystuff = collect($resources)->map(function ($item, $key) {
-//            return collect($item)->put('resource_id', $item['id']);
-//        });
 
 
         if (!Arr::has($events, 'id')) {
@@ -190,10 +185,6 @@ class IFSPSOResourceService extends IFSService
             });
         }
 
-
-//        if (!Arr::has($events, 'id')) {
-//            $events = $events->keyBy('resource_id');
-//        }
 
         $plans = collect($overall_schedule->get('Plan_Resource'))->keyBy('resource_id');
         return collect($resources)->map(function ($item) use ($events) {
@@ -282,9 +273,10 @@ class IFSPSOResourceService extends IFSService
 
         // build the json for the RAM_Rota_Item
         // the first param is looking at the list of shifts and finding the details on the one we're modifying
-        $description = "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " by the thingy tool.(" . Carbon::now()->toDateTimeString() . ")";
+
+        $description = "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " via " . config('pso-services.settings.service_name') . ". (" . Carbon::now()->toDateTimeString() . ")";
         $ram_rota_item_payload = $this->RAMRotaItemPayload(collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id)), $shift_data->rota_id, $shift_data->turn_manual_scheduling_on, $shift_data->shift_type, $description);
-        $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " by the thingy tool");
+        $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " via " . config('pso-services.settings.service_name'));
 
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
@@ -347,7 +339,7 @@ class IFSPSOResourceService extends IFSService
         return [
             'organisation_id' => '2',
             'dataset_id' => $dataset_id,
-            'user_id' => 'thingy user',
+            'user_id' => config('pso-services.settings.service_name') . ' user',
             'ram_update_type_id' => 'CHANGE',
             'is_master_data' => true,
             'description' => $description
@@ -392,7 +384,7 @@ class IFSPSOResourceService extends IFSService
 
         $base_time = $request->base_time . ':00' . $tz;
 
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability from the Thingy');
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability via ' . config('pso-services.settings.service_name'));
         $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
@@ -454,10 +446,10 @@ class IFSPSOResourceService extends IFSService
         $tz = Helper::setTimeZone($request->time_zone, true, $grouped_allocations);
 
         $category_id = $request->category_id ?: $grouped_activities->first()['activity_type_id'];
-        $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated from the thingy on ' . Carbon::now()->toDayDateTimeString();
+        $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated via ' . config('pso-services.settings.service_name') . ' on ' . Carbon::now()->toDayDateTimeString();
 
         $base_time = ($request->base_time ? $request->base_time . ':00' : Str::of($grouped_allocations->first()['activity_start'])->substr(1, 19)) . $tz;
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability from the Thingy');
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability via ' . config('pso-services.settings.service_name'));
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $ram_unavailability_payload = [];
         foreach ($grouped_activities as $na) {
@@ -517,9 +509,8 @@ class IFSPSOResourceService extends IFSService
 
     public function DeleteUnavailability(Request $request): JsonResponse
     {
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability from the Thingy');
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . config('pso-services.settings.service_name'));
 
-        //        $ram_data_update = $this->RAMDataDeletePayloadPart('RAM_Unavailability', $request->unavailability_id);
         $ram_data_update = (new PSODeleteObject(
             'RAM_Unavailability', 'id', '$request->unavailability_id',
             null, null,

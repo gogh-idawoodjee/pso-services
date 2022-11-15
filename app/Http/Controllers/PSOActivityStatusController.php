@@ -41,7 +41,7 @@ class PSOActivityStatusController extends Controller
         Validator::make(['status' => $status], [
             'status' => Rule::in($statuses)
         ])->validate();
-        
+
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
