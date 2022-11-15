@@ -42,7 +42,6 @@ Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::c
 Route::post('/activity/', [PSOActivityController::class, 'store']);
 Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy']);
 
-
 // appointment
 Route::post('/appointment', [PSOAppointmentController::class, 'store']);
 Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show']);

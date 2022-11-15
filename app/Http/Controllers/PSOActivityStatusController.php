@@ -34,19 +34,14 @@ class PSOActivityStatusController extends Controller
      * @return JsonResponse
      * @throws ValidationException
      */
-    public function update(Request $request, $activity_id, $status): JsonResponse
+    public function update(Request $request, $activity_id, $status)
     {
+        $statuses = collect(config('pso-services.statuses.all'))->keys()->toArray();
+
         Validator::make(['status' => $status], [
-            'status' => Rule::in([
-                // todo can we use the keys from the pso-services.statuses.all?
-                'travelling', 'ignore', 'committed', 'sent', 'unallocated', 'downloaded', 'accepted', 'waiting', 'onsite',
-                'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'
-            ])
+            'status' => Rule::in($statuses)
         ])->validate();
-
-        $request->merge(['activity_id' => $activity_id]);
-        $request->merge(['status' => $status]);
-
+        
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
@@ -55,10 +50,12 @@ class PSOActivityStatusController extends Controller
             'token' => 'string',
             'username' => 'string',
             'password' => 'string',
-            'activity_id' => 'string|required',
             'resource_id' => 'string|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
             'date_time_fixed' => 'date_format:Y-m-d\TH:i|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
         ]);
+
+        $request->merge(['activity_id' => $activity_id]);
+        $request->merge(['status' => $status]);
 
         Helper::ValidateSendToPSO($request);
 

@@ -7,6 +7,7 @@ use App\Classes\PSOActivity;
 use App\Classes\PSOActivityStatus;
 use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
+use App\Models\PSOCommitLog;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -89,7 +90,7 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false): JsonResponse
+    public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false)//: JsonResponse
     {
 
         // should be assumed that environment and auth for this service is pre-configured
@@ -110,7 +111,6 @@ class IFSPSOActivityService extends IFSService
 
         // build the individual status update
         foreach ($newsuggestions as $suggestion) {
-//            $activity_part_payload[] = $this->ActivityStatusPartPayload($suggestion['activity_id'], config('pso-services.statuses.commit_status'), $suggestion['resource_id'], $suggestion['expected_start_datetime'], 'From the Commit Service Thingy');
             $activity_part_payload[] = (new PSOActivityStatus(
                 config('pso-services.statuses.commit_status'),
                 1,
@@ -122,6 +122,7 @@ class IFSPSOActivityService extends IFSService
             )->toJson($suggestion['activity_id']);
         }
 
+
         // build the full payload
         $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
 
@@ -130,7 +131,15 @@ class IFSPSOActivityService extends IFSService
                 $activity_status_payload
             );
 
-        // todo log that we received it, sent it and the response from the server
+        if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
+            'id' => Str::orderedUuid()->getHex()->toString(),
+            'pso_suggestions' => json_encode($newsuggestions),
+            'output_payload' => json_encode($activity_status_payload),
+            'pso_response' => $activity_status->body(),
+            'response_time' => $activity_status->transferStats->getTransferTime(),
+            'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats())
+        ]);
+
 
         if ($debug_mode) {
             $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
@@ -141,6 +150,7 @@ class IFSPSOActivityService extends IFSService
                 'original_payload' => [$activity_status_payload]
             ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
+
 
     }
 

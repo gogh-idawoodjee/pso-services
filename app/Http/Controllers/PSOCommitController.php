@@ -15,7 +15,7 @@ class PSOCommitController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update(Request $request): JsonResponse
+    public function update(Request $request)
     {
         // receive the payload
         // strip out the nastiness
@@ -36,6 +36,7 @@ class PSOCommitController extends Controller
             true,
             null
         );
+
 
         return $commit->sendCommitActivity($content);
 
