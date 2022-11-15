@@ -7,7 +7,6 @@ use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -75,6 +74,5 @@ class PSOResourceController extends Controller
         return $resource_init->getResourceForWebApp($resource_id, $request->dataset_id, $request->base_url);
 
     }
-
 
 }
