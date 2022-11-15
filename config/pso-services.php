@@ -4,8 +4,18 @@ return [
 
     'statuses' => [
         'statuses_greater_than_alloc' => [
-            'travelling', 'committed', 'sent', 'downloaded', 'accepted', 'waiting', 'onsite',
-            'pendingcompletion', 'visitcomplete', 'completed', 'incomplete'],
+            'travelling',
+            'committed',
+            'sent',
+            'downloaded',
+            'accepted',
+            'waiting',
+            'onsite',
+            'pendingcompletion',
+            'visitcomplete',
+            'completed',
+            'incomplete'
+        ],
         'all' => [
             'travelling' => 50,
             'ignore' => -1,
