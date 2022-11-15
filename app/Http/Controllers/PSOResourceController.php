@@ -56,10 +56,8 @@ class PSOResourceController extends Controller
         //
         $request->validate([
             'dataset_id' => 'required|string',
-            'token' => 'string',
+            'token' => 'required|string',
             'account_id' => 'string|required',
-            'username' => 'string',
-            'password' => 'string',
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
         ]);
 

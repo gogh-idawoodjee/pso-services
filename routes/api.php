@@ -9,6 +9,7 @@ use App\Http\Controllers\PSOCommitController;
 use App\Http\Controllers\PSOResourceController;
 use App\Http\Controllers\PSOResourceEventController;
 use App\Http\Controllers\PSOResourceShiftController;
+use App\Http\Controllers\PSOSandboxController;
 use App\Http\Controllers\PSOUnavailabilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,6 @@ Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityControll
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 
-Route::post('/sandbox', [\App\Http\Controllers\PSOSandboxController::class, 'store']);
+Route::post('/sandbox', [PSOSandboxController::class, 'store']);
 
 //Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']); // doesn't exist yet

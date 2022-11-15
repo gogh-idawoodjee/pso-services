@@ -29,7 +29,8 @@ return [
             'pendingcompletion' => 65,
             'visitcomplete' => 68,
             'completed' => 70,
-            'incomplete' => 80],
+            'incomplete' => 80
+        ],
         'commit_status' => 30
     ],
 
