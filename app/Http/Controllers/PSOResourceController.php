@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 
@@ -47,7 +49,7 @@ class PSOResourceController extends Controller
      *
      * @param Request $request
      * @param $resource_id
-     * @return Response
+     * @return JsonResponse|Collection
      */
     public function show(Request $request, $resource_id)
     {
@@ -55,12 +57,22 @@ class PSOResourceController extends Controller
         $request->validate([
             'dataset_id' => 'required|string',
             'token' => 'string',
+            'account_id' => 'string|required',
             'username' => 'string',
             'password' => 'string',
-            'base_url' => ['string', 'required', 'not_regex:/prod|prd/i'],
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
         ]);
 
-        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true, 'cb847e5e-8747-4a02-9322-76530ef38a19');
+        Helper::ValidateCredentials($request);
+
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+        if (!$resource_init->isAuthenticated()) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
 
         return $resource_init->getResourceForWebApp($resource_id, $request->dataset_id, $request->base_url);
 

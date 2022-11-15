@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+
 use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
@@ -35,20 +36,170 @@ class IFSPSOResourceService extends IFSService
     public function getResourceForWebApp($resource_id, $dataset_id, $base_url)
     {
 
+
+        $resource_raw = $this->getResource($resource_id, $dataset_id, $base_url);
+
         if (!$this->ResourceExists())
             return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['resource_id' => $resource_id]);
 
-        $payload = [
-            'resource' => [
-                'raw' => $this->getResource($resource_id, $dataset_id, $base_url), // todo clean this up, make it look nicer and more formatted
-                'utilization' => $this->getResourceUtilization(),
-                'events' => $this->getResourceEvents(),
-                'locations' => $this->getResourceLocations(),
-                'shifts' => $this->getResourceShiftsFormatted(),
-            ]
+        $resource = collect($resource_raw['Resources']);
+
+        $resource_type = collect($resource_raw['Resource_Type']);
+        $location = collect($resource_raw['Location']);
+
+
+        $resource_regions = [];
+        $regions = [];
+        if (collect($resource_raw['Resource_Region'])) {
+            if (collect($resource_raw['Resource_Region'])->has('region_id')) {
+                $resource_regions = [collect($resource_raw['Resource_Region'])];
+                $regions = [collect($resource_raw['Region'])];
+            } else {
+                $resource_regions = collect($resource_raw['Resource_Region']);
+                $regions = collect($resource_raw['Region']);
+            }
+            foreach ($regions as $region) {
+                $thisresource_regions[] = $region['description'];
+            }
+        }
+
+        $resource_locations = [];
+
+        if (collect($location)) {
+            if ($location->has('id')) {
+                $resource_locations = [$location];
+            } else {
+                $resource_locations = $location;
+            }
+
+            $resource_locations = collect($resource_locations)->groupBy('id');
+            $newresource_locations = $resource_locations->map(function ($location) {
+                $latlong = collect($location)->first()['latitude'] . ',' . collect($location)->first()['longitude'];
+                $response = \GoogleMaps::load('geocoding')
+                    ->setParam(['latlng' => $latlong])
+                    ->get();
+                $country = json_decode($response)->results[0]->address_components[5]->short_name;
+                return collect(collect($location)->first())->put('country', $country);
+            })->values()->groupBy('id')
+                ->map(function ($location) {
+                    $latlong = collect($location)->first()['latitude'] . ',' . collect($location)->first()['longitude'];
+                    $response = \GoogleMaps::load('geocoding')
+                        ->setParam(['latlng' => $latlong])
+                        ->get();
+                    $formatted_address = json_decode($response)->results[0]->formatted_address;
+                    return collect(collect($location)->first())->put('formatted_address', $formatted_address);
+                });
+
+        }
+
+//        return $newresource_locations;
+
+//        $latlong = $newresource_locations->first()['latitude'] . ',' . $newresource_locations->first()['longitude'];
+//        $response = \GoogleMaps::load('geocoding')
+//            ->setParam(['latlng' => $latlong])
+//            ->get();
+//        return $country = json_decode($response)->results[0]->address_components[5]->short_name;
+
+
+        $resource_skills = [];
+        $skills = [];
+        if (collect($resource_raw['Resource_Skill'])) {
+            if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
+
+                $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
+                $skills = [collect($resource_raw['Skill'])];
+            }
+            // group these so we can grab the proficiency by ID
+            $resource_skills = collect($resource_raw['Resource_Skill'])->groupBy('skill_id');
+            $skills = collect($resource_raw['Skill']);
+            foreach ($skills as $skill) {
+                $thisresource_skills[] = $skill['description'] . ' @ ' . $resource_skills->get($skill['id'])->first()['proficiency'];
+            }
+        }
+
+
+        if ($resource['location_id_start'] == $resource['location_id_end']) {
+            // they're the same
+            $resource_location = [
+                'start_and_end_location' => [
+                    'id' => $newresource_locations[$resource['location_id_start']]['id'],
+                    'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
+                    'city' => $newresource_locations[$resource['location_id_start']]['city'],
+                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
+                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
+                    'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
+                    'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
+                    'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
+                ]
+            ];
+        } else {
+            $resource_location = [
+                'start_location' => [
+                    'id' => $newresource_locations[$resource['location_id_start']]['id'],
+                    'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
+                    'city' => $newresource_locations[$resource['location_id_start']]['city'],
+                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
+                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
+                    'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
+                    'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
+                    'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
+                ],
+                'end_location' => [
+                    'id' => $newresource_locations[$resource['location_id_end']]['id'],
+                    'address' => $newresource_locations[$resource['location_id_end']]['address_line1'],
+                    'city' => $newresource_locations[$resource['location_id_end']]['city'],
+                    $newresource_locations[$resource['location_id_end']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_end']]['state'],
+                    $newresource_locations[$resource['location_id_end']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_end']]['post_code_zip'],
+                    'lat' => $newresource_locations[$resource['location_id_end']]['latitude'],
+                    'long' => $newresource_locations[$resource['location_id_end']]['longitude'],
+                    'formatted_from_google' => $newresource_locations[$resource['location_id_end']]['formatted_address'],
+                ]
+            ];
+        }
+
+
+        $formatted_resource = [
+            'name' => $resource->get('first_name') . ' ' . $resource->get('surname'),
+            'resource_id' => $resource->get('id'),
+            'resource_type' => $resource_type->get('description'),
+            'note' => $resource->get('memo'),
+            'max_travel' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
+            'max_travel_outside_shift_to_first_activity' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
+            'max_travel_outside_shift_to_home' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
+            'locations' => $resource_location,
         ];
 
-        return response($payload, 200)
+        if (count($thisresource_regions)) {
+            $formatted_resource = Arr::add($formatted_resource, 'regions', $thisresource_regions);
+        }
+        if (count($thisresource_skills)) {
+            $formatted_resource = Arr::add($formatted_resource, 'skills', $thisresource_skills);
+        }
+
+        if (count($this->getResourceEvents())) {
+            $formatted_resource = Arr::add($formatted_resource, 'events', $this->getResourceEvents());
+        }
+        $formatted_resource = Arr::add($formatted_resource, 'shifts', $this->getResourceShiftsFormatted());
+        if (config('pso-services.settings.enable_debug')) {
+            $formatted_resource = Arr::add($formatted_resource, 'raw', $resource_raw);
+        }
+
+//        return $this->pso_resource['Plan_Route'];
+//        return $this->getResourceShiftsFormatted();
+//        return $this->IFSPSOAssistService->apiResponse(200, 'Formatted Resource Returned', $formatted_resource);
+
+
+//        $payload = [
+//            'resource' => [
+//                'raw' => $this->getResource($resource_id, $dataset_id, $base_url), // todo clean this up, make it look nicer and more formatted
+//                'utilization' => $this->getResourceUtilization(),
+//                'events' => $this->getResourceEvents(),
+//                'locations' => $this->getResourceLocations(),
+//                'shifts' => $this->getResourceShiftsFormatted(),
+//            ]
+//        ];
+
+        return response($formatted_resource, 200)
             ->header('Content-Type', 'application/json');
 
 
@@ -94,18 +245,39 @@ class IFSPSOResourceService extends IFSService
     public function getResourceShiftsFormatted(): Collection
     {
         $this->getShifts();
+        $routes = collect($this->pso_resource['Plan_Route'])->groupBy('shift_id');
 
-        return collect($this->shifts)->map(function ($item) {
-            $shiftdate = Carbon::createFromDate($item['start_datetime'])->toDateString();
-            $starttime = Carbon::createFromDate($item['start_datetime'])->format('h:i');
-            $endtime = Carbon::createFromDate($item['end_datetime'])->format('h:i');
+        return collect($this->shifts)->map(function ($item) use ($routes) {
+            // this is a really nicely done mapping
+            $shiftdate = Carbon::createFromDate($item['start_datetime'])->toFormattedDateString();
+            $starttime = Carbon::createFromDate($item['start_datetime'])->format('H:i');
+            $endtime = Carbon::createFromDate($item['end_datetime'])->format('H:i');
             $times = $starttime . ' - ' . $endtime;
             $difference = Carbon::createFromDate($item['start_datetime'])->diffInHours(Carbon::createFromDate($item['end_datetime']));
+            $avg_travel = CarbonInterval::fromString($routes[$item['id']][0]['average_travel_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $total_travel_time = CarbonInterval::fromString($routes[$item['id']][0]['total_travel_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $total_on_site_time = CarbonInterval::fromString($routes[$item['id']][0]['total_on_site_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $total_break_time = CarbonInterval::fromString($routes[$item['id']][0]['total_break_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $total_private_time = CarbonInterval::fromString($routes[$item['id']][0]['total_private_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $total_unutilised_time = CarbonInterval::fromString($routes[$item['id']][0]['total_unutilised_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $util_percent = $routes[$item['id']][0]['utilisation'];
+            $total_allocations = $routes[$item['id']][0]['total_allocations'];
+            $route_margin = $routes[$item['id']][0]['route_margin'];
 
             $shifts = collect($item)
                 ->put('shift_date', $shiftdate)
-                ->put('shift_times', $times)
-                ->put('shift_duration', $difference);
+                ->put('shift_span', $times)
+                ->put('shift_duration', $difference)
+                ->put('utilization', [
+                    'percent' => $util_percent,
+                    'total_unutilised_time' => $total_unutilised_time,
+                    'total_private_time' => $total_private_time,
+                    'total_break_time' => $total_break_time,
+                    'total_on_site_time' => $total_on_site_time,
+                    'total_travel_time' => $total_travel_time,
+                    'total_allocations' => $total_allocations,
+                    'route_margin' => $route_margin,
+                ]);
 
             if (!isset($item['manual_scheduling_only'])) {
                 $shifts->put('manual_scheduling_only', false);
@@ -188,13 +360,14 @@ class IFSPSOResourceService extends IFSService
 
         $plans = collect($overall_schedule->get('Plan_Resource'))->keyBy('resource_id');
         return collect($resources)->map(function ($item) use ($events) {
-            // how do we do this if it's only one event?
+            // how do we do this if it's only one event ?
             if (isset($events[$item['id']])) {
                 return collect($item)->put('events', $events[$item['id']]);
             } else {
                 return $item;
             }
-        })->map(function ($item) use ($shifts, $plans) {
+        })->
+        map(function ($item) use ($shifts, $plans) {
             return collect($item)
                 ->put('route', $plans[$item['id']])
                 ->put('shift count', count($shifts[$item['id']]))

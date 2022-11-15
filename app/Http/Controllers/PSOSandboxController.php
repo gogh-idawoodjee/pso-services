@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 
 use App\Services\IFSPSOAssistService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
 use App\Services\IFSPSOScheduleService;
 use App\Services\IFSPSOResourceService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 
 
@@ -18,7 +20,7 @@ class PSOSandboxController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function index()
     {
@@ -215,10 +217,9 @@ class PSOSandboxController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public
-    function create()
+    public function create()
     {
         //
     }
@@ -226,23 +227,24 @@ class PSOSandboxController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return array|JsonResponse
      */
-    public
-    function store(Request $request)
+    public function store(Request $request)
     {
         //
+        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        return $resource_init->getResourceForWebApp($request->resource_id, $request->dataset_id, $request->base_url);
     }
 
     /**
      * Display the specified resource.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public
-    function show()
+    public function show()
     {
         //
 //        return
@@ -252,10 +254,9 @@ class PSOSandboxController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public
-    function edit($id)
+    public function edit($id)
     {
         //
     }
@@ -263,12 +264,11 @@ class PSOSandboxController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public
-    function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -277,10 +277,9 @@ class PSOSandboxController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
-    public
-    function destroy($id)
+    public function destroy($id)
     {
         //
     }

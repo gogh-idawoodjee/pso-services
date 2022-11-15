@@ -125,7 +125,6 @@ class IFSPSOActivityService extends IFSService
 
         // build the full payload
         $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
-
         $activity_status = Http::withHeaders(['apiKey' => $this->token])
             ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
                 $activity_status_payload
@@ -133,6 +132,7 @@ class IFSPSOActivityService extends IFSService
 
         if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
             'id' => Str::orderedUuid()->getHex()->toString(),
+            'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
             'pso_suggestions' => json_encode($newsuggestions),
             'output_payload' => json_encode($activity_status_payload),
             'pso_response' => $activity_status->body(),
@@ -143,13 +143,13 @@ class IFSPSOActivityService extends IFSService
 
         if ($debug_mode) {
             $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
-
-            return response()->json([
-                'status' => 200,
-                'description' => 'Service has sent payload to PSO',
-                'original_payload' => [$activity_status_payload]
-            ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
         }
+
+        return response()->json([
+            'status' => 200,
+            'description' => 'Service has sent payload to PSO',
+            'original_payload' => [$activity_status_payload]
+        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
 
     }

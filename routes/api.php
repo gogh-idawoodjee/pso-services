@@ -59,4 +59,6 @@ Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityControll
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 
+Route::post('/sandbox', [\App\Http\Controllers\PSOSandboxController::class, 'store']);
+
 //Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']); // doesn't exist yet

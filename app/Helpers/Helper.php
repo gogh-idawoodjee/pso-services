@@ -55,5 +55,20 @@ class Helper
         ])->validate();
     }
 
+    public static function ValidateCredentials(Request $request)
+    {
+        Validator::make($request->all(), [
+            'token' => Rule::requiredIf(!$request->username && !$request->password)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'username' => Rule::requiredIf(!$request->token)
+        ])->validate();
+
+        Validator::make($request->all(), [
+            'password' => Rule::requiredIf( !$request->token)
+        ])->validate();
+    }
+
 
 }

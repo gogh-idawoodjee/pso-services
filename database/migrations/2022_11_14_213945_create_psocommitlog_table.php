@@ -14,6 +14,7 @@ return new class extends Migration {
     {
         Schema::create('psocommitlog', function (Blueprint $table) {
             $table->uuid('id');
+            $table->uuid('input_reference');
             $table->json('pso_suggestions');
             $table->json('output_payload');
             $table->json('pso_response');
