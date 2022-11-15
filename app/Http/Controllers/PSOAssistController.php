@@ -97,7 +97,7 @@ class PSOAssistController extends Controller
         );
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         $request->validate([
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],

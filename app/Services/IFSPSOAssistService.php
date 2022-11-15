@@ -135,8 +135,12 @@ class IFSPSOAssistService extends IFSService
                 'minimumDateTime' => $mindate,
                 'maximumDateTime' => $maxdate
             ]);
+        $keys = collect($usage->collect()->first())->groupBy('DatasetId')->keys();
 
-
+        if (!$keys->contains($request->dataset_id)) {
+            return $this->apiResponse(404, 'Dataset not found in this environment', ['dataset_id_requested' => $request->dataset_id, 'datasets_available' => $keys]);
+        }
+        
         if ($usage->collect()->first()) {
 
             $usage_values = collect($usage->collect()->first())->map(function ($item) {

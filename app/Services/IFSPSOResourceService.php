@@ -9,6 +9,7 @@ use App\Helpers\Helper;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use DateInterval;
+use GoogleMaps;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,7 +77,7 @@ class IFSPSOResourceService extends IFSService
             $resource_locations = collect($resource_locations)->groupBy('id');
             $newresource_locations = $resource_locations->map(function ($location) {
                 $latlong = collect($location)->first()['latitude'] . ',' . collect($location)->first()['longitude'];
-                $response = \GoogleMaps::load('geocoding')
+                $response = GoogleMaps::load('geocoding')
                     ->setParam(['latlng' => $latlong])
                     ->get();
                 $country = json_decode($response)->results[0]->address_components[5]->short_name;
@@ -84,7 +85,7 @@ class IFSPSOResourceService extends IFSService
             })->values()->groupBy('id')
                 ->map(function ($location) {
                     $latlong = collect($location)->first()['latitude'] . ',' . collect($location)->first()['longitude'];
-                    $response = \GoogleMaps::load('geocoding')
+                    $response = GoogleMaps::load('geocoding')
                         ->setParam(['latlng' => $latlong])
                         ->get();
                     $formatted_address = json_decode($response)->results[0]->formatted_address;
@@ -103,48 +104,44 @@ class IFSPSOResourceService extends IFSService
 
 
         $resource_skills = [];
+//        return collect($resource_raw['Skill']);
         $skills = [];
         if (collect($resource_raw['Resource_Skill'])->count()) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
                 $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
                 $skills = [collect($resource_raw['Skill'])];
+            } else {
+
+                $skills = collect($resource_raw['Skill']);
             }
             // group these so we can grab the proficiency by ID
             $resource_skills = collect($resource_raw['Resource_Skill'])->groupBy('skill_id');
-            $skills = collect($resource_raw['Skill']);
+
             foreach ($skills as $skill) {
-                $thisresource_skills[] = $skill['description'] . ' @ ' . $resource_skills->get($skill['id'])->first()['proficiency'];
+                $thisresource_skills[] = $skill['description'] . ' (' . $skill['id'] . ') @ ' . $resource_skills->get($skill['id'])->first()['proficiency'];
             }
         }
 
+        $start_location = [
+            'id' => $newresource_locations[$resource['location_id_start']]['id'],
+            'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
+            'city' => $newresource_locations[$resource['location_id_start']]['city'],
+            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
+            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
+            'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
+            'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
+            'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
+        ];
 
         if ($resource['location_id_start'] == $resource['location_id_end']) {
-            // they're the same
+
             $resource_location = [
-                'start_and_end_location' => [
-                    'id' => $newresource_locations[$resource['location_id_start']]['id'],
-                    'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
-                    'city' => $newresource_locations[$resource['location_id_start']]['city'],
-                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
-                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
-                    'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
-                    'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
-                    'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
-                ]
+                'start_and_end_location' => [$start_location]
             ];
         } else {
             $resource_location = [
-                'start_location' => [
-                    'id' => $newresource_locations[$resource['location_id_start']]['id'],
-                    'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
-                    'city' => $newresource_locations[$resource['location_id_start']]['city'],
-                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
-                    $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
-                    'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
-                    'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
-                    'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
-                ],
+                'start_location' => [$start_location],
                 'end_location' => [
                     'id' => $newresource_locations[$resource['location_id_end']]['id'],
                     'address' => $newresource_locations[$resource['location_id_end']]['address_line1'],
