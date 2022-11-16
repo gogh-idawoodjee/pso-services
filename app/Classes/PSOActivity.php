@@ -135,10 +135,10 @@ class PSOActivity extends Activity
         return [
             'id' => $this->activity_id,
             'activity_class_id' => $this->activity_class_id,
-            'activity_type_id' => "$this->activity_type_id",
+            'activity_type_id' => $this->activity_type_id,
             'location_id' => $this->activity_id,
             'priority' => $this->priority,
-            'description' => "$this->description",
+            'description' => (string)$this->description,
             'date_time_created' => $this->date_time_created,
             'date_time_open' => $this->date_time_open,
             'base_value' => $this->base_value,

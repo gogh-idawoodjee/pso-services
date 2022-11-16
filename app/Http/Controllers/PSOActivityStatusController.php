@@ -38,7 +38,7 @@ class PSOActivityStatusController extends Controller
     {
         $statuses = collect(config('pso-services.statuses.all'))->keys()->toArray();
 
-        Validator::make(['status' => $status], [
+        Validator::make(compact('status'), [
             'status' => Rule::in($statuses)
         ])->validate();
 
@@ -54,8 +54,8 @@ class PSOActivityStatusController extends Controller
             'date_time_fixed' => 'date_format:Y-m-d\TH:i|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
         ]);
 
-        $request->merge(['activity_id' => $activity_id]);
-        $request->merge(['status' => $status]);
+        $request->merge(compact('activity_id'));
+        $request->merge(compact('status'));
 
         Helper::ValidateSendToPSO($request);
 

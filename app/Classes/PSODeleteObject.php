@@ -50,11 +50,7 @@ class PSODeleteObject
     private function setDeleteData($object_type_id, $object_pk_name1, $object_pk1, $object_pk_name2, $object_pk2, $object_pk_name3, $object_pk3, $object_pk_name4, $object_pk4, $is_rota_object)
     {
         $data =
-            [
-                'object_type_id' => $object_type_id,
-                'object_pk_name1' => $object_pk_name1,
-                'object_pk1' => $object_pk1
-            ];
+            compact('object_type_id', 'object_pk_name1', 'object_pk1');
 
         foreach ($this->additional_pk as $pk) {
             if (${$pk['name']}) {

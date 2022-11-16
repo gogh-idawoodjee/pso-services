@@ -10,12 +10,12 @@ class InputReference
 {
 
     private string $description;
-    private ?string $datetime;
+    private string|null $datetime;
     private string $input_type;
     private string $dataset_id;
-    private ?string $process_type;
-    private ?string $dse_duration;
-    private ?string $appointment_window;
+    private string|null $process_type;
+    private string|null $dse_duration;
+    private string|null $appointment_window;
 
 
     public function __construct($description, $input_type, $dataset_id, $datetime = null, $dse_duration = null, $process_type = null, $appointment_window = null)
@@ -39,7 +39,7 @@ class InputReference
             [
                 'datetime' => $this->datetime ?: Carbon::now()->toAtomString(),
                 'id' => Str::orderedUuid()->getHex()->toString(),
-                'description' => "$this->description",
+                'description' => $this->description,
                 'input_type' => strtoupper($this->input_type),
                 'organisation_id' => '2',
                 'dataset_id' => $this->dataset_id,

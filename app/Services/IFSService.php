@@ -30,7 +30,7 @@ class IFSService
 
         if ($pso_environment) {
             // local mode, covered
-            $this->pso_environment = PsoEnvironment::find($pso_environment);
+            $this->pso_environment = (new PsoEnvironment)->find($pso_environment);
             $this->authenticatePSO($this->pso_environment->base_url, $this->pso_environment->account_id, $this->pso_environment->username, $this->pso_environment->password);
             return;
         }

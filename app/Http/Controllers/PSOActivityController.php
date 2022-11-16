@@ -89,7 +89,7 @@ class PSOActivityController extends Controller
             'password' => 'string'
         ]);
 
-        $request->merge(['activity_id' => $activity_id]);
+        $request->merge(compact('activity_id'));
 
         Helper::ValidateSendToPSO($request);
 

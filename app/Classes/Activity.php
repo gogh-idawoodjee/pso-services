@@ -3,9 +3,6 @@
 namespace App\Classes;
 
 
-use Illuminate\Support\Collection;
-use stdClass;
-
 abstract class Activity
 {
 

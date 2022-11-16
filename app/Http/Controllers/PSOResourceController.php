@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
+use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +39,7 @@ class PSOResourceController extends Controller
         // need token if no user/pass, should default $requires_auth to true
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        return response(['resources' => collect($resource_init->getScheduleableResources($request)),], 200)
+        return response(['resources' => $resource_init->getScheduleableResources($request),], 200)
             ->header('Content-Type', 'application/json');
 
     }
@@ -51,6 +52,7 @@ class PSOResourceController extends Controller
      * @param $resource_id
      * @return Application|ResponseFactory|JsonResponse|Response
      * @throws ValidationException
+     * @throws Exception
      */
     public function show(Request $request, $resource_id)
     {

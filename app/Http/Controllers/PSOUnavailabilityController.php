@@ -109,7 +109,7 @@ class PSOUnavailabilityController extends Controller
     public function destroy(Request $request, $unavailability_id): JsonResponse
     {
 
-        $request->merge(['unavailability_id' => $unavailability_id]);
+        $request->merge(compact('unavailability_id'));
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],

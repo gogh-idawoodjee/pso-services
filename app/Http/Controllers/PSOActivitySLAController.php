@@ -46,7 +46,7 @@ class PSOActivitySLAController extends Controller
      */
     public function destroy(Request $request, $activity_id)//: JsonResponse
     {
-        $request->merge(['activity_id' => $activity_id]);
+        $request->merge(compact('activity_id'));
 
         $request->validate([
             'send_to_pso' => 'boolean',
