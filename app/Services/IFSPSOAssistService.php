@@ -22,7 +22,7 @@ class IFSPSOAssistService extends IFSService
                 'source_data_type_id' => "RAM",
                 'sequence' => 1,
                 'parameter_name' => 'rota_id',
-                'parameter_value' => "$rota_id",
+                'parameter_value' => (string)$rota_id,
             ];
     }
 
@@ -154,17 +154,15 @@ class IFSPSOAssistService extends IFSService
                 };
 
                 return collect($item)->put('count_type', $type);
-            })->mapToGroups(function ($item) {
-
-                return [$item['DatasetId'] => $item];
-            });
+            })->mapToGroups(fn($item) => [
+                $item['DatasetId'] => $item
+            ]);
 
             $grouped_values = [];
             foreach ($usage_values as $dataset => $value) {
-                $grouped_values[$dataset] = collect($value)->mapToGroups(function ($item) {
-                    return [$item['count_type'] => $item];
-
-                });
+                $grouped_values[$dataset] = collect($value)->mapToGroups(fn($item) => [
+                    $item['count_type'] => $item
+                ]);
             }
 
             $formatted_data = [];
@@ -225,11 +223,7 @@ class IFSPSOAssistService extends IFSService
                 // send the good response
                 return $this->apiResponse(200, ("Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : $desc_200)), $payload);
             } else {
-                if ($response->serverError()) {
-                    return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-                }
-
-                if ($response->json('InternalId') == "-1") {
+                if ($response->serverError() || $response->json('InternalId') == "-1") {
                     return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
                 }
 

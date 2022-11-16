@@ -7,8 +7,10 @@ use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
 use DateInterval;
+use Exception;
 use GoogleMaps;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +37,9 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+    /**
+     * @throws Exception
+     */
     public function getResourceForWebApp($resource_id, $dataset_id, $base_url)
     {
 
@@ -42,7 +47,7 @@ class IFSPSOResourceService extends IFSService
         $resource_raw = $this->getResource($resource_id, $dataset_id, $base_url);
 
         if (!$this->ResourceExists())
-            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['resource_id' => $resource_id]);
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', compact('resource_id'));
 
         $resource = collect($resource_raw['Resources']);
 
@@ -67,7 +72,7 @@ class IFSPSOResourceService extends IFSService
 
         $resource_locations = [];
 
-        if (collect($location)->count()) {
+        if ($location->count()) {
             if ($location->has('id')) {
                 $resource_locations = [$location];
             } else {
@@ -94,17 +99,8 @@ class IFSPSOResourceService extends IFSService
 
         }
 
-//        return $newresource_locations;
-
-//        $latlong = $newresource_locations->first()['latitude'] . ',' . $newresource_locations->first()['longitude'];
-//        $response = \GoogleMaps::load('geocoding')
-//            ->setParam(['latlng' => $latlong])
-//            ->get();
-//        return $country = json_decode($response)->results[0]->address_components[5]->short_name;
-
 
         $resource_skills = [];
-//        return collect($resource_raw['Skill']);
         $skills = [];
         if (collect($resource_raw['Resource_Skill'])->count()) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
@@ -161,9 +157,9 @@ class IFSPSOResourceService extends IFSService
             'resource_id' => $resource->get('id'),
             'resource_type' => $resource_type->get('description'),
             'note' => $resource->get('memo'),
-            'max_travel' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
-            'max_travel_outside_shift_to_first_activity' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
-            'max_travel_outside_shift_to_home' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => Carbon::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => Carbon::FLOOR]) . ' (inheirited from resource_type)',
+            'max_travel' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
+            'max_travel_outside_shift_to_first_activity' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
+            'max_travel_outside_shift_to_home' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
             'locations' => $resource_location,
         ];
 
@@ -252,12 +248,12 @@ class IFSPSOResourceService extends IFSService
             $endtime = Carbon::createFromDate($item['end_datetime'])->format('H:i');
             $times = $starttime . ' - ' . $endtime;
             $difference = Carbon::createFromDate($item['start_datetime'])->diffInHours(Carbon::createFromDate($item['end_datetime']));
-            $avg_travel = CarbonInterval::fromString($routes[$item['id']][0]['average_travel_time'])->forHumans(['options' => Carbon::FLOOR]);
-            $total_travel_time = CarbonInterval::fromString($routes[$item['id']][0]['total_travel_time'])->forHumans(['options' => Carbon::FLOOR]);
-            $total_on_site_time = CarbonInterval::fromString($routes[$item['id']][0]['total_on_site_time'])->forHumans(['options' => Carbon::FLOOR]);
-            $total_break_time = CarbonInterval::fromString($routes[$item['id']][0]['total_break_time'])->forHumans(['options' => Carbon::FLOOR]);
-            $total_private_time = CarbonInterval::fromString($routes[$item['id']][0]['total_private_time'])->forHumans(['options' => Carbon::FLOOR]);
-            $total_unutilised_time = CarbonInterval::fromString($routes[$item['id']][0]['total_unutilised_time'])->forHumans(['options' => Carbon::FLOOR]);
+            $avg_travel = CarbonInterval::fromString($routes[$item['id']][0]['average_travel_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $total_travel_time = CarbonInterval::fromString($routes[$item['id']][0]['total_travel_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $total_on_site_time = CarbonInterval::fromString($routes[$item['id']][0]['total_on_site_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $total_break_time = CarbonInterval::fromString($routes[$item['id']][0]['total_break_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $total_private_time = CarbonInterval::fromString($routes[$item['id']][0]['total_private_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $total_unutilised_time = CarbonInterval::fromString($routes[$item['id']][0]['total_unutilised_time'])->forHumans(['options' => CarbonInterface::FLOOR]);
             $util_percent = $routes[$item['id']][0]['utilisation'];
             $total_allocations = $routes[$item['id']][0]['total_allocations'];
             $route_margin = $routes[$item['id']][0]['route_margin'];
@@ -273,6 +269,7 @@ class IFSPSOResourceService extends IFSService
                     'total_break_time' => $total_break_time,
                     'total_on_site_time' => $total_on_site_time,
                     'total_travel_time' => $total_travel_time,
+                    'average_travel_time' => $avg_travel,
                     'total_allocations' => $total_allocations,
                     'route_margin' => $route_margin,
                 ]);
@@ -317,15 +314,9 @@ class IFSPSOResourceService extends IFSService
                 $this->utilization['travel'][] = ['travel' => $this->pso_resource['Plan_Route']['average_travel_time']];
             } else {
 
-                $this->utilization['dates'] = collect($this->pso_resource['Plan_Route'])->map(function ($item) {
-                    return ['date' => Carbon::create($item['shift_start_datetime'])->toFormattedDateString()];
-                });
-                $this->utilization['utilization'] = collect($this->pso_resource['Plan_Route'])->map(function ($item) {
-                    return ['utilization' => $item['utilisation']];
-                });
-                $this->utilization['travel'] = collect($this->pso_resource['Plan_Route'])->map(function ($item) {
-                    return ['travel' => CarbonInterval::make(new DateInterval($item['average_travel_time']))->i];
-                });
+                $this->utilization['dates'] = collect($this->pso_resource['Plan_Route'])->map(fn($item) => ['date' => Carbon::create($item['shift_start_datetime'])->toFormattedDateString()]);
+                $this->utilization['utilization'] = collect($this->pso_resource['Plan_Route'])->map(fn($item) => ['utilization' => $item['utilisation']]);
+                $this->utilization['travel'] = collect($this->pso_resource['Plan_Route'])->map(fn($item) => ['travel' => CarbonInterval::make(new DateInterval($item['average_travel_time']))->i]);
             }
         }
 
@@ -337,7 +328,7 @@ class IFSPSOResourceService extends IFSService
 
         $schedule = new IFSPSOScheduleService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        $overall_schedule = collect($schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)->collect());
+        $overall_schedule = $schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)->collect();
 
         $resources = collect($overall_schedule->get('Resources'));
         $shifts = collect($overall_schedule->get('Plan_Route'))->groupBy('resource_id');
@@ -345,19 +336,18 @@ class IFSPSOResourceService extends IFSService
 
 
         if (!Arr::has($events, 'id')) {
-            $events = collect($events)->mapToGroups(function ($item) {
-                return [$item['resource_id'] => [
+            $events = $events->mapToGroups(fn($item) => [
+                $item['resource_id'] => [
                     'id' => $item['id'],
                     'event_type_id' => $item['event_type_id'],
                     'date_time_stamp' => $item['date_time_stamp'],
                     'event_date_time' => $item['event_date_time'],
-                ]];
-            });
+                ]]);
         }
 
 
         $plans = collect($overall_schedule->get('Plan_Resource'))->keyBy('resource_id');
-        return collect($resources)->map(function ($item) use ($events) {
+        return $resources->map(function ($item) use ($events) {
             // how do we do this if it's only one event ?
             if (isset($events[$item['id']])) {
                 return collect($item)->put('events', $events[$item['id']]);
@@ -365,7 +355,7 @@ class IFSPSOResourceService extends IFSService
                 return $item;
             }
         })->
-        map(function ($item) use ($shifts, $plans) {
+        map(function ($item) use ($plans, $shifts) {
             return collect($item)
                 ->put('route', $plans[$item['id']])
                 ->put('shift count', count($shifts[$item['id']]))
@@ -426,7 +416,7 @@ class IFSPSOResourceService extends IFSService
                 'date_time_stamp' => Carbon::now()->toAtomString(),
                 'event_date_time' => $event_date_time ?: Carbon::now()->toAtomString(),
                 'event_type_id' => strtoupper($event_type),
-                'resource_id' => "$resource_id"
+                'resource_id' => (string)$resource_id
             ];
     }
 
@@ -467,7 +457,7 @@ class IFSPSOResourceService extends IFSService
             );
 
             // get the resource again
-            $resource_init = new IFSPSOResourceService($shift_data->base_url, $this->token, null, null, null, true);
+            $resource_init = new self($shift_data->base_url, $this->token, null, null, null, true);
             $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
             $fresh_shifts = $resource_init->getResourceShiftsRaw();
             $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
@@ -522,13 +512,13 @@ class IFSPSOResourceService extends IFSService
     {
         return [
             'id' => $rawshift->get('id'),
-            'ram_rota_id' => "$rota_id",
+            'ram_rota_id' => (string)$rota_id,
             'manual_scheduling_only' => $turn_manual_scheduling_on,
             'ram_resource_id' => $rawshift->get('resource_id'),
             'start_datetime' => $rawshift->get('start_datetime'),
             'end_datetime' => $rawshift->get('end_datetime'),
-            'ram_shift_category_id' => "$shift_type",
-            'description' => "$description"
+            'ram_shift_category_id' => (string)$shift_type,
+            'description' => (string)$description
         ];
     }
 
@@ -592,14 +582,10 @@ class IFSPSOResourceService extends IFSService
 
 
         if (Arr::has($schedule->collect()->first(), 'Activity') && Arr::has($schedule->collect()->first(), 'Allocation')) {
-            $grouped_activities = collect($schedule->collect()->first()['Activity'])->mapWithKeys(function ($activity) {
-                return [$activity['id'] => $activity];
-            })->only($unavailabilities);
+            $grouped_activities = collect($schedule->collect()->first()['Activity'])->mapWithKeys(fn($activity) => [$activity['id'] => $activity])->only($unavailabilities);
 
 
-            $grouped_allocations = collect($schedule->collect()->first()['Allocation'])->mapWithKeys(function ($allocation) {
-                return [$allocation['activity_id'] => $allocation];
-            })->only($unavailabilities);
+            $grouped_allocations = collect($schedule->collect()->first()['Allocation'])->mapWithKeys(fn($allocation) => [$allocation['activity_id'] => $allocation])->only($unavailabilities);
 
             if ($grouped_activities->count() == 0 || $grouped_allocations->count() == 0) {
                 // if none of those exist in the schedule return a 404
@@ -651,8 +637,8 @@ class IFSPSOResourceService extends IFSService
             'id' => Str::uuid()->getHex(),
             'ram_time_pattern_id' => $time_pattern_id,
             'ram_resource_id' => $resource_id,
-            'ram_unavailability_category_id' => "$category_id",
-            'description' => "$description"
+            'ram_unavailability_category_id' => (string)$category_id,
+            'description' => (string)$description
         ];
     }
 

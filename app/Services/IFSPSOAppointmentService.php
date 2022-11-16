@@ -89,7 +89,7 @@ class IFSPSOAppointmentService extends IFSService
                 ]
             ];
 
-            return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Offers Received", $payload, 'appointment_request', $additional_data);
+            return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Offers Received", $payload, 'appointment_request_input', $additional_data);
         }
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointment_request');
     }
