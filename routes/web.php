@@ -1,12 +1,7 @@
 <?php
 
-use App\Http\Livewire\Getcrazy\PsoResourceShow;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PSOEnvrionmentController;
-
-use App\Http\Controllers\PSOSandboxController;
-use App\Http\Livewire\Getcrazy\PsoSchedule;
-use App\Http\Livewire\Getcrazy\PsoResource;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,11 +18,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/config/environment', [PSOEnvrionmentController::class, 'index']);
-Route::get('/getcrazy/schedule', PsoSchedule::class);
-Route::get('/getcrazy/sandbox', [PSOSandboxController::class, 'index']);
-//Route::get('/getcrazy/resource', [PSOResourceController::class, 'index']);
-Route::get('/getcrazy/resource', PsoResource::class);
-Route::get('/getcrazy/resource/{resource_id}', PsoResourceShow::class);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
+require __DIR__.'/auth.php';

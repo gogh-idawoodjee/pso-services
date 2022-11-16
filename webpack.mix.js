@@ -11,16 +11,9 @@ const mix = require("laravel-mix");
  |
  */
 
-mix.js("resources/src/js/app.js", "public/js")
-    .js("resources/src/js/ckeditor-classic.js", "public/js")
-    .js("resources/src/js/ckeditor-inline.js", "public/js")
-    .js("resources/src/js/ckeditor-balloon.js", "public/js")
-    .js("resources/src/js/ckeditor-balloon-block.js", "public/js")
-    .js("resources/src/js/ckeditor-document.js", "public/js")
-    .css("resources/dist/css/_app.css", "public/css/app.css")
+mix.js()
+    //    .js("resources/src/js/ckeditor-classic.js", "public/js") "resources/src/js/app.js", "public/js"
+    // .css("resources/dist/css/_app.css", "public/css/app.css")
     .options({
         processCssUrls: false,
     })
-    .copyDirectory("resources/src/json", "public/json")
-    .copyDirectory("resources/src/fonts", "public/fonts")
-    .copyDirectory("resources/src/images", "public/images");

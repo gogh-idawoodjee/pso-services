@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Helper;
 use App\Services\IFSPSOResourceService;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 
@@ -48,7 +49,8 @@ class PSOResourceController extends Controller
      *
      * @param Request $request
      * @param $resource_id
-     * @return JsonResponse|Collection
+     * @return Application|ResponseFactory|JsonResponse|Response
+     * @throws ValidationException
      */
     public function show(Request $request, $resource_id)
     {

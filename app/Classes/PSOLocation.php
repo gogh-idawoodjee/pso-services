@@ -15,8 +15,6 @@ class PSOLocation extends Activity
     {
         $this->latitude = $lat;
         $this->longitude = $long;
-
-
     }
 
     public function toJson($activity_id)

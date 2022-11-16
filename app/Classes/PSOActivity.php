@@ -75,7 +75,7 @@ class PSOActivity extends Activity
         return [
             'Activity' => $this->ActivityToJson(),
             'Activity_Status' => $this->ActivityStatus(),
-            'Activity_Skill' => $this->activity_skill,
+            'Activity_Skill' => $this->ActivitySkills(),
             'Location' => $this->ActivityLocation(),
             'Activity_SLA' => $this->ActivitySLAs(),
             'Location_Region' => $this->activity_region
@@ -107,11 +107,6 @@ class PSOActivity extends Activity
         return $this;
     }
 
-    public function setActivityStatus(PSOActivityStatus $status)
-    {
-        $this->activity_status = $status;
-        return $this;
-    }
 
     public function ActivityLocation()
     {
@@ -127,14 +122,11 @@ class PSOActivity extends Activity
     public function ActivitySLAs()
     {
         return $this->ActivityDataToJson($this->activity_sla);
-
     }
 
     public function ActivitySkills()
     {
-
         return $this->activity_skill;
-
     }
 
 

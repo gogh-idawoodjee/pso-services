@@ -55,6 +55,9 @@ class Helper
         ])->validate();
     }
 
+    /**
+     * @throws ValidationException
+     */
     public static function ValidateCredentials(Request $request)
     {
         Validator::make($request->all(), [

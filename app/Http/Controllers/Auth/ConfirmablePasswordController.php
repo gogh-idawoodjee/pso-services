@@ -1,24 +1,23 @@
 <?php
 
-namespace app\Http\Controllers\Auth;
+namespace App\Http\Controllers\Auth;
 
-use app\Http\Controllers\Controller;
+use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 
 class ConfirmablePasswordController extends Controller
 {
     /**
      * Show the confirm password view.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function show()
     {
-        return Inertia::render('Auth/ConfirmPassword');
+        return view('auth.confirm-password');
     }
 
     /**

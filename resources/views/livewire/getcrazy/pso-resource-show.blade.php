@@ -11,7 +11,7 @@
                                     href="https://themeforest.net/item/midone-jquery-tailwindcss-html-admin-template/26366820"
                                     class="underline ml-1" target="blank">something something</a>.
                                 <button
-                                    class="rounded-md bg-white bg-opacity-20 dark:bg-darkmode-300 hover:bg-opacity-30 py-0.5 px-2 -my-3 ml-2">
+                                    class="rounded-md bg-white bg-opacity-20 hover:bg-opacity-30 py-0.5 px-2 -my-3 ml-2">
                                     Something else
                                 </button>
                             </span>
@@ -43,7 +43,7 @@
                             </div>
 
                             <div
-                                class="text-base 2xl:text-lg justify-center sm:justify-start flex items-center text-slate-600 dark:text-slate-300 leading-3">
+                                class="text-base 2xl:text-lg justify-center sm:justify-start flex items-center text-slate-600 leading-3">
                                 Resource ID {{$resource['Resources']['id']}} </div>
                             <div class="2xl:flex mt-5 mb-3">
                                 <div class="flex items-center justify-center sm:justify-start">
@@ -54,9 +54,9 @@
 
                             </div>
                             <div class="text-slate-500">Type: {{$resource['Resources']['resource_type_id']}}</div>
-                            <div class="2xl:text-base text-slate-600 dark:text-slate-300 mt-6 -mb-1">
+                            <div class="2xl:text-base text-slate-600 mt-6 -mb-1">
                                 Memo: {{$resource['Resources']['memo']}} </div>
-                            <div class="2xl:text-base text-slate-600 dark:text-slate-300 mt-6 -mb-1">
+                            <div class="2xl:text-base text-slate-600 mt-6 -mb-1">
                                 <button class="btn btn-primary w-42 mr-2 mb-2">
                                     <i data-lucide="alarm-clock" class="w-4 h-4 mr-2"></i> Attention On
                                 </button>
@@ -106,7 +106,7 @@
                                     </div>
                                 </div>
                                 <select
-                                    class="form-select bg-transparent border-black border-opacity-10 dark:border-darkmode-400 dark:bg-transparent mx-auto sm:mx-0 py-1.5 px-3 w-auto -mt-2">
+                                    class="form-select bg-transparent border-black border-opacity-10 mx-auto sm:mx-0 py-1.5 px-3 w-auto -mt-2">
                                     <option value="daily">Daily</option>
                                     <option value="weekly">Weekly</option>
                                     <option value="monthly">Monthly</option>
@@ -122,7 +122,7 @@
                         </div>
                         <div
                             class="col-span-12 sm:col-span-6 md:col-span-4 py-6 border-black border-opacity-10 border-t sm:border-t-0 border-l md:border-l-0 border-dashed -ml-4 pl-4 md:ml-0 md:pl-0">
-                            {{--                            <ul class=" nav nav-pills w-3/4 2xl:w-4/6 bg-slate-200 dark:bg-black/10 rounded-md mx-auto p-1 "--}}
+                            {{--                            <ul class=" nav nav-pills w-3/4 2xl:w-4/6 bg-slate-200 rounded-md mx-auto p-1 "--}}
                             {{--                                role="tablist">--}}
                             {{--                                <li id="active-users-tab" class="nav-item flex-1" role="presentation">--}}
                             {{--                                    <button class="nav-link w-full py-1.5 px-2 active" data-tw-toggle="pill"--}}
@@ -185,7 +185,7 @@
                                     Shift
                                 </div>
                                 <div
-                                    class="py-1 px-2.5 rounded-full text-xs bg-slate-300/50 dark:bg-darkmode-400 text-slate-600 dark:text-slate-300 cursor-pointer truncate">
+                                    class="py-1 px-2.5 rounded-full text-xs bg-slate-300/50 text-slate-600 cursor-pointer truncate">
 
                                 </div>
                             </div>
@@ -210,7 +210,7 @@
                                     <div class="truncate mt-1 text-slate-500">Allocations including NAs</div>
                                 </div>
                                 <div
-                                    class="w-px h-16 border border-r border-dashed border-slate-300 dark:border-darkmode-400 mx-4 xl:mx-6"></div>
+                                    class="w-px h-16 border border-r border-dashed border-slate-300 mx-4 xl:mx-6"></div>
                                 <div>
                                     <div class="text-3xl font-medium">135</div>
                                     <div class="truncate mt-1 text-slate-500">Total Something</div>
@@ -222,7 +222,7 @@
                                 <div class="sm:w-full lg:w-auto text-lg font-medium truncate mr-auto">Something Here
                                 </div>
                                 <div
-                                    class="py-1 px-2.5 rounded-full text-xs bg-slate-300/50 dark:bg-darkmode-400 text-slate-600 dark:text-slate-300 cursor-pointer truncate">
+                                    class="py-1 px-2.5 rounded-full text-xs bg-slate-300/50 text-slate-600 cursor-pointer truncate">
                                     666 things
                                 </div>
                             </div>
@@ -243,7 +243,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <div class="mr-auto">
                                     <div
-                                        class="text-white text-opacity-70 dark:text-slate-300 flex items-center leading-3">
+                                        class="text-white text-opacity-70 flex items-center leading-3">
                                         interesting box <i data-lucide="alert-circle" class="tooltip w-4 h-4 ml-1.5"
                                                            title="cool info"></i></div>
                                     <div class="text-white relative text-2xl font-medium leading-5 mt-3.5">
@@ -251,7 +251,7 @@
                                         much things
                                     </div>
                                 </div>
-                                <a class="flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-darkmode-300 bg-opacity-20 hover:bg-opacity-30 text-white"
+                                <a class="flex items-center justify-center w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 text-white"
                                    href=""> <i data-lucide="plus" class="w-6 h-6"></i> </a>
                             </div>
                         </div>
@@ -263,7 +263,7 @@
                                         {{--                                        <a href="" class="ml-auto flex items-center text-primary"> <i--}}
                                         {{--                                                data-lucide="refresh-ccw" class="w-4 h-4 mr-3"></i> Refresh </a>--}}
                                     </div>
-                                    {{--                                    <ul class=" nav nav-pills border border-slate-300 dark:border-darkmode-300 border-dashed rounded-md mx-auto p-1 mt-5 "--}}
+                                    {{--                                    <ul class=" nav nav-pills border border-slate-300 border-dashed rounded-md mx-auto p-1 mt-5 "--}}
                                     {{--                                        role="tablist">--}}
                                     {{--                                        <li id="weekly-report-tab" class="nav-item flex-1" role="presentation">--}}
                                     {{--                                            <button class="nav-link w-full py-1.5 px-2 active" data-tw-toggle="pill"--}}
@@ -382,11 +382,11 @@
                             {{--                                    Weekly Top Products--}}
                             {{--                                </h2>--}}
                             {{--                                <div class="flex items-center sm:ml-auto mt-3 sm:mt-0">--}}
-                            {{--                                    <button class="btn box flex items-center text-slate-600 dark:text-slate-300"><i--}}
+                            {{--                                    <button class="btn box flex items-center text-slate-600"><i--}}
                             {{--                                            data-lucide="file-text" class="hidden sm:block w-4 h-4 mr-2"></i> Export to--}}
                             {{--                                        Excel--}}
                             {{--                                    </button>--}}
-                            {{--                                    <button class="ml-3 btn box flex items-center text-slate-600 dark:text-slate-300"><i--}}
+                            {{--                                    <button class="ml-3 btn box flex items-center text-slate-600"><i--}}
                             {{--                                            data-lucide="file-text" class="hidden sm:block w-4 h-4 mr-2"></i> Export to PDF--}}
                             {{--                                    </button>--}}
                             {{--                                </div>--}}
