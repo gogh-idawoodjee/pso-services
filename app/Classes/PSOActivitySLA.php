@@ -6,7 +6,6 @@ namespace App\Classes;
 class PSOActivitySLA extends Activity
 {
 
-
     private string $sla_type_id;
     private string $datetime_start;
     private string $datetime_end;

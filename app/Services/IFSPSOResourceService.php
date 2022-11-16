@@ -189,7 +189,7 @@ class IFSPSOResourceService extends IFSService
 
 //        $payload = [
 //            'resource' => [
-//                'raw' => $this->getResource($resource_id, $dataset_id, $base_url), // todo clean this up, make it look nicer and more formatted
+//                'raw' => $this->getResource($resource_id, $dataset_id, $base_url),
 //                'utilization' => $this->getResourceUtilization(),
 //                'events' => $this->getResourceEvents(),
 //                'locations' => $this->getResourceLocations(),
