@@ -70,6 +70,7 @@ class IFSPSOAppointmentService extends IFSService
             })->values();
 
             $best_offer_value = collect($response->collect()->first()['Appointment_Offer'])->max('offer_value');
+
             $best_offer = collect($response->collect()->first()['Appointment_Offer'])->where('offer_value', '=', $best_offer_value)
                 ->map(function ($offer) {
                     return collect($offer)->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id');
@@ -82,7 +83,7 @@ class IFSPSOAppointmentService extends IFSService
                 'data' => [
                     'appointment_request_id' => $appointment_request_id,
                     'summary' => $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.',
-                    'best_offer' => $best_offer,
+                    'best_offer' => $best_offer->get('prospective_resource_id') ? $best_offer : 'no valid offers returned',
                     'valid_offers' => $valid_offers,
                     'invalid_offers' => $invalid_offers
                 ]
