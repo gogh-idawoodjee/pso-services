@@ -11,9 +11,9 @@ const mix = require("laravel-mix");
  |
  */
 
-mix.js()
-    //    .js("resources/src/js/ckeditor-classic.js", "public/js") "resources/src/js/app.js", "public/js"
-    // .css("resources/dist/css/_app.css", "public/css/app.css")
+mix
+    .js("resources/js/app.js", "public/js")
+    .css("resources/css/app.css", "public/css/app.css")
     .options({
         processCssUrls: false,
     })

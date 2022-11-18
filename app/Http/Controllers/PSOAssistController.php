@@ -35,7 +35,10 @@ class PSOAssistController extends Controller
             'appointment_window' => 'numeric',
             'process_type' => 'string|in:DYNAMIC,APPOINTMENT,REACTIVE,STATIC',
             'description' => 'string',
-            'datetime' => 'date'
+            'datetime' => 'date',
+            'include_broadcast' => 'boolean',
+            'broadcast_type' => 'integer|required_if:include_broadcast,true',
+            'broadcast_url' => 'url|required_if:include_broadcast,true'
         ]);
 
         Helper::ValidateSendToPSO($request);
@@ -47,7 +50,6 @@ class PSOAssistController extends Controller
                 'status' => 401,
                 'description' => 'did not pass auth'
             ]);
-
         }
 
         return $init->InitializePSO($request);

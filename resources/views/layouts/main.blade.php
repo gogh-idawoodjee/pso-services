@@ -2,27 +2,27 @@
 <html>
 
 <head>
-    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-    <meta charset="utf-8" />
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+    <meta charset="utf-8"/>
     <title>Pages - Admin Dashboard UI Kit - Blank Page</title>
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"/>
     <link rel="apple-touch-icon" href="/pages/ico/60.png">
     <link rel="apple-touch-icon" sizes="76x76" href="/pages/ico/76.png">
     <link rel="apple-touch-icon" sizes="120x120" href="/pages/ico/120.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/pages/ico/152.png">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta content="" name="description" />
-    <meta content="" name="author" />
-    <link href="/assets/plugins/pace/pace-theme-flash.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/plugins/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/plugins/jquery-scrollbar/jquery.scrollbar.css" rel="stylesheet" type="text/css" media="screen" />
-    <link href="/assets/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css" media="screen" />
-    <link class="main-stylesheet" href="/pages/css/themes/abstract.css" rel="stylesheet" type="text/css" />
+    <meta content="" name="description"/>
+    <meta content="" name="author"/>
+    <link href="/assets/plugins/pace/pace-theme-flash.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/plugins/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/plugins/jquery-scrollbar/jquery.scrollbar.css" rel="stylesheet" type="text/css" media="screen"/>
+    <link href="/assets/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css" media="screen"/>
+    <link class="main-stylesheet" href="/pages/css/themes/abstract.css" rel="stylesheet" type="text/css"/>
     @livewireStyles
 </head>
 
@@ -43,12 +43,14 @@
                 <ul class="d-lg-inline-block d-none  notification-list no-margin b-grey b-l b-r no-style p-l-30 p-r-20">
                     <li class="p-r-10 inline">
                         <div class="dropdown">
-                            <a href="/javascript:;" id="notification-center" class="header-icon btn-icon-link" data-toggle="dropdown">
+                            <a href="/javascript:;" id="notification-center" class="header-icon btn-icon-link"
+                               data-toggle="dropdown">
                                 <i class="pg-icon">world</i>
                                 <span class="bubble"></span>
                             </a>
                             <!-- START Notification Dropdown -->
-                            <div class="dropdown-menu notification-toggle" role="menu" aria-labelledby="notification-center">
+                            <div class="dropdown-menu notification-toggle" role="menu"
+                                 aria-labelledby="notification-center">
                                 <!-- START Notification -->
                                 <div class="notification-panel">
                                     <!-- START Notification Body-->
@@ -60,10 +62,11 @@
                                                 <a href="/#" class="text-complete pull-left d-flex align-items-center">
                                                     <i class="pg-icon m-r-10">map</i>
                                                     <span class="bold">Carrot Design</span>
-                                                    <span class="fs-12 m-l-10">David Nester</span>
+                                                    <span class="fs-12 m-l-10">{{ Auth::user()->name }}</span>
                                                 </a>
                                                 <div class="pull-right">
-                                                    <div class="thumbnail-wrapper d16 circular inline m-t-15 m-r-10 toggle-more-details">
+                                                    <div
+                                                        class="thumbnail-wrapper d16 circular inline m-t-15 m-r-10 toggle-more-details">
                                                         <div><i class="pg-icon">chevron_down</i>
                                                         </div>
                                                     </div>
@@ -71,7 +74,8 @@
                                                 </div>
                                                 <div class="more-details">
                                                     <div class="more-details-inner">
-                                                        <h5 class="semi-bold fs-16">“Apple’s Motivation - Innovation <br>
+                                                        <h5 class="semi-bold fs-16">“Apple’s Motivation - Innovation
+                                                            <br>
                                                             distinguishes between <br>
                                                             A leader and a follower.”</h5>
                                                         <p class="small hint-text">
@@ -83,7 +87,8 @@
                                             </div>
                                             <!-- END Notification Item-->
                                             <!-- START Notification Item Right Side-->
-                                            <div class="option" data-toggle="tooltip" data-placement="left" title="mark as read">
+                                            <div class="option" data-toggle="tooltip" data-placement="left"
+                                                 title="mark as read">
                                                 <a href="/#" class="mark"></a>
                                             </div>
                                             <!-- END Notification Item Right Side-->
@@ -126,9 +131,12 @@
                                         <!-- START Notification Item-->
                                         <div class="notification-item unread clearfix">
                                             <div class="heading">
-                                                <div class="thumbnail-wrapper d24 circular b-white m-r-5 b-a b-white m-t-10 m-r-10">
-                                                    <img width="30" height="30" data-src-retina="/assets/img/profiles/1x.jpg"
-                                                         data-src="/assets/img/profiles/1.jpg" alt="" src="/assets/img/profiles/1.jpg">
+                                                <div
+                                                    class="thumbnail-wrapper d24 circular b-white m-r-5 b-a b-white m-t-10 m-r-10">
+                                                    <img width="30" height="30"
+                                                         data-src-retina="/assets/img/profiles/1x.jpg"
+                                                         data-src="/assets/img/profiles/1.jpg" alt=""
+                                                         src="/assets/img/profiles/1.jpg">
                                                 </div>
                                                 <a href="/#" class="text-complete pull-left">
                                                     <span class="bold">Revox Design Labs</span>
@@ -137,7 +145,8 @@
                                                 <span class="pull-right time">11:00pm</span>
                                             </div>
                                             <!-- START Notification Item Right Side-->
-                                            <div class="option" data-toggle="tooltip" data-placement="left" title="mark as read">
+                                            <div class="option" data-toggle="tooltip" data-placement="left"
+                                                 title="mark as read">
                                                 <a href="/#" class="mark"></a>
                                             </div>
                                             <!-- END Notification Item Right Side-->
@@ -148,7 +157,8 @@
                                     <!-- START Notification Footer-->
                                     <div class="notification-footer text-center">
                                         <a href="/#" class="">Read all notifications</a>
-                                        <a data-toggle="refresh" class="portlet-refresh text-black pull-right" href="/#">
+                                        <a data-toggle="refresh" class="portlet-refresh text-black pull-right"
+                                           href="/#">
                                             <i class="pg-refresh_new"></i>
                                         </a>
                                     </div>
@@ -176,7 +186,7 @@
             <div class="d-flex align-items-center">
                 <!-- START User Info-->
                 <div class="pull-left p-r-10 fs-14 font-heading d-lg-inline-block d-none text-white">
-                    <span class="semi-bold">David</span> <span class="">Nest</span>
+                    <span class="semi-bold">{{ Auth::user()->name }}</span>
                 </div>
                 <div class="dropdown pull-right d-lg-block">
                     <button class="profile-dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
@@ -187,7 +197,7 @@
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right profile-dropdown" role="menu">
-                        <a href="/#" class="dropdown-item"><span>Signed in as <br /><b>David Aunsberg</b></span></a>
+                        <a href="/#" class="dropdown-item"><span>Signed in as <br/><b>David Aunsberg</b></span></a>
                         <div class="dropdown-divider"></div>
                         <a href="/#" class="dropdown-item">Your Profile</a>
                         <a href="/#" class="dropdown-item">Your Activity</a>
@@ -198,7 +208,7 @@
                         <a href="/#" class="dropdown-item">Settings</a>
                         <a href="/#" class="dropdown-item">Logout</a>
                         <div class="dropdown-divider"></div>
-                        <span class="dropdown-item fs-12 hint-text">Last edited by David<br />on Friday at 5:27PM</span>
+                        <span class="dropdown-item fs-12 hint-text">Last edited by David<br/>on Friday at 5:27PM</span>
                     </div>
                 </div>
                 <!-- END User Info-->
@@ -213,17 +223,17 @@
                     </a>
                     <ul>
                         <li>
-                            <a href="/#">Menu</a>
+                            <a href="/#">Home</a>
                         </li>
                         <li>
-                            <a href="/javascript:;"><span class="title">Menu</span>
+                            <a><span class="title">PSO Assist</span>
                                 <span class=" arrow"></span></a>
                             <ul class="">
                                 <li class="">
-                                    <a href="/#">Sub Menu</a>
+                                    <a href="/assist">Load and Rota</a>
                                 </li>
                                 <li class="">
-                                    <a href="/#">Sub Menu</a>
+                                    <a href="/usage">Usage</a>
                                 </li>
                             </ul>
                         </li>
@@ -250,7 +260,7 @@
                 <!-- START CONTAINER FLUID -->
                 <div class=" container container-fixed-lg">
                     <!-- BEGIN PlACE PAGE CONTENT HERE -->
-                    {{$slot}}
+                    @yield('content')
                     <!-- END PLACE PAGE CONTENT HERE -->
                 </div>
                 <!-- END CONTAINER FLUID -->
@@ -261,7 +271,8 @@
             <div class=" container   container-fixed-lg footer">
                 <div class="copyright sm-text-center">
                     <p class="small-text no-margin pull-left sm-pull-reset">
-                        ©2014-2020 All Rights Reserved. Pages® and/or its subsidiaries or affiliates are registered trademark of
+                        ©2014-2020 All Rights Reserved. Pages® and/or its subsidiaries or affiliates are registered
+                        trademark of
                         Revox Ltd.
                         <span class="hint-text m-l-15">Pages v05.23 20201105.r.190</span>
                     </p>
@@ -281,10 +292,10 @@
 
     <!-- BEGIN VENDOR JS -->
     <!-- BEGIN VENDOR JS -->
-{{--    <script src="/assets/plugins/pace/pace.min.js" type="text/javascript"></script>--}}
+    {{--    <script src="/assets/plugins/pace/pace.min.js" type="text/javascript"></script>--}}
     <script src="/assets/plugins/jquery/jquery-3.2.1.min.js" type="text/javascript"></script>
     <script src="/assets/plugins/modernizr.custom.js" type="text/javascript"></script>
-{{--    <script src="/assets/plugins/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>--}}
+    {{--    <script src="/assets/plugins/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>--}}
     <script src="/assets/plugins/popper/umd/popper.min.js" type="text/javascript"></script>
     <script src="/assets/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="/assets/plugins/jquery/jquery-easy.js" type="text/javascript"></script>
@@ -292,9 +303,40 @@
     <script src="/assets/plugins/jquery-ios-list/jquery.ioslist.min.js" type="text/javascript"></script>
     <script src="/assets/plugins/jquery-actual/jquery.actual.min.js"></script>
     <script src="/assets/plugins/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <script type="text/javascript" src="assets/plugins/jquery-inputmask/jquery.inputmask.min.js"></script>
+    <script type="text/javascript" src="assets/plugins/select2/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="/assets/plugins/classie/classie.js"></script>
+    <script type="text/javascript" src="/assets/plugins/jquery-autonumeric/autoNumeric.js"></script>
+    <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js" type="text/javascript"></script>
     <!-- END VENDOR JS -->
     <!-- BEGIN CORE TEMPLATE JS -->
     <script src="/pages/js/pages.min.js" type="text/javascript"></script>
+    <script>
+        (function ($) {
+
+            'use strict';
+
+            var getBaseURL = function () {
+                var url = document.URL;
+                return url.substr(0, url.lastIndexOf('/'));
+            }
+
+            $(document).ready(function () {
+                    // Input mask - Input helper
+                    $(function ($) {
+                        $("#date").mask("99/99/9999");
+                        $("#phone").mask("(999) 999-9999");
+                        $("#tin").mask("99-9999999");
+                        $("#ssn").mask("999-99-9999");
+                    });
+                    // Autonumeric plug-in - automatic addition of dollar signs,etc controlled by tag attributes
+                    $('.autonumeric').autoNumeric('init');
+
+                    $('#datepicker-range, #datepicker-component, #datepicker-component2').datepicker();
+                }
+            )
+        })(window.jQuery);
+    </script>
     <!-- END CORE TEMPLATE JS -->
     <!-- BEGIN PAGE LEVEL JS -->
     <script src="/assets/js/scripts.js" type="text/javascript"></script>

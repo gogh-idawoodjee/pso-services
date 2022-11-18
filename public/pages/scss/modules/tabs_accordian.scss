@@ -111,7 +111,7 @@
   }
 }
 
-/* Tabs : Simple 
+/* Tabs : Simple
 ------------------------------------
 */
 
@@ -344,7 +344,7 @@
   }
 }
 
-/* Tabs : Fill-up 
+/* Tabs : Fill-up
 ------------------------------------
 */
 
@@ -359,8 +359,8 @@
       background: transparent;
       &:after {
         @include backface-visibility(hidden);
-        background: none repeat scroll 0 0 $color-success;
-        border: 1px solid $color-success;
+        background: none repeat scroll 0 0 $color-primary;
+        border: 1px solid $color-primary;
         content: "";
         height: calc(100% + 1px);
         @include left( 0 );
@@ -377,8 +377,8 @@
           border: 1px solid $color-primary;
         }
         &.nav-tabs-success {
-          background: none repeat scroll 0 0 $color-success;
-          border: 1px solid $color-success;
+          background: none repeat scroll 0 0 $color-primary;
+          border: 1px solid $color-primary;
         }
         &.nav-tabs-complete {
           background: none repeat scroll 0 0 $color-complete;

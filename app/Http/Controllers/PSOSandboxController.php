@@ -13,6 +13,7 @@ use App\Services\IFSPSOScheduleService;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 
 class PSOSandboxController extends Controller
@@ -233,6 +234,14 @@ class PSOSandboxController extends Controller
     public function store(Request $request)
     {
         //
+        Log::info('received request from 1111PSO');
+
+        return response()->json([
+            'status' => 418,
+            'description' => 'here is a 418',
+        ], 418, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         return $resource_init->getResourceForWebApp($request->resource_id, $request->dataset_id, $request->base_url);

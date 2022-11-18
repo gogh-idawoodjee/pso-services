@@ -9,7 +9,9 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 
 class IFSPSOAssistService extends IFSService
@@ -80,8 +82,36 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
-    private function initializePSOPayload(Request $request): array
+    private function BroadcastPayload($broadcast_type, $broadcast_url)
     {
+        $broadcast_id = Str::orderedUuid()->getHex()->toString();
+        return [
+            'Broadcast' => [
+                'active' => true,
+                'allocation_type' => $broadcast_type ?: 8,
+                'broadcast_type_id' => 'REST',
+                'id' => $broadcast_id,
+                'once_only' => false,
+                'plan_type' => 'COMPLETE'
+            ],
+            'Broadcast_Parameter' => [
+                [
+                    'broadcast_id' => $broadcast_id,
+                    'parameter_name' => 'mediatype',
+                    'parameter_value' => 'application/json'
+                ],
+                [
+                    'broadcast_id' => $broadcast_id,
+                    'parameter_name' => 'url',
+                    'parameter_value' => $broadcast_url
+                ]
+            ],
+        ];
+    }
+
+    private function initializePSOPayload(Request $request)
+    {
+
 
         $description = $request->description ?: 'Init via ' . config('pso-services.settings.service_name');
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
@@ -105,14 +135,24 @@ class IFSPSOAssistService extends IFSService
             $appointment_window)
         )->toJson();
 
-        return [
+
+        $init_payload = collect([
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
                 'Input_Reference' => $input_ref,
                 'Source_Data' => $this->SourceData(),
                 'Source_Data_Parameter' => $this->SourceDataParameter($rota_id),
             ]
-        ];
+        ]);
+
+        if ($request->include_broadcast) {
+            $broadcast_payload = $this->BroadcastPayload($request->broadcast_type, $request->broadcast_url);
+            $init_payload = collect($init_payload->first())->merge(['Broadcast' => $broadcast_payload['Broadcast']]);
+            $init_payload = $init_payload->merge(['Broadcast_Parameter' => $broadcast_payload['Broadcast_Parameter']]);
+            return ['dsScheduleData' => [$init_payload]];
+        }
+
+        return $init_payload;
     }
 
     public function InitializePSO(Request $request)
@@ -136,6 +176,7 @@ class IFSPSOAssistService extends IFSService
                 'maximumDateTime' => $maxdate
             ]);
         $keys = collect($usage->collect()->first())->groupBy('DatasetId')->keys();
+
 
         if (!$keys->contains($request->dataset_id)) {
             return $this->apiResponse(404, 'Dataset not found in this environment', ['dataset_id_requested' => $request->dataset_id, 'datasets_available' => $keys]);
