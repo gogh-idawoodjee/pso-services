@@ -7,20 +7,19 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use Livewire\Component;
 
-class Psoinit extends Component
+class Psorotatodse extends Component
 {
 
-    public $init_data;
+    public $rota_data;
 
     protected $rules = [
-        'init_data.account_id' => 'required_if:send_to_pso,true',
-        'init_data.base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
-        'init_data.process_type' => 'required'
+        'rota_data.account_id' => 'required_if:send_to_pso,true',
+        'rota_data.base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i']
     ];
 
     protected $messages = [
 
-        'init_data.base_url.not_regex' => 'Cannot use a production URL.'
+        'rota_data.base_url.not_regex' => 'Cannot use a production URL.'
 
     ];
 
@@ -32,14 +31,14 @@ class Psoinit extends Component
         $this->validateOnly($propertyName);
     }
 
-    public function initPSO()
+    public function rotaToDSE()
     {
         $this->withValidator(function (Validator $validator) {
 
             $validator->after(function ($validator) {
 
-                if ($this->send_to_pso && !$this->token && !$this->username && !$this->password) {
-                    $validator->errors()->add('init_data.token', 'Please supply a user/pass if not supplying a token');
+                if ($this->rota_data['send_to_pso'] && !$this->rota_data['token'] && !$this->rota_data['username'] && !$this->rota_data['password']) {
+                    $validator->errors()->add('rota_data.token', 'Please supply a user/pass if not supplying a token');
                 }
             });
 
@@ -50,8 +49,8 @@ class Psoinit extends Component
 
     public function mount()
     {
-        $this->init_data = [
-            'description' => 'init from the array',
+        $this->rota_data = [
+            'description' => 'rota update from the array',
             'send_to_pso' => false,
             'base_url' => '',
             'dataset_id' => '',
@@ -59,16 +58,13 @@ class Psoinit extends Component
             'account_id' => '',
             'username' => '',
             'password' => '',
-            'dse_duration' => 7,
-            'appointment_window' => 14,
             'datetime' => Carbon::create(now())->format("Y-m-d\TH:i"),
-            'token' => null,
-            'process_type' => 'APPOINTMENT'
+            'token' => null
         ];
     }
 
     public function render()
     {
-        return view('livewire.psoinit');
+        return view('livewire.psorotatodse');
     }
 }

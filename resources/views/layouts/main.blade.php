@@ -22,7 +22,10 @@
     <link href="/assets/plugins/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
     <link href="/assets/plugins/jquery-scrollbar/jquery.scrollbar.css" rel="stylesheet" type="text/css" media="screen"/>
     <link href="/assets/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css" media="screen"/>
-    <link class="main-stylesheet" href="/pages/css/themes/abstract.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" rel="stylesheet" />
+
+{{--        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">--}}
+    <link class="main-stylesheet" href="/pages/css/pages.min.css" rel="stylesheet" type="text/css"/>
     @livewireStyles
 </head>
 
@@ -197,18 +200,17 @@
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right profile-dropdown" role="menu">
-                        <a href="/#" class="dropdown-item"><span>Signed in as <br/><b>David Aunsberg</b></span></a>
+                        <a href="/#" class="dropdown-item"><span>Signed in as
+                                <br/><b>{{ Auth::user()->name }} </b></span></a>
                         <div class="dropdown-divider"></div>
                         <a href="/#" class="dropdown-item">Your Profile</a>
                         <a href="/#" class="dropdown-item">Your Activity</a>
                         <a href="/#" class="dropdown-item">Your Archive</a>
                         <div class="dropdown-divider"></div>
-                        <a href="/#" class="dropdown-item">Features</a>
-                        <a href="/#" class="dropdown-item">Help</a>
                         <a href="/#" class="dropdown-item">Settings</a>
                         <a href="/#" class="dropdown-item">Logout</a>
                         <div class="dropdown-divider"></div>
-                        <span class="dropdown-item fs-12 hint-text">Last edited by David<br/>on Friday at 5:27PM</span>
+                        <span class="dropdown-item fs-12 hint-text"></span>
                     </div>
                 </div>
                 <!-- END User Info-->
@@ -230,10 +232,13 @@
                                 <span class=" arrow"></span></a>
                             <ul class="">
                                 <li class="">
-                                    <a href="/assist">Load and Rota</a>
+                                    <a href="/assist/init"><i class="pg-icon">grid_alt</i> Initial Load</a>
                                 </li>
                                 <li class="">
-                                    <a href="/usage">Usage</a>
+                                    <a href="/assist/rota"><i class="pg-icon">flag</i> Rota To DSE</a>
+                                </li>
+                                <li class="">
+                                    <a href="/assist/usage">Usage</a>
                                 </li>
                             </ul>
                         </li>
@@ -271,13 +276,11 @@
             <div class=" container   container-fixed-lg footer">
                 <div class="copyright sm-text-center">
                     <p class="small-text no-margin pull-left sm-pull-reset">
-                        ©2014-2020 All Rights Reserved. Pages® and/or its subsidiaries or affiliates are registered
-                        trademark of
-                        Revox Ltd.
-                        <span class="hint-text m-l-15">Pages v05.23 20201105.r.190</span>
+
+                        <span class="hint-text m-l-15">v0.02</span>
                     </p>
                     <p class="small no-margin pull-right sm-pull-reset">
-                        Hand-crafted <span class="hint-text">&amp; made with Love</span>
+                        Mostly <span class="hint-text"> made by Ish</span>
                     </p>
                     <div class="clearfix"></div>
                 </div>
@@ -303,11 +306,12 @@
     <script src="/assets/plugins/jquery-ios-list/jquery.ioslist.min.js" type="text/javascript"></script>
     <script src="/assets/plugins/jquery-actual/jquery.actual.min.js"></script>
     <script src="/assets/plugins/jquery-scrollbar/jquery.scrollbar.min.js"></script>
-    <script type="text/javascript" src="assets/plugins/jquery-inputmask/jquery.inputmask.min.js"></script>
-    <script type="text/javascript" src="assets/plugins/select2/js/select2.full.min.js"></script>
+    <script type="text/javascript" src="/assets/plugins/jquery-inputmask/jquery.inputmask.min.js"></script>
+    <script type="text/javascript" src="/assets/plugins/select2/js/select2.full.min.js"></script>
     <script type="text/javascript" src="/assets/plugins/classie/classie.js"></script>
     <script type="text/javascript" src="/assets/plugins/jquery-autonumeric/autoNumeric.js"></script>
-    <script src="assets/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/components/prism-core.min.js"></script>
+    {{--    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>--}}
     <!-- END VENDOR JS -->
     <!-- BEGIN CORE TEMPLATE JS -->
     <script src="/pages/js/pages.min.js" type="text/javascript"></script>
@@ -332,7 +336,8 @@
                     // Autonumeric plug-in - automatic addition of dollar signs,etc controlled by tag attributes
                     $('.autonumeric').autoNumeric('init');
 
-                    $('#datepicker-range, #datepicker-component, #datepicker-component2').datepicker();
+                    // hljs.highlightAll();
+
                 }
             )
         })(window.jQuery);

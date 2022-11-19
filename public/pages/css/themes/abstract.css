@@ -3055,7 +3055,7 @@ hr.dotted {
 /* Standard HTML Typography tags
 ------------------------------------
 */
-code {
+/*code {
   color: #6c6c6c;
   background-color: rgba(18, 18, 18, 0.05);
   font-size: 97%;
@@ -3072,7 +3072,7 @@ code:hover {
 
 code.code-sm {
   padding: 3px 6px;
-}
+}*/
 
 figcaption {
   font-size: 13px;
@@ -3205,7 +3205,7 @@ acronym {
   border-bottom-color: #ffba5a;
   -webkit-text-stroke: 0.2px;
 }
-
+/*
 pre {
   tab-size: 4;
   font-size: 85.714%;
@@ -3221,7 +3221,7 @@ pre {
   border-radius: 3px;
   margin-top: 20px;
   margin-bottom: 20px;
-}
+}*/
 
 dt {
   font-weight: 700;

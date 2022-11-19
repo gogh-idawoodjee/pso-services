@@ -1,51 +1,51 @@
 <div>
     <div class="card card-default m-t-20">
         <div class="card-header  separator">
-            <div class="card-title">Initial Load Parameters
+            <div class="card-title">Rota To DSE Parameters
             </div>
         </div>
         <div class="card-body  m-t-20">
             <div class="col-md-12">
-                <form role="form" wire:submit.prevent="initPSO">
+                <form role="form" wire:submit.prevent="rotaToDSE">
                     <div class="row column-seperation">
                         <div class="col-lg-12">
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="form-check form-check-inline switch">
                                         <input type="checkbox" id="send_to_pso"
-                                               wire:model="init_data.send_to_pso">
+                                               wire:model="rota_data.send_to_pso">
                                         <label for="send_to_pso">Send to PSO</label>
                                     </div>
                                 </div>
                             </div>
-                            @if($init_data['send_to_pso'])
+                            @if($rota_data['send_to_pso'])
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-group form-group-default required">
                                             <label>Username</label>
                                             <input type="text" class="form-control" name="username"
-                                                   wire:model="init_data.username">
+                                                   wire:model="rota_data.username">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group form-group-default required">
                                             <label>Password</label>
                                             <input type="password" class="form-control" name="password"
-                                                   wire:model="init_data.password">
+                                                   wire:model="rota_data.password">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group form-group-default required">
                                             <label>Account ID</label>
                                             <input type="text" class="form-control" name="account_id"
-                                                   wire:model="init_data.account_id">
+                                                   wire:model="rota_data.account_id">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group form-group-default required">
                                             <label>Base URL</label>
                                             <input type="url" class="form-control" name="base_url"
-                                                   wire:model="init_data.base_url">
+                                                   wire:model="rota_data.base_url">
                                         </div>
                                     </div>
                                 </div>
@@ -55,63 +55,26 @@
                                     <div class="form-group form-group-default required">
                                         <label>Dataset ID</label>
                                         <input type="text" class="form-control" required name="dataset_id"
-                                               wire:model="init_data.dataset_id">
+                                               wire:model="rota_data.dataset_id">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group form-group-default">
                                         <label>Rota ID</label>
                                         <input type="text" class="form-control" name="rota_id"
-                                               wire:model="init_data.rota_id"
+                                               wire:model="rota_data.rota_id"
                                                placeholder="defaults to Dataset ID value">
                                     </div>
                                 </div>
 
-                                <div class="col-md-2">
-                                    <div class="form-group form-group-default">
-                                        <label>DSE Window</label>
-                                        <input type="number" data-v-min="1" data-v-max="14" min="1" max="14"
-                                               value="7" name="dse_duration"
-                                               wire:model="init_data.dse_duration"
-                                               class="autonumeric form-control" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group form-group-default">
-                                        <label>Appointment Window </label>
-                                        <input type="number" data-v-max="200" name="appointment_window"
-                                               wire:model="init_data.appointment_window"
-                                               class="autonumeric form-control">
-                                        {{--                                                    <span class="help">e.g. "1 - 200"</span>--}}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <div
-                                        class="form-group form-group-default form-group-default-select2 required"
-                                        wire:ignore id="select2">
-                                        <label class="">Process Type</label>
-                                        <select class="full-width" data-placeholder="Select Country"
-                                                data-init-plugin="select2" name="process_type"
-                                                wire:model="init_data.process_type">
-                                            <option value="APPOINTMENT" selected>Appointment</option>
-                                            <option value="DYNAMIC">Dynamic</option>
-                                            <option value="REACTIVE">Reactive</option>
-                                            <option value="STATIC">Static</option>
-                                        </select>
-                                    </div>
-
-                                </div>
-                                <div class="col-md-4 align-middle">
-
+                                <div class="col-md-4">
                                     <div
                                         class="form-group form-group-default form-group-default-date input-group">
                                         <div class="form-input-group">
                                             <label class="">Input Date</label>
                                             <input type="datetime-local" class="form-control"
                                                    name="datetime"
-                                                   wire:model="init_data.datetime"
+                                                   wire:model="rota_data.datetime"
                                             >
                                         </div>
                                         <div class="input-group-append">
@@ -120,15 +83,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group form-group-default">
-                                        <label>Description</label>
-                                        <input type="text" class="form-control" name="description"
-                                               wire:model="init_data.description"
-                                               value="Initializing PSO from the Thingy">
-                                    </div>
-                                </div>
                             </div>
+
                         </div>
                     </div>
                     <div class="pull-right">
@@ -136,8 +92,8 @@
                         </button>
                         <button aria-label="" type="submit"
                                 class="btn btn-primary btn-cons">
-                            @if($init_data['send_to_pso'])
-                                Initialize
+                            @if($rota_data['send_to_pso'])
+                                Send Rota to DSE
                             @else
                                 Generate Payload
                             @endif
@@ -159,6 +115,13 @@
                     </div>
                     @enderror
 
+
+                    @error('rota_data.base_url')
+                    <div class="alert alert-warning" role="alert">
+                        <button aria-label="" class="close" data-dismiss="alert"></button>
+                        <strong>Please check: </strong>{{$message}}
+                    </div>
+                    @enderror
                 </div>
             </div>
         </div>

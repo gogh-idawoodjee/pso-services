@@ -29,7 +29,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/environment', [EnvironmentController::class, 'index'])->name('env.index');
-    Route::get('/assist', [AssistController::class, 'index'])->name('assist.index');
+    Route::get('/assist/init', [AssistController::class, 'index'])->name('assist.index');
+    Route::get('/assist/rota', [AssistController::class, 'update'])->name('assist.update');
+    Route::get('/assist/usage', [AssistController::class, 'show'])->name('assist.show');
 });
 
 require __DIR__ . '/auth.php';

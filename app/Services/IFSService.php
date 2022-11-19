@@ -47,13 +47,17 @@ class IFSService
         $response = [];
         if ($base_url) {
             try {
-                $response = Http::asForm()->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session', [
-                    'accountId' => $account_id,
-                    'username' => $username,
-                    'password' => $password,
-                ]);
+                $response = Http::asForm()
+                    ->timeout(5)
+                    ->connectTimeout(5)
+                    ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session', [
+                        'accountId' => $account_id,
+                        'username' => $username,
+                        'password' => $password,
+                    ]);
             } catch (Exception $e) {
-                dd($e);
+//                dd($e);
+                // todo need to catch this fail and bubble it up to is_authenticated
             }
         }
 
