@@ -139,7 +139,7 @@
         <div class="card card-default m-t-20">
             <div class="card-body">
                 @if($this->http_status==200)
-                    <div class="alert alert-info" role="alert">
+                    <div class="alert alert-success" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Successful Get - </strong> See Data Below
                     </div>

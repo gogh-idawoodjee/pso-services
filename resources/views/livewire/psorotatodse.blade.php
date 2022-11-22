@@ -74,8 +74,7 @@
                                             <label class="">Input Date</label>
                                             <input type="datetime-local" class="form-control"
                                                    name="datetime"
-                                                   wire:model="rota_data.datetime"
-                                            >
+                                                   wire:model="rota_data.datetime">
                                         </div>
                                         <div class="input-group-append">
                                             <span class="input-group-text">
@@ -101,14 +100,14 @@
                     </div>
                 </form>
                 <div class="row">
-                    @error('account_id')
+                    @error('rota_data.account_id')
                     <div class="alert alert-warning" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Please check: </strong>{{$message}}
                     </div>
                     @enderror
 
-                    @error('token')
+                    @error('rota_data.token')
                     <div class="alert alert-warning" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Please check: </strong>{{$message}}

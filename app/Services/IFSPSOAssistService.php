@@ -158,6 +158,7 @@ class IFSPSOAssistService extends IFSService
     public function InitializePSO(Request $request)
     {
         $payload = $this->initializePSOPayload($request);
+
         return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize via ' . config('pso-services.settings.service_name'));
     }
 
@@ -280,9 +281,10 @@ class IFSPSOAssistService extends IFSService
                     return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
             }
+            return $this->apiResponse(418, "None of the above", $payload);
         }
 
-        return $this->apiResponse(202, "Payload not sent to PSO", $payload);
+        return $this->apiResponse(202, "Successful but payload not sent to PSO by choice", $payload);
 
     }
 }

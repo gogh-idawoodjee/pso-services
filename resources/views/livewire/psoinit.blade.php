@@ -145,22 +145,46 @@
                     </div>
                 </form>
                 <div class="row">
-                    @error('account_id')
+                    @error('init_data.account_id')
                     <div class="alert alert-warning" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Please check: </strong>{{$message}}
                     </div>
                     @enderror
 
-                    @error('token')
+                    @error('init_data.token')
                     <div class="alert alert-warning" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Please check: </strong>{{$message}}
                     </div>
                     @enderror
+
 
                 </div>
             </div>
         </div>
     </div>
+
+    @if($http_status)
+        <div class="card card-default m-t-20">
+            <div class="card-body">
+                @if($http_status==200 ||$http_status==202)
+                    <div class="alert alert-success" role="alert">
+                        <button aria-label="" class="close" data-dismiss="alert"></button>
+                        <strong>{{$description}}</strong>
+                    </div>
+                @endif
+
+                @if($http_status==404)
+                    <div class="alert alert-warning" role="alert">
+                        <button aria-label="" class="close" data-dismiss="alert"></button>
+                        <strong>Problem - </strong>
+                        Dataset does not exist. If available, try one of the datasets listed below
+                    </div>
+                @endif
+                <pre><code class="language-json">{{$original_payload}}</code></pre>
+            </div>
+        </div>
+    @endif
+
 </div>
