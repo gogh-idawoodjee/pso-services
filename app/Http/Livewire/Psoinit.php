@@ -2,9 +2,11 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\PsoEnvironment;
 use App\Services\IFSPSOAssistService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use Livewire\Component;
@@ -16,7 +18,9 @@ class Psoinit extends Component
     public $http_status;
     public $description;
     public $original_payload;
-    public bool $not_authorized = false;
+    public $environments;
+    public $datasets;
+    public $environment;
 
     protected $rules = [
         'init_data.account_id' => 'required_if:send_to_pso,true',
@@ -36,6 +40,13 @@ class Psoinit extends Component
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
+        if ($propertyName == 'environment') {
+            $env = $this->environments->where('id', $this->environment)->first();
+            $this->init_data['base_url'] = $env->base_url;
+            $this->init_data['username'] = $env->username;
+            $this->init_data['password'] = $env->password;
+            $this->init_data['account_id'] = $env->account_id;
+        }
     }
 
     public function initPSO()
@@ -58,12 +69,7 @@ class Psoinit extends Component
         $init = new IFSPSOAssistService($this->init_data['base_url'], $this->init_data['token'], $this->init_data['username'], $this->init_data['password'], $this->init_data['account_id'], $this->init_data['send_to_pso']);
 
         if (!$init->isAuthenticated() && $this->init_data['send_to_pso']) {
-//            return response()->json([
-//                'status' => 401,
-//                'description' => 'did not pass auth'
-//            ]);
 
-            // some boolean here
             $this->reset_fields();
 
         } else {
@@ -87,7 +93,7 @@ class Psoinit extends Component
     public function mount()
     {
         $this->init_data = [
-            'description' => 'init from the array',
+            'description' => 'init from the thingy',
             'send_to_pso' => false,
             'base_url' => '',
             'dataset_id' => '',
@@ -101,6 +107,11 @@ class Psoinit extends Component
             'token' => null,
             'process_type' => 'APPOINTMENT'
         ];
+
+        $this->environments = PsoEnvironment::where('user_id', '=', Auth::user()->id)->with('datasets', 'defaultdataset')->get();
+        foreach ($this->environments as $env) {
+            $this->datasets[$env->id] = $env->datasets;
+        }
     }
 
     public function render()

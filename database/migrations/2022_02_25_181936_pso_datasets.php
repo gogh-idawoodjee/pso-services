@@ -17,6 +17,7 @@ class PsoDatasets extends Migration
         Schema::create('pso_datasets', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('pso_environment_id');
+            $table->string('user_id');
             $table->string('rota_id');
             $table->string('dataset_id');
             $table->timestamps();

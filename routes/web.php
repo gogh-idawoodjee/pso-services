@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssistController;
+use App\Http\Controllers\EnvironmentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/environment', [EnvironmentController::class, 'index'])->name('env.index');
+    Route::get('/environment/{id}', [EnvironmentController::class, 'edit'])->name('env.edit');
     Route::get('/assist/init', [AssistController::class, 'index'])->name('assist.index');
     Route::get('/assist/rota', [AssistController::class, 'update'])->name('assist.update');
     Route::get('/assist/usage', [AssistController::class, 'show'])->name('assist.show');

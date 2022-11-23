@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
     <meta charset="utf-8"/>
-    <title>Pages - Admin Dashboard UI Kit - Blank Page</title>
+    <title>PSO Services - @yield('title')</title>
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"/>
     <link rel="apple-touch-icon" href="/pages/ico/60.png">
@@ -22,9 +22,14 @@
     <link href="/assets/plugins/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
     <link href="/assets/plugins/jquery-scrollbar/jquery.scrollbar.css" rel="stylesheet" type="text/css" media="screen"/>
     <link href="/assets/plugins/select2/css/select2.min.css" rel="stylesheet" type="text/css" media="screen"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" rel="stylesheet" />
-
-{{--        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">--}}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" rel="stylesheet"/>
+    <link href="/assets/plugins/jquery-datatable/media/css/dataTables.bootstrap.min.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="/assets/plugins/jquery-datatable/extensions/FixedColumns/css/dataTables.fixedColumns.min.css"
+          rel="stylesheet" type="text/css"/>
+    <link href="/assets/plugins/datatables-responsive/css/datatables.responsive.css" rel="stylesheet" type="text/css"
+          media="screen">
+    {{--        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css">--}}
     <link class="main-stylesheet" href="/pages/css/pages.min.css" rel="stylesheet" type="text/css"/>
     @livewireStyles
 </head>
@@ -232,14 +237,31 @@
                                 <span class=" arrow"></span></a>
                             <ul class="">
                                 <li class="">
-                                    <a href="/assist/init"><i class="pg-icon">grid_alt</i> Initial Load</a>
+                                    <a href="/assist/init"><i class="pg-icon"
+                                                              style="line-height: 1.25; margin-right:3px">effects</i>
+                                        Initial Load</a>
                                 </li>
                                 <li class="">
-                                    <a href="/assist/rota"><i class="pg-icon">flag</i> Rota To DSE</a>
+                                    <a href="/assist/rota"><i class="pg-icon"
+                                                              style="line-height: 1.25; margin-right:3px">grid</i> Rota
+                                        To DSE</a>
                                 </li>
                                 <li class="">
-                                    <a href="/assist/usage">Usage</a>
+                                    <a href="/assist/usage"><i class="pg-icon"
+                                                               style="line-height: 1.25; margin-right:3px">bin</i> Usage</a>
                                 </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a><span class="title">Setup</span>
+                                <span class=" arrow"></span></a>
+                            <ul class="">
+                                <li class="">
+                                    <a href="/environment"><i class="pg-icon"
+                                                              style="line-height: 1.25; margin-right:3px">world</i> PSO
+                                        Environments</a>
+                                </li>
+
                             </ul>
                         </li>
                     </ul>
@@ -257,8 +279,8 @@
                 <div class="bg-white">
                     <div class="container">
                         <ol class="breadcrumb breadcrumb-alt">
-                            <li class="breadcrumb-item"><a href="/#">Pages</a></li>
-                            <li class="breadcrumb-item active">Blank template</li>
+                            <li class="breadcrumb-item"><a href="/#">@yield('menu-item')</a></li>
+                            <li class="breadcrumb-item active">@yield('title')</li>
                         </ol>
                     </div>
                 </div>
@@ -311,6 +333,13 @@
     <script type="text/javascript" src="/assets/plugins/classie/classie.js"></script>
     <script type="text/javascript" src="/assets/plugins/jquery-autonumeric/autoNumeric.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/components/prism-core.min.js"></script>
+    <script src="/assets/plugins/jquery-datatable/media/js/jquery.dataTables.min.js" type="text/javascript"></script>
+    <script src="/assets/plugins/jquery-datatable/extensions/TableTools/js/dataTables.tableTools.min.js"
+            type="text/javascript"></script>
+    <script src="/assets/plugins/jquery-datatable/media/js/dataTables.bootstrap.js" type="text/javascript"></script>
+    <script src="/assets/plugins/jquery-datatable/extensions/Bootstrap/jquery-datatable-bootstrap.js"
+            type="text/javascript"></script>
+    <script type="text/javascript" src="/assets/plugins/datatables-responsive/js/datatables.responsive.js"></script>
     {{--    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>--}}
     <!-- END VENDOR JS -->
     <!-- BEGIN CORE TEMPLATE JS -->
@@ -336,8 +365,30 @@
                     // Autonumeric plug-in - automatic addition of dollar signs,etc controlled by tag attributes
                     $('.autonumeric').autoNumeric('init');
 
-                    // hljs.highlightAll();
+                    // Initialize datatable showing a search box at the top right corner
+                    var initTableWithSearch = function () {
+                        var table = $('#tableWithSearch');
 
+                        var settings = {
+                            "sDom": "<t><'row'<p i>>",
+                            "destroy": true,
+                            "scrollCollapse": true,
+                            "oLanguage": {
+                                "sLengthMenu": "_MENU_ ",
+                                "sInfo": "Showing <b>_START_ to _END_</b> of _TOTAL_ entries"
+                            },
+                            "iDisplayLength": 5
+                        };
+
+                        table.dataTable(settings);
+
+                        // search box for table
+                        $('#search-table').keyup(function () {
+                            table.fnFilter($(this).val());
+                        });
+                    }
+
+                    initTableWithSearch();
                 }
             )
         })(window.jQuery);

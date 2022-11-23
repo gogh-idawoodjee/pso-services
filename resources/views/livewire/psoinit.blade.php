@@ -1,6 +1,30 @@
 <div>
     <div class="card card-default m-t-20">
         <div class="card-header  separator">
+            <div class="card-title">Select an existing environment
+            </div>
+        </div>
+        <div class="card-body">
+            <div
+                class="form-group m-t-10" wire:ignore>
+
+                <select wire:model="environment"
+                        class="cs-select cs-skin-slide" data-init-plugin="cs-select">
+                    @foreach($environments as $env)
+                        <option value="{{$env->id}}" selected>{{$env->name}} - {{$env->account_id}}
+                            - {{$env->base_url}}</option>
+                    @endforeach
+                </select>
+
+            </div>
+            <div>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="card card-default m-t-20">
+        <div class="card-header  separator">
             <div class="card-title">Initial Load Parameters
             </div>
         </div>
@@ -92,7 +116,7 @@
                                         class="form-group form-group-default form-group-default-select2 required"
                                         wire:ignore id="select2">
                                         <label class="">Process Type</label>
-                                        <select class="full-width" data-placeholder="Select Country"
+                                        <select class="full-width" data-placeholder="Select Process type"
                                                 data-init-plugin="select2" name="process_type"
                                                 wire:model="init_data.process_type">
                                             <option value="APPOINTMENT" selected>Appointment</option>

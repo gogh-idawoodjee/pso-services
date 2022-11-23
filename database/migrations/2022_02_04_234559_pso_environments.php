@@ -16,6 +16,7 @@ class PsoEnvironments extends Migration
     {
         Schema::create('pso_environments', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->string('user_id');
             $table->string('name')->nullable();
             $table->string('base_url');
             $table->string('account_id');
