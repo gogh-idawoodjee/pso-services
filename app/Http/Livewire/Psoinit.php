@@ -20,6 +20,7 @@ class Psoinit extends Component
     public $original_payload;
     public $environments;
     public $datasets;
+    public $dataset;
     public $environment;
 
     protected $rules = [
@@ -46,6 +47,15 @@ class Psoinit extends Component
             $this->init_data['username'] = $env->username;
             $this->init_data['password'] = $env->password;
             $this->init_data['account_id'] = $env->account_id;
+
+            // get the datasets
+            $this->datasets = $env->datasets;
+        }
+
+        if ($propertyName == 'dataset') {
+            $dataset = $this->datasets->where('id', $this->dataset)->first();
+            $this->init_data['dataset_id'] = $dataset->dataset_id;
+            $this->init_data['rota_id'] = $dataset->rota_id;
         }
     }
 
@@ -71,7 +81,7 @@ class Psoinit extends Component
         if (!$init->isAuthenticated() && $this->init_data['send_to_pso']) {
 
             $this->reset_fields();
-
+            $this->http_status = 401;
         } else {
 
 
@@ -109,9 +119,7 @@ class Psoinit extends Component
         ];
 
         $this->environments = PsoEnvironment::where('user_id', '=', Auth::user()->id)->with('datasets', 'defaultdataset')->get();
-        foreach ($this->environments as $env) {
-            $this->datasets[$env->id] = $env->datasets;
-        }
+
     }
 
     public function render()

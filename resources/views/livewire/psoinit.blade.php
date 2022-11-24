@@ -9,16 +9,26 @@
                 class="form-group m-t-10" wire:ignore>
 
                 <select wire:model="environment"
-                        class="cs-select cs-skin-slide" data-init-plugin="cs-select">
+                        class="cs-select cs-skin-slide" data-init-plugin="cs-select" id="envs">
+                    <option value="" disabled selected>Select Environment</option>
                     @foreach($environments as $env)
-                        <option value="{{$env->id}}" selected>{{$env->name}} - {{$env->account_id}}
+                        <option value="{{$env->id}}">{{$env->name}} - {{$env->account_id}}
                             - {{$env->base_url}}</option>
                     @endforeach
                 </select>
 
             </div>
-            <div>
-
+            <div class="form-group m-t-10">
+                @if($datasets)
+                    <select wire:model="dataset"
+                            class="cs-select cs-skin-slide" data-init-plugin="cs-select" id="datasets">
+                        <option value="" disabled selected>Select Dataset</option>
+                        @foreach($datasets as $ds)
+                            <option value="{{$ds->id}}">{{$ds->dataset_id}} - {{$ds->rota_id}}</option>
+                            {{--                            <option value="" selected>{{$ds->dataset_id}}</option>--}}
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
         </div>
@@ -192,11 +202,13 @@
     @if($http_status)
         <div class="card card-default m-t-20">
             <div class="card-body">
+                
                 @if($http_status==200 ||$http_status==202)
                     <div class="alert alert-success" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>{{$description}}</strong>
                     </div>
+                    <pre><code class="language-json">{{$original_payload}}</code></pre>
                 @endif
 
                 @if($http_status==404)
@@ -206,7 +218,16 @@
                         Dataset does not exist. If available, try one of the datasets listed below
                     </div>
                 @endif
-                <pre><code class="language-json">{{$original_payload}}</code></pre>
+
+                @if($http_status==401)
+                    <div class="alert alert-warning" role="alert">
+                        <button aria-label="" class="close" data-dismiss="alert"></button>
+                        <strong>Problem - </strong>
+                        Could not authenticate. Check user, pass or account ID
+                    </div>
+                @endif
+
+
             </div>
         </div>
     @endif
