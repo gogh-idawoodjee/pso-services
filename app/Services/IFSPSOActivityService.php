@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 
@@ -95,7 +96,7 @@ class IFSPSOActivityService extends IFSService
 
         // should be assumed that environment and auth for this service is pre-configured
 
-        $dataset_id = config('pso-services.debug.dataset_id');
+        //$dataset_id = config('pso-services.debug.dataset_id'); // dumbass this is wrong, dataset should be from the broadcast
         $base_url = config('pso-services.debug.base_url');
         $activity_part_payload = [];
 
@@ -104,54 +105,65 @@ class IFSPSOActivityService extends IFSService
 
         $suggestions = collect($pso_sds_broadcast)->get('Suggested_Dispatch');
 
-        // this is to check if the suggestions is an array of objects or an object
-        if (isset($suggestions->plan_id)) $newsuggestions[] = $suggestions; else {
-            $newsuggestions = $suggestions;
+        if (count($suggestions) > 0) {
+
+            $dataset_id = collect($pso_sds_broadcast)->get('Plan')[0]['dataset_id'];
+            Log::info($dataset_id);
+
+            // this is to check if the suggestions is an array of objects or an object
+            if (isset($suggestions->plan_id)) $newsuggestions[] = $suggestions; else {
+                $newsuggestions = $suggestions;
+            }
+
+            // build the individual status update
+            foreach ($newsuggestions as $suggestion) {
+                $start = Carbon::parse($suggestion['expected_start_datetime']);
+                $end = Carbon::parse($suggestion['expected_end_datetime']);
+                $difference = $end->diffInMinutes($start);
+
+
+                $activity_part_payload[] = (new PSOActivityStatus(
+                    config('pso-services.statuses.commit_status'),
+                    1,
+                    $difference,
+                    true,
+                    $suggestion['resource_id'],
+                    'From the Commit Service via ' . config('pso-services.settings.service_name'),
+                    $suggestion['expected_start_datetime'])
+                )->toJson($suggestion['activity_id']);
+            }
+
+
+            // build the full payload
+            $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
+            $activity_status = Http::withHeaders(['apiKey' => $this->token])
+                ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+                    $activity_status_payload
+                );
+
+            if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
+                'id' => Str::orderedUuid()->getHex()->toString(),
+                'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
+                'pso_suggestions' => json_encode($newsuggestions),
+                'output_payload' => json_encode($activity_status_payload),
+                'pso_response' => $activity_status->body(),
+                'response_time' => $activity_status->transferStats->getTransferTime(),
+                'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats())
+            ]);
+
+
+            if ($debug_mode) {
+                $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
+            }
+
+            return response()->json([
+                'status' => 200,
+                'description' => 'Service has sent payload to PSO',
+                'original_payload' => [$activity_status_payload]
+            ], 200, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+
         }
-
-        // build the individual status update
-        foreach ($newsuggestions as $suggestion) {
-            $activity_part_payload[] = (new PSOActivityStatus(
-                config('pso-services.statuses.commit_status'),
-                1,
-                0,
-                true,
-                $suggestion['resource_id'],
-                'From the Commit Service via ' . config('pso-services.settings.service_name'),
-                $suggestion['expected_start_datetime'])
-            )->toJson($suggestion['activity_id']);
-        }
-
-
-        // build the full payload
-        $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
-        $activity_status = Http::withHeaders(['apiKey' => $this->token])
-            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-                $activity_status_payload
-            );
-
-        if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
-            'id' => Str::orderedUuid()->getHex()->toString(),
-            'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
-            'pso_suggestions' => json_encode($newsuggestions),
-            'output_payload' => json_encode($activity_status_payload),
-            'pso_response' => $activity_status->body(),
-            'response_time' => $activity_status->transferStats->getTransferTime(),
-            'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats())
-        ]);
-
-
-        if ($debug_mode) {
-            $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
-        }
-
-        return response()->json([
-            'status' => 200,
-            'description' => 'Service has sent payload to PSO',
-            'original_payload' => [$activity_status_payload]
-        ], 202, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
-
     }
 
     public function updateActivityStatus($request, $status): JsonResponse
@@ -193,9 +205,9 @@ class IFSPSOActivityService extends IFSService
     }
 
 
-    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description): array
+    private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description, $datetime = null): array
     {
-        $input_ref = (new InputReference($description, 'Change', $dataset_id))->toJson();
+        $input_ref = (new InputReference($description, 'Change', $dataset_id, $datetime))->toJson();
 
         return [
             'dsScheduleData' => [

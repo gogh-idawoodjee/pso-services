@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 // commit
-Route::patch('/commit', [PSOCommitController::class, 'update']);
+Route::post('/commit', [PSOCommitController::class, 'update']);
 Route::post('/commit/test', [PSOCommitController::class, 'store']);
 
 // assist

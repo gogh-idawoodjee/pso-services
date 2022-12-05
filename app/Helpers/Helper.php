@@ -29,7 +29,7 @@ class Helper
 
     public static function setPSODuration($duration)
     {
-        return 'PT' . intdiv(($duration), 60) . 'H' . (($duration) % 60) . 'M';
+        return 'PT' . intdiv((int)$duration, 60) . 'H' . ((int)$duration % 60) . 'M';
     }
 
     public static function setPSODurationDays($duration)
@@ -69,7 +69,7 @@ class Helper
         ])->validate();
 
         Validator::make($request->all(), [
-            'password' => Rule::requiredIf( !$request->token)
+            'password' => Rule::requiredIf(!$request->token)
         ])->validate();
     }
 

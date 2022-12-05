@@ -6,6 +6,7 @@ use App\Services\IFSPSOActivityService;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PSOCommitController extends Controller
 {
@@ -17,16 +18,8 @@ class PSOCommitController extends Controller
      */
     public function update(Request $request)
     {
-        // receive the payload
-        // strip out the nastiness
 
-
-        if (!$request->all()) {
-            $content = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $request->getContent()));
-        } else {
-            $content = $request->all();
-        }
-
+        Log::info('committing');
         $commit = new IFSPSOActivityService(
             config('pso-services.debug.base_url'),
             null,
@@ -38,24 +31,17 @@ class PSOCommitController extends Controller
         );
 
 
-        return $commit->sendCommitActivity($content);
+        return $commit->sendCommitActivity($request->all());
 
     }
 
     public function store(Request $request): JsonResponse
     {
-        // strip out the nastiness
-
-        if (!$request->all()) {
-            $content = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $request->getContent()));
-        } else {
-            $content = $request->all();
-        }
 
         $commit = new IFSPSOActivityService(null, null, null, null, null, false, null);
 
         if ($commit->isAuthenticated()) {
-            return $commit->sendCommitActivity($content, true);
+            return $commit->sendCommitActivity($request->all(), true);
         }
 
         return response()->json([
