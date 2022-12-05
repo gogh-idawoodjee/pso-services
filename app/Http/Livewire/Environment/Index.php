@@ -66,7 +66,9 @@ class Index extends Component
         $dataset->environment()->associate($environment);
         $dataset->save();
 
-        $this->environments = collect($this->environments)->push($environment);
+        $this->environments = $this->getUserEnvironments();
+//        $this->environments = collect($this->environments)->push($environment);
+
 
     }
 

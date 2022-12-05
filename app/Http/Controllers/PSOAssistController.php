@@ -75,7 +75,10 @@ class PSOAssistController extends Controller
             'username' => 'string',
             'password' => 'string',
             'description' => 'string',
-            'datetime' => 'date'
+            'datetime' => 'date',
+            'include_broadcast' => 'boolean',
+            'broadcast_type' => 'integer|required_if:include_broadcast,true',
+            'broadcast_url' => 'url|required_if:include_broadcast,true'
         ]);
 
         Helper::ValidateSendToPSO($request);
@@ -95,7 +98,11 @@ class PSOAssistController extends Controller
             $request->rota_id,
             $request->base_url,
             $request->datetime,
-            $request->send_to_pso
+            $request->send_to_pso,
+            $request->include_broadcast,
+            $request->broadcast_type,
+            $request->broadcast_url,
+
         );
     }
 

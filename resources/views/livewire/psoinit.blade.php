@@ -202,7 +202,7 @@
     @if($http_status)
         <div class="card card-default m-t-20">
             <div class="card-body">
-                
+
                 @if($http_status==200 ||$http_status==202)
                     <div class="alert alert-success" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
@@ -226,7 +226,6 @@
                         Could not authenticate. Check user, pass or account ID
                     </div>
                 @endif
-
 
             </div>
         </div>

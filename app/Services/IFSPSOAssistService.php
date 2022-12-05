@@ -9,7 +9,6 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -28,7 +27,7 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
-    private function RotaToDSEPayload($dataset_id, $rota_id, $datetime = null): array
+    private function RotaToDSEPayload($dataset_id, $rota_id, $datetime, $include_broadcast, $broadcast_type, $broadcast_url): array
     {
         $input_reference = (new InputReference(
             "Update Rota from " . config('pso-services.settings.service_name'),
@@ -37,19 +36,31 @@ class IFSPSOAssistService extends IFSService
             $datetime)
         )->toJson();
 
-        return [
+
+        $rota_to_dse_payload = collect([
             'dsScheduleData' => [
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
                 'Input_Reference' => $input_reference,
                 'Source_Data' => $this->SourceData(),
                 'Source_Data_Parameter' => $this->SourceDataParameter($rota_id ?: $dataset_id),
             ]
-        ];
+        ]);
+
+        if ($include_broadcast) {
+            $broadcast_payload = $this->BroadcastPayload($broadcast_type, $broadcast_url);
+            $rota_to_dse_payload = collect($rota_to_dse_payload->first())->merge(['Broadcast' => $broadcast_payload['Broadcast']]);
+            $rota_to_dse_payload = $rota_to_dse_payload->merge(['Broadcast_Parameter' => $broadcast_payload['Broadcast_Parameter']]);
+            return ['dsScheduleData' => [$rota_to_dse_payload]];
+        }
+
+        return $rota_to_dse_payload->toArray();
+
+
     }
 
-    public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null): JsonResponse
+    public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null, $include_broadcast = null, $broadcast_type = null, $broadcast_url = null)//: JsonResponse
     {
-        $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date);
+        $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date, $include_broadcast, $broadcast_type, $broadcast_url);
 
         return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota via ' . config('pso-services.settings.service_name'));
 

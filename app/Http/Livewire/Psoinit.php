@@ -15,7 +15,7 @@ class Psoinit extends Component
 {
 
     public $init_data;
-    public $http_status;
+    public $http_status = null;
     public $description;
     public $original_payload;
     public $environments;
@@ -102,6 +102,7 @@ class Psoinit extends Component
 
     public function mount()
     {
+
         $this->init_data = [
             'description' => 'init from the thingy',
             'send_to_pso' => false,

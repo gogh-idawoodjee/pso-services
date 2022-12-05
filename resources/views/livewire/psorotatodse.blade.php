@@ -121,6 +121,15 @@
                         <strong>Please check: </strong>{{$message}}
                     </div>
                     @enderror
+
+                    @if($http_status==401)
+                        <div class="alert alert-warning" role="alert">
+                            <button aria-label="" class="close" data-dismiss="alert"></button>
+                            <strong>Problem - </strong>
+                            Could not authenticate. Check user, pass or account ID
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </div>

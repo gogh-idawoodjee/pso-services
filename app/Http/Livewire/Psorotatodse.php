@@ -11,6 +11,7 @@ class Psorotatodse extends Component
 {
 
     public $rota_data;
+    public $http_status = null;
 
     protected $rules = [
         'rota_data.account_id' => 'required_if:send_to_pso,true',
