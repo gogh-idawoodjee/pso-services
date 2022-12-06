@@ -10,6 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 
@@ -27,10 +28,13 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
-    private function RotaToDSEPayload($dataset_id, $rota_id, $datetime, $include_broadcast, $broadcast_type, $broadcast_url): array
+    private function RotaToDSEPayload($dataset_id, $rota_id, $datetime, $include_broadcast, $broadcast_type, $broadcast_url, $desc): array
     {
+        if (!$desc) {
+            $desc = "Update Rota from " . config('pso-services.settings.service_name');
+        }
         $input_reference = (new InputReference(
-            "Update Rota from " . config('pso-services.settings.service_name'),
+            $desc,
             'CHANGE',
             $dataset_id,
             $datetime)
@@ -58,11 +62,13 @@ class IFSPSOAssistService extends IFSService
 
     }
 
-    public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null, $include_broadcast = null, $broadcast_type = null, $broadcast_url = null)//: JsonResponse
+    public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null, $include_broadcast = null, $broadcast_type = null, $broadcast_url = null, $desc200 = null)//: JsonResponse
     {
-        $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date, $include_broadcast, $broadcast_type, $broadcast_url);
+        Log::debug('sending rota to dse, this is the service itself');
 
-        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url, 'Updated Rota via ' . config('pso-services.settings.service_name'));
+        $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date, $include_broadcast, $broadcast_type, $broadcast_url, $desc200);
+
+        return $this->processPayload($send_to_pso, $payload, $this->token, $base_url);
 
     }
 
@@ -256,7 +262,7 @@ class IFSPSOAssistService extends IFSService
             ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
     }
 
-    public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
+    public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200 = null, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
     {
         if ($send_to_pso) {
 

@@ -100,15 +100,12 @@ class IFSPSOActivityService extends IFSService
         $base_url = config('pso-services.debug.base_url');
         $activity_part_payload = [];
 
-        // this is the whole broadcast
         // chunk out just the suggested dispatch
-
         $suggestions = collect($pso_sds_broadcast)->get('Suggested_Dispatch');
 
         if (count($suggestions) > 0) {
 
             $dataset_id = collect($pso_sds_broadcast)->get('Plan')[0]['dataset_id'];
-            Log::info($dataset_id);
 
             // this is to check if the suggestions is an array of objects or an object
             if (isset($suggestions->plan_id)) $newsuggestions[] = $suggestions; else {
@@ -120,7 +117,6 @@ class IFSPSOActivityService extends IFSService
                 $start = Carbon::parse($suggestion['expected_start_datetime']);
                 $end = Carbon::parse($suggestion['expected_end_datetime']);
                 $difference = $end->diffInMinutes($start);
-
 
                 $activity_part_payload[] = (new PSOActivityStatus(
                     config('pso-services.statuses.commit_status'),
