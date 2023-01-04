@@ -18,7 +18,8 @@ class PSODeleteObject
         $object_pk_name2 = null, $object_pk2 = null,
         $object_pk_name3 = null, $object_pk3 = null,
         $object_pk_name4 = null, $object_pk4 = null,
-        $is_rota_object = false)
+        $is_rota_object = false
+    )
     {
         $this->additional_pk = [
             'pk2' => [
@@ -44,9 +45,9 @@ class PSODeleteObject
                 $is_rota_object
             );
 
-
     }
 
+    /** @noinspection PhpUnusedParameterInspection */
     private function setDeleteData($object_type_id, $object_pk_name1, $object_pk1, $object_pk_name2, $object_pk2, $object_pk_name3, $object_pk3, $object_pk_name4, $object_pk4, $is_rota_object)
     {
         $data =

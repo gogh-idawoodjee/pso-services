@@ -29,7 +29,7 @@ class IFSPSOScheduleService extends IFSService
 
     }
 
-    public static function getSchedule($base_url, $dataset_id, $token)
+    public static function getSchedule($base_url, $dataset_id, $token, $include_input = true, $include_output = true)
     {
         try {
             $schedule = Http::withHeaders([

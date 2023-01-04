@@ -22,7 +22,7 @@
                 @if($datasets)
                     <select wire:model="dataset"
                             class="cs-select cs-skin-slide" data-init-plugin="cs-select" id="datasets">
-                        <option value="" disabled selected>Select Dataset</option>
+                        <option value="no_dataset" selected>Select Dataset</option>
                         @foreach($datasets as $ds)
                             <option value="{{$ds->id}}">{{$ds->dataset_id}} - {{$ds->rota_id}}</option>
                             {{--                            <option value="" selected>{{$ds->dataset_id}}</option>--}}
@@ -44,13 +44,22 @@
                     <div class="row column-seperation">
                         <div class="col-lg-12">
                             <div class="row">
-                                <div class="col-lg-12">
+                                <div class="col-lg-4">
                                     <div class="form-check form-check-inline switch">
                                         <input type="checkbox" id="send_to_pso"
                                                wire:model="init_data.send_to_pso">
                                         <label for="send_to_pso">Send to PSO</label>
                                     </div>
                                 </div>
+                                @if($init_data['send_to_pso'])
+                                    <div class="col-lg-4">
+                                        <div class="form-check form-check-inline switch">
+                                            <input type="checkbox" id="keep_pso_data"
+                                                   wire:model="init_data.keep_pso_data">
+                                            <label for="keep_pso_data">Keep PSO Data That Has Not Expired</label>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             @if($init_data['send_to_pso'])
                                 <div class="row">

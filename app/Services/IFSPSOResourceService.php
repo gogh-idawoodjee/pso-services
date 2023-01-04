@@ -55,8 +55,6 @@ class IFSPSOResourceService extends IFSService
         $location = collect($resource_raw['Location']);
 
 
-        $resource_regions = [];
-        $regions = [];
         if (collect($resource_raw['Resource_Region'])->count()) {
             if (collect($resource_raw['Resource_Region'])->has('region_id')) {
                 $resource_regions = [collect($resource_raw['Resource_Region'])];
@@ -69,8 +67,6 @@ class IFSPSOResourceService extends IFSService
                 $thisresource_regions[] = $region['description'];
             }
         }
-
-        $resource_locations = [];
 
         if ($location->count()) {
             if ($location->has('id')) {
@@ -100,8 +96,6 @@ class IFSPSOResourceService extends IFSService
         }
 
 
-        $resource_skills = [];
-        $skills = [];
         if (collect($resource_raw['Resource_Skill'])->count()) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
@@ -442,6 +436,7 @@ class IFSPSOResourceService extends IFSService
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
 
+
         // do the check if we're sending to PSO
         if ($shift_data->send_to_pso) {
 
@@ -460,6 +455,7 @@ class IFSPSOResourceService extends IFSService
             $resource_init = new self($shift_data->base_url, $this->token, null, null, null, true);
             $resource_init->getResource($resource_id, $shift_data->dataset_id, $shift_data->base_url);
             $fresh_shifts = $resource_init->getResourceShiftsRaw();
+
             $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
 
             // compare the shift

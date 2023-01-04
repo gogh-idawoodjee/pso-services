@@ -205,14 +205,14 @@ class IFSPSOAppointmentService extends IFSService
         // create the new activity
         // damn we need all the stuff, skills, regions, location etc because we trashed the original
         // todo, do this later.
-        $activity_data_new = [
-            'activity_id' => $request->activity_id, // will have to do some logic here around _appt suffix
-            'activity_type_id' => $activity_data['Activity']['activity_type_id'],
-            'description' => $activity_data['Activity']['description'],
-            'description' => $activity_data['Activity']['priority'],
-            'description' => $activity_data['Activity']['base_value']
-        ];
-        $new_activity = new PSOActivity();
+//        $activity_data_new = [
+//            'activity_id' => $request->activity_id, // will have to do some logic here around _appt suffix
+//            'activity_type_id' => $activity_data['Activity']['activity_type_id'],
+//            'description' => $activity_data['Activity']['description'],
+//            'description' => $activity_data['Activity']['priority'],
+//            'description' => $activity_data['Activity']['base_value']
+//        ];
+//        $new_activity = new PSOActivity();
 
     }
 

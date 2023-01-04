@@ -53,9 +53,19 @@ class Psoinit extends Component
         }
 
         if ($propertyName == 'dataset') {
-            $dataset = $this->datasets->where('id', $this->dataset)->first();
-            $this->init_data['dataset_id'] = $dataset->dataset_id;
-            $this->init_data['rota_id'] = $dataset->rota_id;
+            if ($this->dataset != 'no_dataset') {
+                $dataset = $this->datasets->where('id', $this->dataset)->first();
+                $env = $this->environments->where('id', $this->environment)->first();
+                $this->init_data['dataset_id'] = $dataset->dataset_id;
+                $this->init_data['rota_id'] = $dataset->rota_id;
+                $this->init_data['base_url'] = $env->base_url;
+                $this->init_data['username'] = $env->username;
+                $this->init_data['password'] = $env->password;
+                $this->init_data['account_id'] = $env->account_id;
+            } else {
+                $this->reset_fields();
+                $this->clear_fields();
+            }
         }
     }
 
@@ -98,6 +108,16 @@ class Psoinit extends Component
         $this->http_status = null;
         $this->description = null;
         $this->original_payload = null;
+    }
+
+    private function clear_fields()
+    {
+        $this->init_data['base_url'] = null;
+        $this->init_data['username'] = null;
+        $this->init_data['password'] = null;
+        $this->init_data['account_id'] = null;
+        $this->init_data['dataset_id'] = null;
+        $this->init_data['rota_id'] = null;
     }
 
     public function mount()

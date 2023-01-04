@@ -59,6 +59,7 @@ class PSOActivityStatusController extends Controller
 
         Helper::ValidateSendToPSO($request);
 
+
         $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         if (!$activity->isAuthenticated() && $request->send_to_pso) {

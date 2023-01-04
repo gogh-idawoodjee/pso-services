@@ -37,6 +37,7 @@ Route::post('/load', [PSOAssistController::class, 'store']);
 Route::patch('/rotatodse', [PSOAssistController::class, 'update']);
 Route::get('/usage', [PSOAssistController::class, 'index']);
 
+
 // activity
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
 Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
@@ -60,6 +61,6 @@ Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityControll
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 
-Route::post('/sandbox', [PSOSandboxController::class, 'store']);
+Route::post('/sandbox', [PSOSandboxController::class, 'test']);
 
 //Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']); // doesn't exist yet

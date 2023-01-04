@@ -19,11 +19,12 @@ class PSOAssistController extends Controller
      * @return JsonResponse
      * @throws ValidationException
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
 
         $request->validate([
-            'send_to_pso' => 'boolean',
+            'send_to_pso' => 'boolean|required_if:keep_pso_data,true',
+            'keep_pso_data' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
             'dataset_id' => 'string|required',
             'rota_id' => 'string', // if not included, assume same as dataset ID
