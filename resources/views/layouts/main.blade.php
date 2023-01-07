@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
     <meta charset="utf-8"/>
-    <title>PSO Services - @yield('title')</title>
+    <title>Ish PSO Services - @yield('title')</title>
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"/>
     <link rel="apple-touch-icon" href="/pages/ico/60.png">
@@ -279,7 +279,7 @@
                 <div class="bg-white">
                     <div class="container">
                         <ol class="breadcrumb breadcrumb-alt">
-                            <li class="breadcrumb-item"><a href="/#">@yield('menu-item')</a></li>
+                            <li class="breadcrumb-item"><a href="">@yield('menu-item')</a></li>
                             <li class="breadcrumb-item active">@yield('title')</li>
                         </ol>
                     </div>

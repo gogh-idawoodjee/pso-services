@@ -8,14 +8,7 @@
                 <form role="form" wire:submit.prevent="getUsage">
                     <div class="row column-seperation">
                         <div class="col-lg-12">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="form-check form-check-inline switch disabled">
-                                        <input type="checkbox" id="send_to_pso" disabled>
-                                        <label for="send_to_pso">Send to PSO</label>
-                                    </div>
-                                </div>
-                            </div>
+
 
                             <div class="row">
                                 <div class="col-md-3">
@@ -149,7 +142,7 @@
                     <div class="alert alert-warning" role="alert">
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Problem - </strong>
-                        Dataset does not exist. If available, try one of the datasets listed below
+                        Dataset does not exist. Try one of the datasets listed below.
                     </div>
                 @endif
                 <pre><code class="language-json">{{$usage_response}}</code></pre>

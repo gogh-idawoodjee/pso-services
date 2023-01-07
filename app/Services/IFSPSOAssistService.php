@@ -136,22 +136,7 @@ class IFSPSOAssistService extends IFSService
     {
 
         // collecting all existing schedule data required for the load
-
-        $fullschedule = $schedule->collect()->first();
-        $activity = collect($fullschedule['Activity']);
-
-
-        // get Activity;
-        if ($activity->count()) {
-            if ($activity->has('id')) {
-                $activities = [$activity];
-            } else {
-                $activities = $activity;
-            }
-
-        }
-        $activity_keys = collect($activities)->pluck('id');
-        $activity_locations = collect($activities)->pluck('location_id');
+        $activities = [];
         $required_statuses = [];
         $required_skills = [];
         $required_locations = [];
@@ -159,92 +144,110 @@ class IFSPSOAssistService extends IFSService
         $schedule_events = [];
         $schedule_exception_responses = [];
 
-        // then get Activity_Skill, Activity_Status,  where activity_id in list of activities
-        if (Arr::has($fullschedule, 'Activity_Skill')) {
-            $activity_skill = collect($fullschedule['Activity_Skill']);
-            if ($activity_skill->count()) {
-                if ($activity_skill->has('id')) {
-                    $activity_skills = [$activity_skill];
+        $fullschedule = $schedule->collect()->first();
+        // only run through the whole thing if we at least have an activity
+        if (Arr::has($fullschedule, 'Activity')) {
+            $activity = collect($fullschedule['Activity']);
+
+
+            if ($activity->count()) {
+                if ($activity->has('id')) {
+                    $activities = [$activity];
                 } else {
-                    $activity_skills = $activity_skill;
+                    $activities = $activity;
                 }
+
             }
-            $activity_skills = collect($activity_skills);
-            $required_skills = ['Activity_Skill' => $activity_skills->whereIn('activity_id', $activity_keys)->values()];
+            $activity_keys = collect($activities)->pluck('id');
+            $activity_locations = collect($activities)->pluck('location_id');
 
-        }
 
-        if (Arr::has($fullschedule, 'Schedule_Event')) {
-
-            $schedule_event = collect($fullschedule['Schedule_Event']);
-            if ($schedule_event->count()) {
-                if ($schedule_event->has('status_id')) {
-                    $schedule_events = [$schedule_event];
-                } else {
-                    $schedule_events = $schedule_event;
+            // then get Activity_Skill, Activity_Status, where activity_id in list of activities
+            if (Arr::has($fullschedule, 'Activity_Skill')) {
+                $activity_skill = collect($fullschedule['Activity_Skill']);
+                if ($activity_skill->count()) {
+                    if ($activity_skill->has('id')) {
+                        $activity_skills = [$activity_skill];
+                    } else {
+                        $activity_skills = $activity_skill;
+                    }
                 }
+                $activity_skills = collect($activity_skills);
+                $required_skills = ['Activity_Skill' => $activity_skills->whereIn('activity_id', $activity_keys)->values()];
+
             }
-            $schedule_events = collect($schedule_events);
 
-        }
+            if (Arr::has($fullschedule, 'Schedule_Event')) {
 
-        if (Arr::has($fullschedule, 'Schedule_Exception_Response')) {
-
-            $schedule_exception_response = collect($fullschedule['Schedule_Exception_Response']);
-            if ($schedule_exception_response->count()) {
-                if ($schedule_exception_response->has('status_id')) {
-                    $schedule_exception_responses = [$schedule_exception_response];
-                } else {
-                    $schedule_exception_responses = $schedule_exception_response;
+                $schedule_event = collect($fullschedule['Schedule_Event']);
+                if ($schedule_event->count()) {
+                    if ($schedule_event->has('status_id')) {
+                        $schedule_events = [$schedule_event];
+                    } else {
+                        $schedule_events = $schedule_event;
+                    }
                 }
+                $schedule_events = collect($schedule_events);
+
             }
-            $schedule_exception_responses = collect($schedule_exception_responses);
 
-        }
+            if (Arr::has($fullschedule, 'Schedule_Exception_Response')) {
 
-
-        if (Arr::has($fullschedule, 'Activity_Status')) {
-
-            $activity_status = collect($fullschedule['Activity_Status']);
-            if ($activity_status->count()) {
-                if ($activity_status->has('status_id')) {
-                    $activity_statuses = [$activity_status];
-                } else {
-                    $activity_statuses = $activity_status;
+                $schedule_exception_response = collect($fullschedule['Schedule_Exception_Response']);
+                if ($schedule_exception_response->count()) {
+                    if ($schedule_exception_response->has('status_id')) {
+                        $schedule_exception_responses = [$schedule_exception_response];
+                    } else {
+                        $schedule_exception_responses = $schedule_exception_response;
+                    }
                 }
+                $schedule_exception_responses = collect($schedule_exception_responses);
+
             }
-            $activity_statuses = collect($activity_statuses);
-            $required_statuses = $activity_statuses->whereIn('activity_id', $activity_keys)->values();
-        }
 
-        if (Arr::has($fullschedule, 'Location')) {
 
-            $location = collect($fullschedule['Location']);
-            if ($location->count()) {
-                if ($location->has('id')) {
-                    $locations = [$location];
-                } else {
-                    $locations = $location;
+            if (Arr::has($fullschedule, 'Activity_Status')) {
+
+                $activity_status = collect($fullschedule['Activity_Status']);
+                if ($activity_status->count()) {
+                    if ($activity_status->has('status_id')) {
+                        $activity_statuses = [$activity_status];
+                    } else {
+                        $activity_statuses = $activity_status;
+                    }
                 }
+                $activity_statuses = collect($activity_statuses);
+                $required_statuses = $activity_statuses->whereIn('activity_id', $activity_keys)->values();
             }
-            $locations = collect($locations);
-            $required_locations = $locations->whereIn('id', $activity_locations)->values();
-        }
 
-        if (Arr::has($fullschedule, 'Location_Region')) {
+            if (Arr::has($fullschedule, 'Location')) {
 
-            $location_region = collect($fullschedule['Location_Region']);
-            if ($location_region->count()) {
-                if ($location_region->has('location_id')) {
-                    $location_regions = [$location_region];
-                } else {
-                    $location_regions = $location_region;
+                $location = collect($fullschedule['Location']);
+                if ($location->count()) {
+                    if ($location->has('id')) {
+                        $locations = [$location];
+                    } else {
+                        $locations = $location;
+                    }
                 }
+                $locations = collect($locations);
+                $required_locations = $locations->whereIn('id', $activity_locations)->values();
             }
-            $location_regions = collect($location_regions);
-            $required_locations = $location_regions->whereIn('activity_id', $activity_locations)->values();
-        }
 
+            if (Arr::has($fullschedule, 'Location_Region')) {
+
+                $location_region = collect($fullschedule['Location_Region']);
+                if ($location_region->count()) {
+                    if ($location_region->has('location_id')) {
+                        $location_regions = [$location_region];
+                    } else {
+                        $location_regions = $location_region;
+                    }
+                }
+                $location_regions = collect($location_regions);
+                $required_locations = $location_regions->whereIn('activity_id', $activity_locations)->values();
+            }
+        }
         return [
             'Activity' => $activities,
             'Activity_Status' => $required_statuses,

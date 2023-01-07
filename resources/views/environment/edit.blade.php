@@ -3,8 +3,8 @@
     Setup
 @endsection
 @section('title')
-    Environments
+    Edit Environment
 @endsection
 @section('content')
-    <livewire:environment.index/>
+    <livewire:environment.edit :id="$id">
 @endsection

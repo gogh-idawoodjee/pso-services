@@ -47,7 +47,7 @@ class EnvironmentController extends Controller
      */
     public function edit($id)
     {
-        return view('environment.edit');
+        return view('environment.edit')->with('id',$id);
     }
 
     /**

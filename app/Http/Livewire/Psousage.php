@@ -51,11 +51,11 @@ class Psousage extends Component
             $usage_data = $usage_init->getUsageData(new Request($this->usage_data));
             $this->http_status = json_decode($usage_data->content())->status;
             if ($this->http_status == 200) {
-                $this->usage_response = json_encode(json_decode($usage_data->content())->usage_data[0], [JSON_PRETTY_PRINT,JSON_UNESCAPED_SLASHES]);
+                $this->usage_response = json_encode(json_decode($usage_data->content())->usage_data[0],JSON_PRETTY_PRINT);
             }
 
             if ($this->http_status == 404) {
-                $this->usage_response = json_encode(json_decode($usage_data->content())->original_payload[0], [JSON_PRETTY_PRINT,JSON_UNESCAPED_SLASHES]);
+                $this->usage_response = json_encode(json_decode($usage_data->content())->original_payload[0], JSON_PRETTY_PRINT);
             }
         }
 
