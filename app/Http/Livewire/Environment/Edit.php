@@ -45,7 +45,7 @@ class Edit extends Component
 
     public function updateEnvironment()
     {
-        $validatedData = $this->validate($this->dataset_rules);
+        $validatedData = $this->validate();
 
         $this->environment->name = $this->env_data['name'];
         $this->environment->base_url = $this->env_data['base_url'];
@@ -64,8 +64,7 @@ class Edit extends Component
 
     public function addDataset()
     {
-        $validatedData = $this->validate();
-
+        $validatedData = $this->validate($this->dataset_rules);
         $dataset = new PsoDataset();
         $dataset->dataset_id = $this->dataset_data['dataset_id'];
         $dataset->rota_id = Arr::exists($this->dataset_data, 'rota_id') ? $this->dataset_data['rota_id'] : $this->dataset_data['dataset_id'];

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssistController;
 use App\Http\Controllers\EnvironmentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ResourceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/assist/init', [AssistController::class, 'index'])->name('assist.index');
     Route::get('/assist/rota', [AssistController::class, 'update'])->name('assist.update');
     Route::get('/assist/usage', [AssistController::class, 'show'])->name('assist.show');
+    Route::get('/resource', [ResourceController::class, 'index'])->name('resource.show');
 });
 
 require __DIR__ . '/auth.php';

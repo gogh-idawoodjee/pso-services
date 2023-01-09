@@ -1,0 +1,10 @@
+@extends('layouts.main')
+@section('menu-item')
+    Resources
+@endsection
+@section('title')
+    Listing
+@endsection
+@section('content')
+    <livewire:resource.index/>
+@endsection

@@ -31,6 +31,9 @@ class PSOResourceShiftController extends Controller
      */
     public function update(Request $request, $resource_id)//: JsonResponse
     {
+        // this must always be true
+        $request->send_to_pso = true;
+
         $request->validate([
             'shift_id' => 'required|alpha_dash',
             'dataset_id' => 'required|string',
@@ -44,6 +47,7 @@ class PSOResourceShiftController extends Controller
             'username' => 'string',
             'password' => 'string'
         ]);
+
 
         // auth and validation is required because there is a GET request done first on the resource
 

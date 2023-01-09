@@ -21,6 +21,8 @@ class PsoEnvironments extends Migration
             $table->string('base_url');
             $table->string('account_id');
             $table->string('username');
+            $table->string('manual_scheduling_shift_id');
+            $table->string('standard_shift_id');
             $table->text('password');
             $table->timestamps();
         });

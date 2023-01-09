@@ -264,6 +264,7 @@
 
                             </ul>
                         </li>
+                        <li><a href="/resource"><span class="title">Resources</span></a></li>
                     </ul>
                     <a href="/#" class="search-link d-flex justify-content-between align-items-center d-lg-none"
                        data-toggle="search">Tap here to search <i class="pg-search float-right"></i></a>

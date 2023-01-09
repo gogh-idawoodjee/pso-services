@@ -53,14 +53,16 @@ class IFSPSOResourceService extends IFSService
 
         $resource_type = collect($resource_raw['Resource_Type']);
         $location = collect($resource_raw['Location']);
+        $thisresource_regions = [];
+        $thisresource_skills = [];
 
 
-        if (collect($resource_raw['Resource_Region'])->count()) {
+        if (Arr::has($resource_raw, 'Resource_Region') && collect($resource_raw['Resource_Region'])->count()) {
             if (collect($resource_raw['Resource_Region'])->has('region_id')) {
-                $resource_regions = [collect($resource_raw['Resource_Region'])];
+//                $resource_regions = [collect($resource_raw['Resource_Region'])];
                 $regions = [collect($resource_raw['Region'])];
             } else {
-                $resource_regions = collect($resource_raw['Resource_Region']);
+//                $resource_regions = collect($resource_raw['Resource_Region']);
                 $regions = collect($resource_raw['Region']);
             }
             foreach ($regions as $region) {
@@ -96,10 +98,10 @@ class IFSPSOResourceService extends IFSService
         }
 
 
-        if (collect($resource_raw['Resource_Skill'])->count()) {
+        if (Arr::has($resource_raw, 'Resource_Skill') && (collect($resource_raw['Resource_Skill'])->count())) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
-                $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
+//                $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
                 $skills = [collect($resource_raw['Skill'])];
             } else {
 
@@ -115,24 +117,31 @@ class IFSPSOResourceService extends IFSService
 
         $start_location = [
             'id' => $newresource_locations[$resource['location_id_start']]['id'],
-            'address' => $newresource_locations[$resource['location_id_start']]['address_line1'],
-            'city' => $newresource_locations[$resource['location_id_start']]['city'],
-            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
-            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
+            'address' => Arr::has($newresource_locations[$resource['location_id_start']], 'address_line1') ? $newresource_locations[$resource['location_id_start']]['address_line1'] : "",
+            'city' => Arr::has($newresource_locations[$resource['location_id_start']], 'city') ? $newresource_locations[$resource['location_id_start']]['city'] : "",
+//            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
+//            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
             'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
             'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
             'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
         ];
 
-        if ($resource['location_id_start'] == $resource['location_id_end']) {
+        if (Arr::has($newresource_locations[$resource['location_id_start']], 'country')) {
+            $state_type = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province';
+            $ziptype = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code';
+            if (Arr::has($newresource_locations[$resource['location_id_start']], 'state')) {
+                $start_location = Arr::add($newresource_locations[$resource['location_id_start']], $state_type, $newresource_locations[$resource['location_id_start']]['state']);
+            }
+            if (Arr::has($newresource_locations[$resource['location_id_start']], 'post_code_zip')) {
+                $start_location = Arr::add($newresource_locations[$resource['location_id_start']], $ziptype, $newresource_locations[$resource['location_id_start']]['post_code_zip']);
+            }
+        }
 
-            $resource_location = [
-                'start_and_end_location' => [$start_location]
-            ];
-        } else {
-            $resource_location = [
-                'start_location' => [$start_location],
-                'end_location' => [
+        $resource_location = [
+            'start_location' => [$start_location],
+            'end_location' => $resource['location_id_start'] == $resource['location_id_end'] ? [$start_location] :
+                [
+                    // todo repeat above validation with end_location
                     'id' => $newresource_locations[$resource['location_id_end']]['id'],
                     'address' => $newresource_locations[$resource['location_id_end']]['address_line1'],
                     'city' => $newresource_locations[$resource['location_id_end']]['city'],
@@ -142,8 +151,10 @@ class IFSPSOResourceService extends IFSService
                     'long' => $newresource_locations[$resource['location_id_end']]['longitude'],
                     'formatted_from_google' => $newresource_locations[$resource['location_id_end']]['formatted_address'],
                 ]
-            ];
-        }
+        ];
+
+
+        $resource_location = Arr::add($resource_location, 'start_and_end_are_same', $resource['location_id_start'] == $resource['location_id_end']);
 
 
         $formatted_resource = [
@@ -317,17 +328,24 @@ class IFSPSOResourceService extends IFSService
         return $this->utilization;
     }
 
-    public function getScheduleableResources($request): Collection
+    public function getScheduleableResources($request)
     {
 
         $schedule = new IFSPSOScheduleService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
+        if (!$schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)) {
+
+            return $this->IFSPSOAssistService->apiResponse(404, 'Dataset Does Not Exist', ["request_resources_from_dataset"=>$request->dataset_id]);
+
+        }
         $overall_schedule = $schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)->collect();
+        if (!$overall_schedule->has('Resources')) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'No resources exist in this schedule', $request);
+        }
 
         $resources = collect($overall_schedule->get('Resources'));
         $shifts = collect($overall_schedule->get('Plan_Route'))->groupBy('resource_id');
         $events = collect($overall_schedule->get('Schedule_Event'));
-
 
         if (!Arr::has($events, 'id')) {
             $events = $events->mapToGroups(fn($item) => [
@@ -341,7 +359,8 @@ class IFSPSOResourceService extends IFSService
 
 
         $plans = collect($overall_schedule->get('Plan_Resource'))->keyBy('resource_id');
-        return $resources->map(function ($item) use ($events) {
+
+        $output = $resources->map(function ($item) use ($events) {
             // how do we do this if it's only one event ?
             if (isset($events[$item['id']])) {
                 return collect($item)->put('events', $events[$item['id']]);
@@ -356,6 +375,8 @@ class IFSPSOResourceService extends IFSService
                 ->put('shift_max', collect($shifts[$item['id']])->max('shift_start_datetime'))
                 ->put('shift_min', collect($shifts[$item['id']])->min('shift_start_datetime'));
         });
+
+        return $this->IFSPSOAssistService->apiResponse(200, 'Resources Returned', $output);
 
     }
 
@@ -700,9 +721,10 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function ResourceExists()
+    private function ResourceExists($collection = null)
     {
-        if (!Arr::has($this->pso_resource, 'Resources')) {
+        $collection = $collection ?: $this->pso_resource;
+        if (!Arr::has($collection, 'Resources')) {
             return false;
         }
         return true;
