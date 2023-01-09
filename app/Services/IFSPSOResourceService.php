@@ -160,11 +160,29 @@ class IFSPSOResourceService extends IFSService
         $formatted_resource = [
             'name' => $resource->get('first_name') . ' ' . $resource->get('surname'),
             'resource_id' => $resource->get('id'),
-            'resource_type' => $resource_type->get('description'),
+            'resource_type' => [
+                'type_id' => $resource_type->get('id'),
+                'description' => $resource_type->get('description'),
+            ],
             'note' => $resource->get('memo'),
-            'max_travel' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
-            'max_travel_outside_shift_to_first_activity' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
-            'max_travel_outside_shift_to_home' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) . ' (inherited from resource_type)',
+            'max_travel' =>
+                [
+                    'readable' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]),
+                    'value' => $resource->get('max_travel') ? $resource->get('max_travel') : $resource_type->get('max_travel'),
+                    'source' => $resource->get('max_travel') ? 'resource' : 'inherited from resource_type'
+                ],
+            'max_travel_outside_shift_to_first_activity' =>
+                [
+                    'readable' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]),
+                    'value' => $resource->get('travel_to') ? $resource->get('travel_to') : $resource_type->get('travel_to'),
+                    'source' => $resource->get('travel_to') ? 'resource' : 'inherited from resource_type'
+                ],
+            'max_travel_outside_shift_to_home' =>
+                [
+                    'readable' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]),
+                    'value' => $resource->get('travel_from') ? $resource->get('travel_from') : $resource_type->get('travel_from'),
+                    'source' => $resource->get('travel_from') ? 'resource' : 'inherited from resource_type'
+                ],
             'locations' => $resource_location,
         ];
 
@@ -335,7 +353,7 @@ class IFSPSOResourceService extends IFSService
 
         if (!$schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)) {
 
-            return $this->IFSPSOAssistService->apiResponse(404, 'Dataset Does Not Exist', ["request_resources_from_dataset"=>$request->dataset_id]);
+            return $this->IFSPSOAssistService->apiResponse(404, 'Dataset Does Not Exist', ["request_resources_from_dataset" => $request->dataset_id]);
 
         }
         $overall_schedule = $schedule->getScheduleAsCollection($request->dataset_id, $request->base_url)->collect();
