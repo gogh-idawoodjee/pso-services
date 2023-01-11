@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-
 use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
 use App\Helpers\Helper;
@@ -19,7 +18,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-
 
 class IFSPSOResourceService extends IFSService
 {
@@ -102,35 +100,68 @@ class IFSPSOResourceService extends IFSService
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
 //                $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
-                $skills = [collect($resource_raw['Skill'])];
+                $skills = [collect($resource_raw['Skill'])->groupBy('id')];
             } else {
 
-                $skills = collect($resource_raw['Skill']);
+                $skills = collect($resource_raw['Skill'])->groupBy('id');
             }
             // group these so we can grab the proficiency by ID
             $resource_skills = collect($resource_raw['Resource_Skill'])->groupBy('skill_id');
 
-            foreach ($skills as $skill) {
-                $thisresource_skills[] = $skill['description'] . ' (' . $skill['id'] . ') @ ' . $resource_skills->get($skill['id'])->first()['proficiency'];
+
+            foreach ($resource_skills as $resource_skill) {
+
+                $thisresource_skills[] = [
+                    $skills[$resource_skill[0]['skill_id']][0]['id'] =>
+                        [
+                            'readable' => $skills[$resource_skill[0]['skill_id']][0]['description'] . ' (' . $skills[$resource_skill[0]['skill_id']][0]['id'] . ')' . Arr::has($skills[$resource_skill[0]['skill_id']][0], 'proficiency') ?: ' @ ' . $skills[$resource_skill[0]['skill_id']][0]['id']['proficiency'],
+                            'value' => [
+                                'id' => $skills[$resource_skill[0]['skill_id']][0]['id'],
+                                'description' => $skills[$resource_skill[0]['skill_id']][0]['description'],
+                                'proficiency' => Arr::has($skills[$resource_skill[0]['skill_id']][0], 'proficiency') ? ' @ ' . $skills[$resource_skill[0]['skill_id']][0]['id']['proficiency'] : 1
+                            ]
+                        ]
+                ];
             }
         }
 
         $start_location = [
             'id' => $newresource_locations[$resource['location_id_start']]['id'],
-            'address' => Arr::has($newresource_locations[$resource['location_id_start']], 'address_line1') ? $newresource_locations[$resource['location_id_start']]['address_line1'] : "",
-            'city' => Arr::has($newresource_locations[$resource['location_id_start']], 'city') ? $newresource_locations[$resource['location_id_start']]['city'] : "",
-//            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_start']]['state'],
-//            $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_start']]['post_code_zip'],
+//            'address' => Arr::has($newresource_locations[$resource['location_id_start']], 'address_line1') ? $newresource_locations[$resource['location_id_start']]['address_line1'] : "",
+//            'city' => Arr::has($newresource_locations[$resource['location_id_start']], 'city') ? $newresource_locations[$resource['location_id_start']]['city'] : "",
             'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
             'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
             'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
         ];
 
+        $address_attributes = [
+            'address_line1',
+            'address_line2',
+            'address_line3',
+            'address_line4',
+            'address_line5',
+            'address_line6',
+            'city',
+            'description',
+            'locality',
+            'name'
+        ];
+
+        foreach ($address_attributes as $aa) {
+            if (Arr::has($newresource_locations[$resource['location_id_start']], $aa)) {
+                Arr::add($newresource_locations[$resource['location_id_start']], $aa, $newresource_locations[$resource['location_id_start']][$aa]);
+            }
+        }
+
+
         if (Arr::has($newresource_locations[$resource['location_id_start']], 'country')) {
-            $state_type = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province';
+            $region_type = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province';
             $ziptype = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code';
+            Arr::add($newresource_locations[$resource['location_id_start']], 'region_type', $region_type);
+            Arr::add($newresource_locations[$resource['location_id_start']], 'zip_type', $ziptype);
+
             if (Arr::has($newresource_locations[$resource['location_id_start']], 'state')) {
-                $start_location = Arr::add($newresource_locations[$resource['location_id_start']], $state_type, $newresource_locations[$resource['location_id_start']]['state']);
+                $start_location = Arr::add($newresource_locations[$resource['location_id_start']], $region_type, $newresource_locations[$resource['location_id_start']]['state']);
             }
             if (Arr::has($newresource_locations[$resource['location_id_start']], 'post_code_zip')) {
                 $start_location = Arr::add($newresource_locations[$resource['location_id_start']], $ziptype, $newresource_locations[$resource['location_id_start']]['post_code_zip']);
@@ -154,11 +185,13 @@ class IFSPSOResourceService extends IFSService
         ];
 
 
-        $resource_location = Arr::add($resource_location, 'start_and_end_are_same', $resource['location_id_start'] == $resource['location_id_end']);
+        $resource_location = Arr::add($resource_location, 'same_start_and_end_location', $resource['location_id_start'] == $resource['location_id_end']);
 
 
         $formatted_resource = [
-            'name' => $resource->get('first_name') . ' ' . $resource->get('surname'),
+            'full_name' => $resource->get('first_name') . ' ' . $resource->get('surname'),
+            'first_name' => $resource->get('first_name'),
+            'surname' => $resource->get('surname'),
             'resource_id' => $resource->get('id'),
             'resource_type' => [
                 'type_id' => $resource_type->get('id'),
@@ -280,11 +313,13 @@ class IFSPSOResourceService extends IFSService
             $util_percent = $routes[$item['id']][0]['utilisation'];
             $total_allocations = $routes[$item['id']][0]['total_allocations'];
             $route_margin = $routes[$item['id']][0]['route_margin'];
+            $overtime_period = CarbonInterval::fromString($item['overtime_period'])->forHumans(['options' => CarbonInterface::FLOOR]);
 
             $shifts = collect($item)
                 ->put('shift_date', $shiftdate)
                 ->put('shift_span', $times)
                 ->put('shift_duration', $difference)
+                ->put('overtime_period', $overtime_period)
                 ->put('utilization', [
                     'percent' => $util_percent,
                     'total_unutilised_time' => $total_unutilised_time,
@@ -377,6 +412,10 @@ class IFSPSOResourceService extends IFSService
 
 
         $plans = collect($overall_schedule->get('Plan_Resource'))->keyBy('resource_id');
+        $resources = $resources->map(function ($item) {
+            return collect($item)
+                ->put('fullname', $item['first_name'] . ' ' . $item['surname']);
+        });
 
         $output = $resources->map(function ($item) use ($events) {
             // how do we do this if it's only one event ?
@@ -389,7 +428,7 @@ class IFSPSOResourceService extends IFSService
         map(function ($item) use ($plans, $shifts) {
             return collect($item)
                 ->put('route', $plans[$item['id']])
-                ->put('shift count', count($shifts[$item['id']]))
+                ->put('shift_count', count($shifts[$item['id']]))
                 ->put('shift_max', collect($shifts[$item['id']])->max('shift_start_datetime'))
                 ->put('shift_min', collect($shifts[$item['id']])->min('shift_start_datetime'));
         });

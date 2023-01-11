@@ -3,8 +3,6 @@
 namespace App\Http\Livewire\Resource;
 
 use App\Models\PsoEnvironment;
-use App\Services\IFSPSOAssistService;
-
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +21,7 @@ class Index extends Component
     public $datasets;
     public $dataset;
     public $environment;
-    public $resources;
+    public $resources=[];
 
 
     protected $rules = [
@@ -74,6 +72,22 @@ class Index extends Component
             }
         }
     }
+
+    private function reset_fields()
+    {
+        $this->http_status = null;
+
+    }
+
+    private function clear_fields()
+    {
+        $this->usage_data['base_url'] = null;
+        $this->usage_data['username'] = null;
+        $this->usage_data['password'] = null;
+        $this->usage_data['account_id'] = null;
+        $this->usage_data['dataset_id'] = null;
+    }
+
 
     public function getResources()
     {

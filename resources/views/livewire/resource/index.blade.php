@@ -148,14 +148,65 @@
                         <button aria-label="" class="close" data-dismiss="alert"></button>
                         <strong>Problem - </strong>
                         See Below.
-                        <pre><code class="language-json">{{$usage_response}}</code></pre>
+
                     </div>
+                    <pre><code class="language-json">{{$usage_response}}</code></pre>
                 @endif
 
             </div>
         </div>
     @endif
-    @if($resources)
+    @if(count($resources))
+        <div class="card card-default m-t-30">
+            <div class="card-header ">
+                <div class="card-title">Resources
+                </div>
+                <div class="pull-right">
+                    <div class="col-xs-12">
+                        <input type="text" id="search-table" class="form-control pull-right" placeholder="Search">
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover demo-table-search table-responsive-block" id="tableWithSearch">
+                    <thead>
+                        <tr>
+                            <th>Name / ID</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($resources as $resource)
+                            <tr>
+                                <td class="v-align-middle semi-bold">
+                                    <a href="{{$resource->id}}"><p>{{$resource->fullname}}</p>
+                                        <small>{{$resource->id}}</small></a>
+                                </td>
+                                <td class="v-align-middle">
+                                    @if($resource->shift_count > 0)
+                                        <a href="{{$resource->id}}/shift"
+                                           class="btn ">Manage {{$resource->shift_count}} Shifts</a>
+                                    @else
+                                        No Shifts
+                                    @endif
+                                </td>
+                                <td class="v-align-middle">
+                                    <a href="{{$resource->id}}/unavailability"
+                                       class="btn ">Manage Unavailablities</a>
+                                </td>
+                                <td class="v-align-middle">
+                                    <a href="{{$resource->id}}/event"
+                                       class="btn ">Manage Events</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     @endif
 </div>

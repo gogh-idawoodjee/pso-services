@@ -335,7 +335,7 @@ class IFSPSOAssistService extends IFSService
 
 
         if (!$keys->contains($request->dataset_id)) {
-            return $this->apiResponse(`404`, 'Dataset not found in this environment', ['dataset_id_requested' => $request->dataset_id, 'datasets_available' => $keys]);
+            return $this->apiResponse(404, 'Dataset not found in this environment', ['dataset_id_requested' => $request->dataset_id, 'datasets_available' => $keys]);
         }
 
         if ($usage->collect()->first()) {

@@ -6,7 +6,10 @@ use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use App\Classes\PSOActivitySLA;
 use App\Helpers\Helper;
+use App\Models\PSOAppointment;
 use Carbon\Carbon;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -30,21 +33,26 @@ class IFSPSOAppointmentService extends IFSService
 
         $activity = new PSOActivity($request, true);
 
-        // should this go into AppointmentRequestPayloadPart or stay here?
+        // todo save activity details
+
+        // should this go into AppointmentRequestPayloadPart or stay here? // pushed to within the payload method
 //        $appointment_duration = 'P' . ($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration')) . 'D';
-        $appointment_duration = Helper::setPSODurationDays($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
+//        $appointment_duration = Helper::setPSODurationDays($request->appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
         // build the full activity object
         $activity_payload = $activity->FullActivityObject();
         $appointment_request_part_payload = $this->AppointmentRequestPayloadPart(
             $activity->getActivityID(),
             $request->appointment_template_id,
-            $appointment_duration,
+            $request->appointment_template_duration,
             $request->appointment_template_datetime
 
         );
 
+
         $input_ref = (new InputReference($request->description ?: 'Appointment Request', 'CHANGE', $request->dataset_id, $request->input_datetime))->toJson();
         $payload = $this->AppointmentRequestPayload($input_ref, $appointment_request_part_payload, $activity_payload);
+
+
         if ($request->send_to_pso) {
             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url, true);
 
@@ -89,6 +97,8 @@ class IFSPSOAppointmentService extends IFSService
                 ]
             ];
 
+            $this->save_appointment_request($appointment_request_part_payload, $payload, $activity, $input_ref['id'], $response, $valid_offers, $invalid_offers, $best_offer);
+
             return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Offers Received", $payload, 'appointment_request_input', $additional_data);
         }
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointment_request');
@@ -97,10 +107,12 @@ class IFSPSOAppointmentService extends IFSService
     private function AppointmentRequestPayloadPart($activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null)
     {
 
+        $appointment_duration = Helper::setPSODurationDays($appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
+
         return [
             'activity_id' => $activity_id,
             'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
-            'appointment_template_duration' => $appointment_template_duration,
+            'appointment_template_duration' => $appointment_duration,
             'appointment_template_id' => $appointment_template_id,
             'id' => Str::orderedUuid()->getHex()->toString(),
             'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString()
@@ -229,11 +241,7 @@ class IFSPSOAppointmentService extends IFSService
 
     private function AppointmentOfferResponsePayloadPart($appointment_request_id, $appointment_offer_id, $input_updated = false)
     {
-        return [
-            'appointment_request_id' => $appointment_request_id,
-            'appointment_offer_id' => $appointment_offer_id,
-            'input_updated' => $input_updated
-        ];
+        return compact('appointment_request_id', 'appointment_offer_id', 'input_updated');
     }
 
     private function AppointmentRequestPayload($input_reference, $appointment_request, $activity_payload): array
@@ -268,5 +276,37 @@ class IFSPSOAppointmentService extends IFSService
             ]];
     }
 
+    /**
+     * @param array $appointment_request_part_payload
+     * @param array $payload
+     * @param PSOActivity $activity
+     * @param $id
+     * @param PromiseInterface|Response $response
+     * @param $valid_offers
+     * @param $invalid_offers
+     * @param $best_offer
+     * @return void
+     */
+    private function save_appointment_request(array $appointment_request_part_payload, array $payload, PSOActivity $activity, $id, PromiseInterface|Response $response, $valid_offers, $invalid_offers, $best_offer): void
+    {
+        $appointment_request = new PSOAppointment();
+        $appointment_request->id = $appointment_request_part_payload['id'];
+        $appointment_request->appointment_request = json_encode($payload);
+        $appointment_request->activity_id = $activity->getActivityID();
+        $appointment_request->input_reference_id = $id;
+        $appointment_request->appointment_template_id = $appointment_request_part_payload['appointment_template_id'];
+        $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
+        $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
+        $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
+        $appointment_request->appointment_response = json_encode($response->collect());
+        $appointment_request->valid_offers = json_encode($valid_offers);
+        $appointment_request->invalid_offers = json_encode($invalid_offers);
+        $appointment_request->best_offer = $best_offer->get('prospective_resource_id') ? json_encode($best_offer) : json_encode('no valid offers returned');
+        $appointment_request->summary = $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.';
+        $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
+        $appointment_request->total_valid_offers_returned = $valid_offers->count();
+        $appointment_request->total_invalid_offers_returned = $invalid_offers->count();
+        $appointment_request->save();
+    }
 
 }
