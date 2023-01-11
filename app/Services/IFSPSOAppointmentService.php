@@ -31,6 +31,7 @@ class IFSPSOAppointmentService extends IFSService
     public function getAppointment(Request $request)//: JsonResponse
     {
 
+
         $activity = new PSOActivity($request, true);
 
         // todo save activity details
@@ -44,7 +45,8 @@ class IFSPSOAppointmentService extends IFSService
             $activity->getActivityID(),
             $request->appointment_template_id,
             $request->appointment_template_duration,
-            $request->appointment_template_datetime
+            $request->appointment_template_datetime,
+            $request->slot_usage_rule_id
 
         );
 
@@ -104,19 +106,27 @@ class IFSPSOAppointmentService extends IFSService
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointment_request');
     }
 
-    private function AppointmentRequestPayloadPart($activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null)
+    private function AppointmentRequestPayloadPart($activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null, $slot_usage_rule_id = null)
     {
 
         $appointment_duration = Helper::setPSODurationDays($appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
 
-        return [
-            'activity_id' => $activity_id,
-            'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
-            'appointment_template_duration' => $appointment_duration,
-            'appointment_template_id' => $appointment_template_id,
-            'id' => Str::orderedUuid()->getHex()->toString(),
-            'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString()
-        ];
+        $payload =
+
+            [
+                'activity_id' => $activity_id,
+                'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
+                'appointment_template_duration' => $appointment_duration,
+                'appointment_template_id' => $appointment_template_id,
+                'id' => Str::orderedUuid()->getHex()->toString(),
+                'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString()
+            ];
+
+        if ($slot_usage_rule_id) {
+            $payload = Arr::add($payload, 'slot_usage_rule_id', $slot_usage_rule_id);
+        }
+
+        return $payload;
     }
 
     public function checkAppointed($request, $appointment_request_id): JsonResponse
@@ -298,6 +308,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
+        $appointment_request->slot_usage_rule_id = $appointment_request_part_payload['slot_usage_rule_id'];
         $appointment_request->appointment_response = json_encode($response->collect());
         $appointment_request->valid_offers = json_encode($valid_offers);
         $appointment_request->invalid_offers = json_encode($invalid_offers);
