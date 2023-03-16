@@ -73,5 +73,9 @@ class Helper
         ])->validate();
     }
 
+    public static function RotaID($dataset_id, $rota_id)
+    {
+        return $rota_id ? $rota_id : $dataset_id;
+    }
 
 }

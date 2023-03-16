@@ -26,7 +26,7 @@ class PSOAppointmentController extends Controller
             'token' => 'string',
             'username' => 'string',
             'password' => 'string',
-            'appointment_offer_id' => 'string|required'
+            'appointment_offer_id' => 'integer|required'
         ]);
 
         Helper::ValidateSendToPSO($request);
@@ -74,8 +74,10 @@ class PSOAppointmentController extends Controller
             'sla_type_id' => 'string|required',
             'appointment_template_id' => 'string|required',
             'appointment_template_duration' => 'integer|gte:0',
-            'appointment_template_datetime' => 'date|after:input_datetime',
-            'input_datetime' => 'date|before:appointment_template_datetime',
+//            'appointment_template_datetime' => 'date|after:input_datetime',
+            'appointment_template_datetime' => 'date',
+            'input_datetime' => 'date',
+//            'input_datetime' => 'date|before:appointment_template_datetime',
             'lat' => 'numeric|between:-90,90|required',
             'long' => 'numeric|between:-180,180|required'
         ]);
@@ -156,8 +158,7 @@ class PSOAppointmentController extends Controller
             'account_id' => 'string|required',
             'token' => 'string',
             'username' => 'string',
-            'password' => 'string',
-            'activity_id' => 'string|required'
+            'password' => 'string'
         ]);
 
         Helper::ValidateSendToPSO($request);

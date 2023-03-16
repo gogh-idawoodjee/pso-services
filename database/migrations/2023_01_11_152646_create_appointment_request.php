@@ -28,11 +28,11 @@ return new class extends Migration {
             $table->json('accepted_offer')->nullable();
             $table->string('activity_id');
             $table->string('input_reference_id');
+            $table->string('accept_decline_input_reference_id')->nullable();
             $table->string('appointment_template_id');
             $table->dateTime('appointment_template_datetime');
             $table->dateTime('offer_expiry_datetime');
-            $table->dateTime('accepted_datetime')->nullable();
-            $table->dateTime('declined_datetime')->nullable();
+            $table->dateTime('accept_decline_datetime')->nullable();
             $table->string('appointment_template_duration');
             $table->string('user_id')->nullable();
             $table->timestamps();

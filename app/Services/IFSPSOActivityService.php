@@ -50,7 +50,7 @@ class IFSPSOActivityService extends IFSService
             'activity_type_id' => $request->activity_type_id,
             'status_id' => 0,
             'duration' => $request->duration,
-            'description' => $request->description ?: 'Instant Activity from ' . config('pso-services.settings.service_name'),
+            'description' => $request->description ?: 'Instant Activity from ' . $this->service_name,
             'skill' => $request->skill,
             'region' => $request->region
         ]);
@@ -58,7 +58,7 @@ class IFSPSOActivityService extends IFSService
         $activity = new PSOActivity($activity_build_data);
 
         $input_ref = (new InputReference(
-            'Instant Activity Generator from ' . config('pso-services.settings.service_name'),
+            'Instant Activity Generator from ' . $this->service_name,
             'CHANGE',
             $request->dataset_id,
             $request->input_datetime
@@ -84,9 +84,9 @@ class IFSPSOActivityService extends IFSService
         return $this->activity_object = $activity->collect()->first();
     }
 
-    public function activityExists(): bool
+    public function activityExists()//: bool
     {
-        return collect($this->activity_object->first())->has('Activity');
+        return collect($this->activity_object)->has('Activity');
     }
 
 
@@ -123,7 +123,7 @@ class IFSPSOActivityService extends IFSService
                     $difference,
                     true,
                     $suggestion['resource_id'],
-                    'From the Commit Service via ' . config('pso-services.settings.service_name'),
+                    'From the Commit Service via ' . $this->service_name,
                     $suggestion['expected_start_datetime'])
                 )->toJson($suggestion['activity_id']);
             }
@@ -173,13 +173,13 @@ class IFSPSOActivityService extends IFSService
             0,
             false,
             $request->resource_id,
-            'Update Status from ' . config('pso-services.settings.service_name'),
+            'Update Status from ' . $this->service_name,
             $request->date_time_fixed)
         )->toJson($request->activity_id);
 
-        $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change via ' . config('pso-services.settings.service_name'));
+        $payload = $this->ActivityStatusFullPayload($request->dataset_id, $activity_part_payload, 'Status Change via ' . $this->service_name);
 
-        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change via ' . config('pso-services.settings.service_name'));
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Status Change via ' . $this->service_name);
 
     }
 
@@ -202,7 +202,13 @@ class IFSPSOActivityService extends IFSService
 
     private function ActivityStatusFullPayload($dataset_id, $activity_status_payload, $description, $datetime = null): array
     {
-        $input_ref = (new InputReference($description, 'Change', $dataset_id, $datetime))->toJson();
+        $input_ref = (
+        new InputReference(
+            $description,
+            'Change',
+            $dataset_id,
+            $datetime)
+        )->toJson();
 
         return [
             'dsScheduleData' => [
@@ -214,7 +220,6 @@ class IFSPSOActivityService extends IFSService
         ];
     }
 
-
     public function deleteActivity(Request $request, $description = null)
     {
 
@@ -222,7 +227,7 @@ class IFSPSOActivityService extends IFSService
             'Activity',
             'id', $request->activity_id
         ))->toJson();
-        $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, 'Activity');
+        $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, $description);
 
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
 
@@ -250,7 +255,7 @@ class IFSPSOActivityService extends IFSService
     {
 
         $input_ref = (
-        new InputReference(("Deleting " . $description . " via " . config('pso-services.settings.service_name')),
+        new InputReference(("Deleting " . $description . " via " . $this->service_name),
             'CHANGE',
             $dataset_id))
             ->toJson();

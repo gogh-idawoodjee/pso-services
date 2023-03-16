@@ -28,10 +28,13 @@ class IFSPSOResourceService extends IFSService
     private $shifts;
     private IFSPSOAssistService $IFSPSOAssistService;
 
+
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
         $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
+        $this->pso_resource = collect();
+
 
     }
 
@@ -40,7 +43,6 @@ class IFSPSOResourceService extends IFSService
      */
     public function getResourceForWebApp($resource_id, $dataset_id, $base_url)
     {
-
 
         $resource_raw = $this->getResource($resource_id, $dataset_id, $base_url);
 
@@ -55,17 +57,27 @@ class IFSPSOResourceService extends IFSService
         $thisresource_skills = [];
 
 
+//return $resource_raw['Resource_Region'];
         if (Arr::has($resource_raw, 'Resource_Region') && collect($resource_raw['Resource_Region'])->count()) {
             if (collect($resource_raw['Resource_Region'])->has('region_id')) {
 //                $resource_regions = [collect($resource_raw['Resource_Region'])];
-                $regions = [collect($resource_raw['Region'])];
+                $regions = [collect($resource_raw['Resource_Region'])];
+
             } else {
 //                $resource_regions = collect($resource_raw['Resource_Region']);
-                $regions = collect($resource_raw['Region']);
+                $regions = collect($resource_raw['Resource_Region']);
+
             }
+
+            $regions_list = Arr::keyBy($resource_raw['Region'], 'id');
+
             foreach ($regions as $region) {
-                $thisresource_regions[] = $region['description'];
+
+                $thisresource_regions[] = Arr::has($regions_list[$region['region_id']], 'description') ? $regions_list[$region['region_id']]['description'] : $region['region_id'];
+
             }
+
+
         }
 
         if ($location->count()) {
@@ -96,10 +108,9 @@ class IFSPSOResourceService extends IFSService
         }
 
 
-        if (Arr::has($resource_raw, 'Resource_Skill') && (collect($resource_raw['Resource_Skill'])->count())) {
+        if (Arr::has($resource_raw, 'Resource_Skill') && (collect($resource_raw['Resource_Skill'])->count()) && Arr::has($resource_raw, 'Skill')) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
-//                $resource_skills = [collect($resource_raw['Resource_Skill'])->groupBy('skill_id')];
                 $skills = [collect($resource_raw['Skill'])->groupBy('id')];
             } else {
 
@@ -111,14 +122,15 @@ class IFSPSOResourceService extends IFSService
 
             foreach ($resource_skills as $resource_skill) {
 
+                $collected_skill = $skills[$resource_skill[0]['skill_id']][0];
                 $thisresource_skills[] = [
-                    $skills[$resource_skill[0]['skill_id']][0]['id'] =>
+                    $collected_skill['id'] =>
                         [
-                            'readable' => $skills[$resource_skill[0]['skill_id']][0]['description'] . ' (' . $skills[$resource_skill[0]['skill_id']][0]['id'] . ')' . Arr::has($skills[$resource_skill[0]['skill_id']][0], 'proficiency') ?: ' @ ' . $skills[$resource_skill[0]['skill_id']][0]['id']['proficiency'],
+                            'readable' => $collected_skill['description'] . ' (' . $collected_skill['id'] . ')' . Arr::has($collected_skill, 'proficiency') ?: ' @ ' . $collected_skill['id']['proficiency'],
                             'value' => [
-                                'id' => $skills[$resource_skill[0]['skill_id']][0]['id'],
-                                'description' => $skills[$resource_skill[0]['skill_id']][0]['description'],
-                                'proficiency' => Arr::has($skills[$resource_skill[0]['skill_id']][0], 'proficiency') ? ' @ ' . $skills[$resource_skill[0]['skill_id']][0]['id']['proficiency'] : 1
+                                'id' => $collected_skill['id'],
+                                'description' => $collected_skill['description'],
+                                'proficiency' => Arr::has($collected_skill, 'proficiency') ? ' @ ' . $collected_skill['id']['proficiency'] : 1
                             ]
                         ]
                 ];
@@ -127,8 +139,6 @@ class IFSPSOResourceService extends IFSService
 
         $start_location = [
             'id' => $newresource_locations[$resource['location_id_start']]['id'],
-//            'address' => Arr::has($newresource_locations[$resource['location_id_start']], 'address_line1') ? $newresource_locations[$resource['location_id_start']]['address_line1'] : "",
-//            'city' => Arr::has($newresource_locations[$resource['location_id_start']], 'city') ? $newresource_locations[$resource['location_id_start']]['city'] : "",
             'lat' => $newresource_locations[$resource['location_id_start']]['latitude'],
             'long' => $newresource_locations[$resource['location_id_start']]['longitude'],
             'formatted_from_google' => $newresource_locations[$resource['location_id_start']]['formatted_address'],
@@ -152,7 +162,6 @@ class IFSPSOResourceService extends IFSService
                 Arr::add($newresource_locations[$resource['location_id_start']], $aa, $newresource_locations[$resource['location_id_start']][$aa]);
             }
         }
-
 
         if (Arr::has($newresource_locations[$resource['location_id_start']], 'country')) {
             $region_type = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province';
@@ -313,7 +322,8 @@ class IFSPSOResourceService extends IFSService
             $util_percent = $routes[$item['id']][0]['utilisation'];
             $total_allocations = $routes[$item['id']][0]['total_allocations'];
             $route_margin = $routes[$item['id']][0]['route_margin'];
-            $overtime_period = CarbonInterval::fromString($item['overtime_period'])->forHumans(['options' => CarbonInterface::FLOOR]);
+            $overtime_period = Arr::has($item, 'overtime_period') ?
+                CarbonInterval::fromString($item['overtime_period'])->forHumans(['options' => CarbonInterface::FLOOR]) : "no overtime";
 
             $shifts = collect($item)
                 ->put('shift_date', $shiftdate)
@@ -332,17 +342,24 @@ class IFSPSOResourceService extends IFSService
                     'route_margin' => $route_margin,
                 ]);
 
-            if (!isset($item['manual_scheduling_only'])) {
-                $shifts->put('manual_scheduling_only', false);
-            } else {
-                $shifts->put('manual_scheduling_isset', true); // this may need to be renamed to 'checked' if used in VueJS
-            }
 
             $shifts->pull('start_datetime');
             $shifts->pull('end_datetime');
             $shifts->pull('actual');
             $shifts->pull('split_allowed');
             $shifts->pull('resource_id');
+
+            if (!isset($item['manual_scheduling_only'])) {
+                $shifts->put('manual_scheduling_only', false);
+            } else {
+
+                $shifts->pull('manual_scheduling_only');
+
+                $shifts->put('manual_scheduling_only', true); // this may need to be renamed to 'checked' if used in VueJS
+            }
+
+            // todo figure out how to sort
+            $shifts = $shifts->sortBy('shift_date');
 
             return $shifts;
         });
@@ -492,7 +509,7 @@ class IFSPSOResourceService extends IFSService
             ];
     }
 
-    public function setManualScheduling($shift_data, $resource_id)
+    public function updateShift(Request $shift_data, $resource_id)
     {
 
         if (!$this->ResourceExists()) return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
@@ -507,9 +524,30 @@ class IFSPSOResourceService extends IFSService
         // build the json for the RAM_Rota_Item
         // the first param is looking at the list of shifts and finding the details on the one we're modifying
 
-        $description = "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " via " . config('pso-services.settings.service_name') . ". (" . Carbon::now()->toDateTimeString() . ")";
-        $ram_rota_item_payload = $this->RAMRotaItemPayload(collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id)), $shift_data->rota_id, $shift_data->turn_manual_scheduling_on, $shift_data->shift_type, $description);
-        $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " via " . config('pso-services.settings.service_name'));
+        $rawshift = collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id));
+        $raw_shift_data['turn_manual_scheduling_on'] = $rawshift->get('manual_scheduling_only') ? $rawshift->get('manual_scheduling_only') : false;
+        $raw_shift_data['shift_type'] = $shift_data->shift_type ? $shift_data->shift_type : $rawshift->get('shift_type_id');
+        $raw_shift_data['start_datetime'] = $shift_data->start_datetime ? $shift_data->start_datetime : $rawshift->get('start_datetime');
+        $raw_shift_data['end_datetime'] = $shift_data->end_datetime ? $shift_data->end_datetime : $rawshift->get('end_datetime');
+        if (Carbon::make($raw_shift_data['end_datetime'])->lt(Carbon::make($raw_shift_data['start_datetime']))) {
+            return $this->IFSPSOAssistService->apiResponse(500, 'Start Date cannot be greater than End Date', ['start_datetime' => $raw_shift_data['start_datetime'], 'end_datetime' => $raw_shift_data['end_datetime']], 'submitted_data');
+        }
+        $description = "Shift updated via " . $this->service_name . ". (" . Carbon::now()->toDateTimeString() . ")";
+        if ($shift_data->has('turn_manual_scheduling_on')) {
+            $raw_shift_data['turn_manual_scheduling_on'] = $shift_data->turn_manual_scheduling_on;
+            $description = "Manual Scheduling Only set to " . ($shift_data->turn_manual_scheduling_on ? "ON" : "OFF") . " via " . $this->service_name . ". (" . Carbon::now()->toDateTimeString() . ")";
+        }
+
+        //defaulting rota_id to dataset_id if rota_id is null
+        $rota_id = Helper::RotaID($shift_data->dataset_id, $shift_data->rota_id);
+        $ram_rota_item_payload = $this->RAMRotaItemPayload(
+            $rawshift,
+            $rota_id,
+            $raw_shift_data,
+            $description
+        );
+
+        $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, $description);
 
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
@@ -526,7 +564,7 @@ class IFSPSOResourceService extends IFSService
                 'Rota Item Updated',
                 true,
                 $shift_data->dataset_id,
-                $shift_data->rota_id
+                $rota_id
             );
 
             // get the resource again
@@ -552,7 +590,7 @@ class IFSPSOResourceService extends IFSService
             'Rota Item Updated',
             true,
             $shift_data->dataset_id,
-            $shift_data->rota_id
+            $rota_id
         );
 
     }
@@ -574,7 +612,7 @@ class IFSPSOResourceService extends IFSService
         return [
             'organisation_id' => '2',
             'dataset_id' => $dataset_id,
-            'user_id' => config('pso-services.settings.service_name') . ' user',
+            'user_id' => $this->service_name . ' user',
             'ram_update_type_id' => 'CHANGE',
             'is_master_data' => true,
             'description' => $description
@@ -582,18 +620,26 @@ class IFSPSOResourceService extends IFSService
     }
 
 
-    private function RAMRotaItemPayload($rawshift, $rota_id, $turn_manual_scheduling_on, $shift_type, $description): array
+    private function RAMRotaItemPayload($rawshift, $rota_id, $shift_data, $description)
     {
-        return [
+
+
+        $payload = [
             'id' => $rawshift->get('id'),
             'ram_rota_id' => (string)$rota_id,
-            'manual_scheduling_only' => $turn_manual_scheduling_on,
+            'manual_scheduling_only' => $shift_data['turn_manual_scheduling_on'],
             'ram_resource_id' => $rawshift->get('resource_id'),
-            'start_datetime' => $rawshift->get('start_datetime'),
-            'end_datetime' => $rawshift->get('end_datetime'),
-            'ram_shift_category_id' => (string)$shift_type,
+            'start_datetime' => $shift_data['start_datetime'],
+            'end_datetime' => $shift_data['end_datetime'],
+            'ram_shift_category_id' => (string)$shift_data['shift_type'],
             'description' => (string)$description
         ];
+
+        if ($rawshift->get('overtime_period')) {
+            $payload = Arr::add($payload, 'overtime_period', $rawshift->get('overtime_period'));
+        }
+
+        return $payload;
     }
 
     private function getShifts(): void
@@ -619,7 +665,7 @@ class IFSPSOResourceService extends IFSService
 
         $base_time = $request->base_time . ':00' . $tz;
 
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability via ' . config('pso-services.settings.service_name'));
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability via ' . $this->service_name);
         $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
@@ -677,10 +723,10 @@ class IFSPSOResourceService extends IFSService
         $tz = Helper::setTimeZone($request->time_zone, true, $grouped_allocations);
 
         $category_id = $request->category_id ?: $grouped_activities->first()['activity_type_id'];
-        $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated via ' . config('pso-services.settings.service_name') . ' on ' . Carbon::now()->toDayDateTimeString();
+        $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated via ' . $this->service_name . ' on ' . Carbon::now()->toDayDateTimeString();
 
         $base_time = ($request->base_time ? $request->base_time . ':00' : Str::of($grouped_allocations->first()['activity_start'])->substr(1, 19)) . $tz;
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability via ' . config('pso-services.settings.service_name'));
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability via ' . $this->service_name);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $ram_unavailability_payload = [];
         foreach ($grouped_activities as $na) {
@@ -740,7 +786,7 @@ class IFSPSOResourceService extends IFSService
 
     public function DeleteUnavailability(Request $request): JsonResponse
     {
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . config('pso-services.settings.service_name'));
+        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . $this->service_name);
 
         $ram_data_update = (new PSODeleteObject(
             'RAM_Unavailability', 'id', '$request->unavailability_id',

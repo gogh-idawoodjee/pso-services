@@ -51,7 +51,7 @@ Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController:
 Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']);
 
 // resource (???)
-Route::patch('/resource/{resource_id}/manualschedule', [PSOResourceShiftController::class, 'update']);
+Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update']);
 Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
 
 Route::get('/resource/', [PSOResourceController::class, 'index']);

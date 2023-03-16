@@ -10,9 +10,10 @@ class IFSService
 
 {
     protected PsoEnvironment $pso_environment;
-    // todo make sure this is protected again
-    public $token;
+    // todo make sure this need to be protected and not public
+    protected $token;
     private $base_url;
+    protected $service_name;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -20,6 +21,7 @@ class IFSService
 
         $this->token = $token;
         $this->base_url = $base_url;
+        $this->service_name =config('pso-services.settings.service_name');
 
         if (!$pso_environment) {
             $this->pso_environment = new PsoEnvironment();
@@ -44,7 +46,7 @@ class IFSService
 
     private function authenticatePSO($base_url, $account_id, $username, $password)
     {
-        $response = [];
+        $response = collect();
         if ($base_url) {
             try {
                 $response = Http::asForm()

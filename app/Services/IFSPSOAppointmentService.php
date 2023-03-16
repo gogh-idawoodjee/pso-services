@@ -9,8 +9,8 @@ use App\Helpers\Helper;
 use App\Models\PSOAppointment;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Client\Response;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -42,11 +42,12 @@ class IFSPSOAppointmentService extends IFSService
         // build the full activity object
         $activity_payload = $activity->FullActivityObject();
         $appointment_request_part_payload = $this->AppointmentRequestPayloadPart(
+            $request->input_datetime,
             $activity->getActivityID(),
             $request->appointment_template_id,
             $request->appointment_template_duration,
             $request->appointment_template_datetime,
-            $request->slot_usage_rule_id
+            $request->slot_usage_rule_id ? $request->slot_usage_rule_id : null
 
         );
 
@@ -106,20 +107,19 @@ class IFSPSOAppointmentService extends IFSService
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointment_request');
     }
 
-    private function AppointmentRequestPayloadPart($activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null, $slot_usage_rule_id = null)
+    private function AppointmentRequestPayloadPart($input_datetime, $activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null, $slot_usage_rule_id = null)
     {
 
         $appointment_duration = Helper::setPSODurationDays($appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
 
         $payload =
-
             [
                 'activity_id' => $activity_id,
                 'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
                 'appointment_template_duration' => $appointment_duration,
                 'appointment_template_id' => $appointment_template_id,
                 'id' => Str::orderedUuid()->getHex()->toString(),
-                'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString()
+                'offer_expiry_datetime' => $input_datetime ? Carbon::parse($input_datetime)->addMinutes(5)->toAtomString() : Carbon::now()->addMinutes(5)->toAtomString()
             ];
 
         if ($slot_usage_rule_id) {
@@ -129,7 +129,7 @@ class IFSPSOAppointmentService extends IFSService
         return $payload;
     }
 
-    public function checkAppointed($request, $appointment_request_id): JsonResponse
+    public function checkAppointed($request, $appointment_request_id)
     {
 
         $input_ref = (new InputReference($request->description ?: 'Appointment Slot Check', 'CHANGE', $request->dataset_id))->toJson();
@@ -137,6 +137,7 @@ class IFSPSOAppointmentService extends IFSService
         $payload = $this->AppointmentOfferResponsePayload($input_ref, $offer_response_payload);
 
         if ($request->send_to_pso) {
+
             $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url, true);
 
             $summary_check = $response->collect()->first();
@@ -147,7 +148,7 @@ class IFSPSOAppointmentService extends IFSService
             $additional_data = [
                 'description' => 'appointment_summary',
                 'data' => [
-                    'appointment_request_id' => $summary->appointment_request_id,
+                    'appointment_request_id' => $appointment_request_id,
                     'slot_is_available' => $summary->appointed,
                     'full_summary' => $summary->toJson()
                 ]
@@ -160,9 +161,20 @@ class IFSPSOAppointmentService extends IFSService
 
     public function declineAppointment(Request $request, $appointment_request_id)//: JsonResponse
     {
+
+        // lookup the appointment request ID
+
+        try {
+            $appointment_request = PSOAppointment::where('id', $appointment_request_id)->firstOrFail();
+
+        } catch (ModelNotFoundException) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'No Such Appointment Request', compact('appointment_request_id'));
+        }
+
         // lookup the activity
         $activity = new IFSPSOActivityService($request->base_url, $this->token, null, null, $request->account_id, true);
-        $activity->getActivity($request, $request->activity_id);
+        return $activity->getActivity($request, $appointment_request->activity_id);
+
 
         if (!$activity->activityExists()) {
             return $this->IFSPSOAssistService->apiResponse(404, 'Activity does not exist in PSO', ['activity_id' => $request->activity_id]);
@@ -178,10 +190,16 @@ class IFSPSOAppointmentService extends IFSService
 
         $activity->deleteActivity($activity_request, "deleting temp activity - declined appointments");
 
+
         // decline the appointment
         $decline_payload = $this->AppointmentOfferResponsePayloadPart($appointment_request_id, -1, true);
         $input_ref = (new InputReference($request->description ?: 'Declining Appointments', 'CHANGE', $request->dataset_id))->toJson();
         $payload = $this->AppointmentOfferResponsePayload($input_ref, $decline_payload);
+
+        // update the appointment_request in DB
+        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 2);
+
+
         return $this->IFSPSOAssistService->processPayload(true, $payload, $this->token, $request->base_url, 'appointment_offers_declined');
     }
 
@@ -308,7 +326,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
-        $appointment_request->slot_usage_rule_id = $appointment_request_part_payload['slot_usage_rule_id'];
+        $appointment_request->slot_usage_rule_id = Arr::has($appointment_request_part_payload, 'slot_usage_rule_id') ? $appointment_request_part_payload['slot_usage_rule_id'] : null;
         $appointment_request->appointment_response = json_encode($response->collect());
         $appointment_request->valid_offers = json_encode($valid_offers);
         $appointment_request->invalid_offers = json_encode($invalid_offers);
@@ -317,6 +335,20 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
         $appointment_request->total_valid_offers_returned = $valid_offers->count();
         $appointment_request->total_invalid_offers_returned = $invalid_offers->count();
+        $appointment_request->save();
+    }
+
+    /**
+     * @param PSOAppointment $appointment_request
+     * @param $id
+     * @param $status
+     * @return void
+     */
+    private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status): void
+    {
+        $appointment_request->status = $status;
+        $appointment_request->accept_decline_input_reference_id = $id;
+        $appointment_request->accept_decline_datetime = Carbon::now()->toAtomString();
         $appointment_request->save();
     }
 

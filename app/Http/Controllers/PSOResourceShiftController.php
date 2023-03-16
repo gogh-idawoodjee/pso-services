@@ -37,13 +37,15 @@ class PSOResourceShiftController extends Controller
         $request->validate([
             'shift_id' => 'required|alpha_dash',
             'dataset_id' => 'required|string',
-            'rota_id' => 'required|string',
+            'rota_id' => 'string',
             'token' => 'string',
-            'shift_type' => 'required|string',
-            'turn_manual_scheduling_on' => 'required|boolean',
+            'shift_type' => 'required_with:turn_manual_scheduling_on|string',
+            'turn_manual_scheduling_on' => 'boolean',
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'account_id' => 'string|required',
+            'start_datetime' => 'date',
+            'end_datetime' => 'date|after:start_datetime',
             'username' => 'string',
             'password' => 'string'
         ]);
@@ -67,7 +69,7 @@ class PSOResourceShiftController extends Controller
         $resource_init->getResource($resource_id, $request->dataset_id, $request->base_url);
 
         // send all that back to the service and let it do the work
-        return $resource_init->setManualScheduling($request, $resource_id);
+        return $resource_init->updateShift($request, $resource_id);
 
     }
 

@@ -32,7 +32,7 @@ class IFSPSOAssistService extends IFSService
     private function RotaToDSEPayload($dataset_id, $rota_id, $datetime, $include_broadcast, $broadcast_type, $broadcast_url, $desc): array
     {
         if (!$desc) {
-            $desc = "Update Rota from " . config('pso-services.settings.service_name');
+            $desc = "Update Rota from " . $this->service_name;
         }
         $input_reference = (new InputReference(
             $desc,
@@ -47,7 +47,7 @@ class IFSPSOAssistService extends IFSService
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
                 'Input_Reference' => $input_reference,
                 'Source_Data' => $this->SourceData(),
-                'Source_Data_Parameter' => $this->SourceDataParameter($rota_id ?: $dataset_id),
+                'Source_Data_Parameter' => $this->SourceDataParameter(Helper::RotaID($dataset_id, $rota_id)),
             ]
         ]);
 
@@ -262,7 +262,7 @@ class IFSPSOAssistService extends IFSService
     private function initializePSOPayload(Request $request)
     {
 
-        $description = $request->description ?: 'Init via ' . config('pso-services.settings.service_name');
+        $description = $request->description ?: 'Init via ' . $this->service_name;
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
         $dse_duration = Helper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
@@ -271,18 +271,18 @@ class IFSPSOAssistService extends IFSService
             $appointment_window = null;
         }
         $process_type = $request->process_type ?: config('pso-services.defaults.process_type');
-        $rota_id = $request->rota_id ?: $request->dataset_id;
+        $rota_id = Helper::RotaID($request->dataset_id, $request->rota_id);
 
-
-        $input_ref = (new InputReference(
+        $input_ref = (
+        new InputReference(
             $description,
             'LOAD',
             $request->dataset_id,
             $datetime,
             $dse_duration,
             $process_type,
-            $appointment_window)
-        )->toJson();
+            $appointment_window
+        ))->toJson();
 
 
         $init_payload = collect([
@@ -295,7 +295,7 @@ class IFSPSOAssistService extends IFSService
 
         if ($request->include_broadcast) {
             $broadcast_payload = $this->BroadcastPayload($request->broadcast_type, $request->broadcast_url);
-            $init_payload = collect($init_payload->first())->merge(['Broadcast' => $broadcast_payload['Broadcast']]);
+            $init_payload = collect($init_payload)->merge(['Broadcast' => $broadcast_payload['Broadcast']]);
             $init_payload = $init_payload->merge(['Broadcast_Parameter' => $broadcast_payload['Broadcast_Parameter']]);
 
         }
@@ -314,7 +314,7 @@ class IFSPSOAssistService extends IFSService
 
         $payload = $this->initializePSOPayload($request);
 
-        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize via ' . config('pso-services.settings.service_name'));
+        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize via ' . $this->service_name);
     }
 
     public function getUsageData($request)
@@ -424,7 +424,7 @@ class IFSPSOAssistService extends IFSService
                     return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
                 }
 
-                if ($response->json('Code') == 401) {
+                if ($response->json('Code') == 401 || $response->status() == 401) {
                     return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
 
@@ -432,11 +432,8 @@ class IFSPSOAssistService extends IFSService
                     return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
                 }
 
-                if ($response->status() == 401) {
-                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                }
             }
-            return $this->apiResponse(418, "None of the above", $payload);
+            return $this->apiResponse(418, "None of the above", $payload, null, ['description' => 'PSO Response', 'data' => $response->object()]);
         }
 
         return $this->apiResponse(202, "Successful but payload not sent to PSO by choice", $payload);
