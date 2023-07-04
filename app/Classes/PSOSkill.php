@@ -18,8 +18,8 @@ class PSOSkill
     {
 
         return [
-            'skill_id' => $this->skill_id,
-            $this->entity_type == "activity" ? "activity_id" : "resource_id" => $id
+            $this->entity_type == "activity" ? 'skill_id' : 'ram_skill_id' => $this->skill_id,
+            $this->entity_type == "activity" ? "activity_id" : "ram_resource_id" => $id
         ];
     }
 }
