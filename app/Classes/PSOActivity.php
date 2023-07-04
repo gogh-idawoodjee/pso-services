@@ -41,7 +41,7 @@ class PSOActivity extends Activity
         // build the skills
         if ($activity_data->skill) {
             foreach ($activity_data->skill as $skill) {
-                $this->addActivitySkill(new PSOActivitySkill($skill));
+                $this->addActivitySkill(new PSOSkill($skill));
             }
         }
 
@@ -80,7 +80,7 @@ class PSOActivity extends Activity
         ];
     }
 
-    public function addActivitySkill(PSOActivitySkill $skill)
+    public function addActivitySkill(PSOSkill $skill)
     {
         $this->activity_skill[] = $skill->toJson($this->activity_id);
         return $this;

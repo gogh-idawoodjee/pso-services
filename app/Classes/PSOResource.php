@@ -10,16 +10,19 @@ class PSOResource
 
     private string $resource_class_id;
     private string $resource_type_id;
+    private string $surname;
+    private string $first_name;
 
-    private string $description;
+
+
     private string $date_time_created;
 
 
     private array $resource_skill = [];
     private array $resource_region = [];
 
-    private PSOLocation $activity_location;
-    private PSOActivityStatus $activity_status;
+    private PSOLocation $resource_location;
+
 
 
     public function __construct($resource_data)
@@ -28,19 +31,13 @@ class PSOResource
         $this->resource_id = $resource_data->resouce_id;
         $this->resource_class_id = config('pso-services.defaults.activity.class_id');
 
-        $this->activity_type_id = $activity_data->activity_type_id;
-        $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
-        $this->description = $activity_data->description ?: 'Appointment Request';
-        $this->date_time_created = Carbon::now()->toAtomString();
-        $this->date_time_open = Carbon::now()->toAtomString();
-        $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
-        $this->fixed = (bool)$activity_data->fixed;
+        $this->resource_type_id = $resource_data->resource_type_id;
 
 
         // build the skills
-        if ($activity_data->skill) {
-            foreach ($activity_data->skill as $skill) {
-                $this->addActivitySkill(new PSOActivitySkill($skill));
+        if ($resource_data->skill) {
+            foreach ($resource_data->skill as $skill) {
+                $this->addActivitySkill(new PSOSkill($skill));
             }
         }
 
@@ -79,7 +76,7 @@ class PSOResource
         ];
     }
 
-    public function addActivitySkill(PSOActivitySkill $skill)
+    public function addActivitySkill(PSOSkill $skill)
     {
         $this->activity_skill[] = $skill->toJson($this->activity_id);
         return $this;
