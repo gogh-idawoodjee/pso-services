@@ -38,7 +38,8 @@ return [
         'activity' => [
             'base_value' => env('DEFAULT_BASE_VALUE', 1000),
             'priority' => env('DEFAULT_PRIORITY', 1),
-            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7)
+            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7),
+            'class_id' => 'CALL'
         ],
         'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
         'timeout' => env('DEFAULT_TIMEOUT', 5),
@@ -49,11 +50,11 @@ return [
 
     'debug' => [
         'webhook_uuid' => '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3',
-        'base_url'      => env('BASE_URL', 'https://thetechnodro.me:950'),
-        'username'      => env('PSO_USERNAME', 'admin'),
-        'password'      => env('PSO_PASSWORD', 'Ohyouthinkdarknessisyourally1!'),
-        'dataset_id'    => env('DATASET_ID', 'NORTH'),
-        'account_id'    => env('ACCOUNT_ID', 'Default'),
+        'base_url' => env('BASE_URL', 'https://thetechnodro.me:950'),
+        'username' => env('PSO_USERNAME', 'admin'),
+        'password' => env('PSO_PASSWORD', 'Ohyouthinkdarknessisyourally1!'),
+        'dataset_id' => env('DATASET_ID', 'NORTH'),
+        'account_id' => env('ACCOUNT_ID', 'Default'),
         'debug_mode_on' => true,
         'debug_timeout' => 30
     ],

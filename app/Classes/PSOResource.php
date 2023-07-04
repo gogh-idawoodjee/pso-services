@@ -5,29 +5,28 @@ namespace App\Classes;
 use Carbon\Carbon;
 
 
-class PSOActivity extends Activity
+class PSOResource
 {
 
-    private string $activity_class_id;
-    private string $activity_type_id;
-    private int $priority;
-    private bool $fixed;
+    private string $resource_class_id;
+    private string $resource_type_id;
+
     private string $description;
     private string $date_time_created;
-    private string $date_time_open;
-    private int $base_value;
-    private array $activity_skill = [];
-    private array $activity_region = [];
-    private array $activity_sla;
+
+
+    private array $resource_skill = [];
+    private array $resource_region = [];
+
     private PSOLocation $activity_location;
     private PSOActivityStatus $activity_status;
 
 
-    public function __construct($activity_data, $is_ab_request = false)
+    public function __construct($resource_data)
     {
 
-        $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
-        $this->activity_class_id = 'CALL';
+        $this->resource_id = $resource_data->resouce_id;
+        $this->resource_class_id = config('pso-services.defaults.activity.class_id');
 
         $this->activity_type_id = $activity_data->activity_type_id;
         $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
