@@ -151,6 +151,10 @@ class IFSPSOAppointmentService extends IFSService
         if ($appointment_request->appointed_check_complete != 0) {
             return $this->checkResponded($appointment_request_id, $appointment_request->appointed_check_result, $appointment_request->activity_id, $appointment_request->appointed_check_datetime, 'appointed');
         }
+        if ($appointment_request->status != 0) {
+            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime, 'accept_decline');
+        }
+
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
             return $this->checkExpired($appointment_request_id, $appointment_request->activity_id, $appointment_request->offer_expiry_datetime);
         }

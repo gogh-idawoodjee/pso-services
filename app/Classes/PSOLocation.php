@@ -3,7 +3,7 @@
 namespace App\Classes;
 
 
-class PSOLocation extends Activity
+class PSOLocation
 {
 
     private float $latitude;
