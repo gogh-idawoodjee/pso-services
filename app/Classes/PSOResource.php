@@ -44,7 +44,7 @@ class PSOResource
         // build the regions
         if ($activity_data->region) {
             foreach ($activity_data->region as $region) {
-                $this->addActivityRegion(new PSOActivityRegion($region));
+                $this->addActivityRegion(new PSORegion($region));
             }
         }
 
@@ -88,7 +88,7 @@ class PSOResource
         return $this;
     }
 
-    public function addActivityRegion(PSOActivityRegion $region)
+    public function addActivityRegion(PSORegion $region)
     {
         $this->activity_region[] = $region->toJson($this->activity_id);
         return $this;
