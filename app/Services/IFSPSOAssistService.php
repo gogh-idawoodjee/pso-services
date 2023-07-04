@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Classes\InputReference;
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -47,7 +47,7 @@ class IFSPSOAssistService extends IFSService
                 '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
                 'Input_Reference' => $input_reference,
                 'Source_Data' => $this->SourceData(),
-                'Source_Data_Parameter' => $this->SourceDataParameter(Helper::RotaID($dataset_id, $rota_id)),
+                'Source_Data_Parameter' => $this->SourceDataParameter(PSOHelper::RotaID($dataset_id, $rota_id)),
             ]
         ]);
 
@@ -264,14 +264,14 @@ class IFSPSOAssistService extends IFSService
 
         $description = $request->description ?: 'Init via ' . $this->service_name;
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
-        $dse_duration = Helper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
+        $dse_duration = PSOHelper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
-            $appointment_window = Helper::setPSODurationDays($request->appointment_window);
+            $appointment_window = PSOHelper::setPSODurationDays($request->appointment_window);
         } else {
             $appointment_window = null;
         }
         $process_type = $request->process_type ?: config('pso-services.defaults.process_type');
-        $rota_id = Helper::RotaID($request->dataset_id, $request->rota_id);
+        $rota_id = PSOHelper::RotaID($request->dataset_id, $request->rota_id);
 
         $input_ref = (
         new InputReference(
@@ -394,9 +394,9 @@ class IFSPSOAssistService extends IFSService
     {
         $endpoint_segment = $requires_pso_response ? 'appointment' : 'data';
 
-        return Http::timeout(5)
+        return Http::timeout(PSOHelper::GetTimeOut())
             ->withHeaders(['apiKey' => $token])
-            ->connectTimeout(5)
+            ->connectTimeout(PSOHelper::GetTimeOut())
             ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
     }
 

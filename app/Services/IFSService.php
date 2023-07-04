@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PsoEnvironment;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use App\Helpers\PSOHelper;
 
 class IFSService
 
@@ -14,6 +15,7 @@ class IFSService
     protected $token;
     private $base_url;
     protected $service_name;
+    public $authresponse;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -21,7 +23,7 @@ class IFSService
 
         $this->token = $token;
         $this->base_url = $base_url;
-        $this->service_name =config('pso-services.settings.service_name');
+        $this->service_name = config('pso-services.settings.service_name');
 
         if (!$pso_environment) {
             $this->pso_environment = new PsoEnvironment();
@@ -38,6 +40,7 @@ class IFSService
         }
 
         if ($requires_auth && !$this->token) {
+
             $this->authenticatePSO($base_url, $account_id, $username, $password);
         }
 
@@ -46,19 +49,25 @@ class IFSService
 
     private function authenticatePSO($base_url, $account_id, $username, $password)
     {
+
         $response = collect();
         if ($base_url) {
+
             try {
+
                 $response = Http::asForm()
-                    ->timeout(5)
-                    ->connectTimeout(5)
+                    ->timeout(PSOHelper::GetTimeOut())
+                    ->connectTimeout(PSOHelper::GetTimeOut())
                     ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session', [
                         'accountId' => $account_id,
-                        'username' => $username,
+                        'userName' => $username,
                         'password' => $password,
                     ]);
+
+
+
             } catch (Exception $e) {
-//                dd($e);
+
                 // todo need to catch this fail and bubble it up to is_authenticated
             }
         }

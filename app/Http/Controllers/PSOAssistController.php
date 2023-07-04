@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use App\Services\IFSPSOAssistService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,7 +42,7 @@ class PSOAssistController extends Controller
             'broadcast_url' => 'url|required_if:include_broadcast,true'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
         $init = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
@@ -63,7 +63,7 @@ class PSOAssistController extends Controller
      * @return JsonResponse
      * @throws ValidationException
      */
-    public function update(Request $request): JsonResponse
+    public function update(Request $request)
     {
 
         $request->validate([
@@ -82,9 +82,11 @@ class PSOAssistController extends Controller
             'broadcast_url' => 'url|required_if:include_broadcast,true'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
+
 
         $rotatodse = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
 
         if (!$rotatodse->isAuthenticated() && $request->send_to_pso) {
             return response()->json([

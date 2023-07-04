@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
@@ -539,7 +539,7 @@ class IFSPSOResourceService extends IFSService
         }
 
         //defaulting rota_id to dataset_id if rota_id is null
-        $rota_id = Helper::RotaID($shift_data->dataset_id, $shift_data->rota_id);
+        $rota_id = PSOHelper::RotaID($shift_data->dataset_id, $shift_data->rota_id);
         $ram_rota_item_payload = $this->RAMRotaItemPayload(
             $rawshift,
             $rota_id,
@@ -659,9 +659,9 @@ class IFSPSOResourceService extends IFSService
     {
 
         $time_pattern_id = Str::uuid()->getHex();
-        $duration = Helper::setPSODuration($request->duration);
+        $duration = PSOHelper::setPSODuration($request->duration);
 
-        $tz = Helper::setTimeZone($request->time_zone);
+        $tz = PSOHelper::setTimeZone($request->time_zone);
 
         $base_time = $request->base_time . ':00' . $tz;
 
@@ -718,9 +718,9 @@ class IFSPSOResourceService extends IFSService
         // all these NAs will share a single time pattern based on the input (if there is one)
         $time_pattern_id = Str::uuid()->getHex();
 
-        $duration = $request->duration ? Helper::setPSODuration($request->duration) : $grouped_allocations->first()['duration'];
+        $duration = $request->duration ? PSOHelper::setPSODuration($request->duration) : $grouped_allocations->first()['duration'];
 
-        $tz = Helper::setTimeZone($request->time_zone, true, $grouped_allocations);
+        $tz = PSOHelper::setTimeZone($request->time_zone, true, $grouped_allocations);
 
         $category_id = $request->category_id ?: $grouped_activities->first()['activity_type_id'];
         $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated via ' . $this->service_name . ' on ' . Carbon::now()->toDayDateTimeString();

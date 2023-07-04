@@ -6,11 +6,12 @@ use App\Classes\InputReference;
 use App\Classes\PSOActivity;
 use App\Classes\PSOActivityStatus;
 use App\Classes\PSODeleteObject;
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use App\Models\PSOCommitLog;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -19,7 +20,7 @@ class IFSPSOActivityService extends IFSService
 {
 
     private IFSPSOAssistService $IFSPSOAssistService;
-    private $activity_object;
+    private Collection $activity_object;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -33,7 +34,7 @@ class IFSPSOActivityService extends IFSService
     public function createActivity(Request $request)
     {
 
-        $tz = Helper::setTimeZone($request->time_zone);
+        $tz = PSOHelper::setTimeZone($request->time_zone);
 
         $relative_day = $request->relative_day ?: 1;
         $relative_day_end = $request->relative_day_end ?: $relative_day;
@@ -70,23 +71,29 @@ class IFSPSOActivityService extends IFSService
 
     }
 
-    public function getActivity(Request $request, $activity_id)//: Collection
+    public function getActivity(Request $request, $activity_id, $dataset_id)//: Collection
     {
+
         $activity = Http::withHeaders(['apiKey' => $this->token])
             ->get($request->base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/activity',
                 [
                     'includeOutput' => true,
-                    'datasetId' => $request->dataset_id,
+                    'datasetId' => $dataset_id,
                     'activityId' => $activity_id,
                     'tableFilter' => 'Activity, SLA_Type, Activity_SLA, Location, Activity_Status'
                 ]
             );
-        return $this->activity_object = $activity->collect()->first();
+        return $this->activity_object = collect($activity->collect()->first());
     }
 
     public function activityExists()//: bool
     {
         return collect($this->activity_object)->has('Activity');
+    }
+
+    public function getActivityID()
+    {
+        return $this->activity_object['Activity']['id'];
     }
 
 
@@ -113,24 +120,32 @@ class IFSPSOActivityService extends IFSService
 
             // build the individual status update
             foreach ($newsuggestions as $suggestion) {
+                $input_reference_datetime = $suggestion['date_time_status'];
                 $start = Carbon::parse($suggestion['expected_start_datetime']);
                 $end = Carbon::parse($suggestion['expected_end_datetime']);
                 $difference = $end->diffInMinutes($start);
 
                 $activity_part_payload[] = (new PSOActivityStatus(
                     config('pso-services.statuses.commit_status'),
-                    1,
+                    $suggestion['visit_id'],
                     $difference,
                     true,
                     $suggestion['resource_id'],
                     'From the Commit Service via ' . $this->service_name,
-                    $suggestion['expected_start_datetime'])
+                    config("pso-services.settings.fix_committed_activities") ? $suggestion['expected_start_datetime'] : null,
+                    null, //$suggestion['expected_start_datetime'],
+                    $suggestion['expected_start_datetime']
+                )
                 )->toJson($suggestion['activity_id']);
             }
 
 
             // build the full payload
-            $activity_status_payload = $this->ActivityStatusFullPayload($dataset_id, $activity_part_payload, 'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS');
+            $activity_status_payload = $this->ActivityStatusFullPayload(
+                $dataset_id,
+                $activity_part_payload,
+                'Committing ' . count($activity_part_payload) . (count($activity_part_payload) > 1 ? ' Activities' : ' activity') . ' based on the SDS',
+                $input_reference_datetime);
             $activity_status = Http::withHeaders(['apiKey' => $this->token])
                 ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
                     $activity_status_payload

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use App\Services\IFSPSOResourceService;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -34,7 +34,7 @@ class PSOResourceController extends Controller
 
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
         // need token if no user/pass, should default $requires_auth to true
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
@@ -64,7 +64,7 @@ class PSOResourceController extends Controller
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
         ]);
 
-        Helper::ValidateCredentials($request);
+        PSOHelper::ValidateCredentials($request);
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
         if (!$resource_init->isAuthenticated()) {

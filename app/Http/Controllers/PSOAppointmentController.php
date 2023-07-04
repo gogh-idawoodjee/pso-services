@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\Helper;
+use App\Helpers\PSOHelper;
 use App\Services\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,15 +21,14 @@ class PSOAppointmentController extends Controller
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
-            'dataset_id' => 'string|required',
             'account_id' => 'string|required_if:send_to_pso,true',
             'token' => 'string',
             'username' => 'string',
             'password' => 'string',
-            'appointment_offer_id' => 'integer|required'
+            'appointment_offer_id' => 'integer|gt:-1|required'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
         $appointed = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
@@ -69,20 +68,20 @@ class PSOAppointmentController extends Controller
             'base_value' => 'integer|gt:0',
             'visit_id' => 'integer|gt:0',
             'priority' => 'integer',
-            'sla_start' => 'date|before:sla_end|required',
-            'sla_end' => 'date|after:sla_start|required',
+            'sla_start' => 'date_format:Y-m-d\TH:i:s|before:sla_end|required',
+            'sla_end' => 'date_format:Y-m-d\TH:i:s|after:sla_start|required',
             'sla_type_id' => 'string|required',
             'appointment_template_id' => 'string|required',
             'appointment_template_duration' => 'integer|gte:0',
 //            'appointment_template_datetime' => 'date|after:input_datetime',
-            'appointment_template_datetime' => 'date',
-            'input_datetime' => 'date',
+            'appointment_template_datetime' => 'date_format:Y-m-d\TH:i:s',
+            'input_datetime' => 'date_format:Y-m-d\TH:i:s',
 //            'input_datetime' => 'date|before:appointment_template_datetime',
             'lat' => 'numeric|between:-90,90|required',
             'long' => 'numeric|between:-180,180|required'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
@@ -112,21 +111,18 @@ class PSOAppointmentController extends Controller
     {
         $request->validate([
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
-            'dataset_id' => 'string|required',
+
             'account_id' => 'string|required_if:send_to_pso,true',
             'token' => 'string',
             'username' => 'string',
             'password' => 'string',
-            'activity_id' => 'string|required',
             'sla_priority' => 'integer',
             'sla_start_based' => 'boolean',
-            'sla_start' => 'date|before:sla_end|required',
-            'sla_end' => 'date|after:sla_start|required',
             'sla_type_id' => 'string|required',
-            'appointment_offer_id' => 'integer|gt:0|required'
+            'appointment_offer_id' => 'integer|gt:-1|required'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
@@ -154,14 +150,13 @@ class PSOAppointmentController extends Controller
     {
         $request->validate([
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
-            'dataset_id' => 'string|required',
             'account_id' => 'string|required',
             'token' => 'string',
             'username' => 'string',
             'password' => 'string'
         ]);
 
-        Helper::ValidateSendToPSO($request);
+        PSOHelper::ValidateSendToPSO($request);
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
@@ -175,6 +170,5 @@ class PSOAppointmentController extends Controller
         return $appointment->declineAppointment($request, $appointment_request_id);
 
     }
-
 
 }

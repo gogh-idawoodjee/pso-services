@@ -142,6 +142,8 @@ class PSOActivity extends Activity
             'date_time_created' => $this->date_time_created,
             'date_time_open' => $this->date_time_open,
             'base_value' => $this->base_value,
+            'do_on_location_incentive' => config('pso-services.defaults.do_on_location_incentive'),
+            'do_in_locality_incentive' => config('pso-services.defaults.do_in_locality_incentive')
         ];
     }
 

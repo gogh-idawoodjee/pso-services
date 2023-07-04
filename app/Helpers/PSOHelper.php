@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-class Helper
+class PSOHelper
 {
 
     public static function setTimeZone($time_zone, $check_from_source = false, $source_collection = null)
@@ -75,7 +75,11 @@ class Helper
 
     public static function RotaID($dataset_id, $rota_id)
     {
-        return $rota_id ? $rota_id : $dataset_id;
+        return $rota_id ?: $dataset_id;
     }
 
+    public static function GetTimeOut()
+    {
+        return config('pso-services.debug.debug_mode_on') ? config('pso-services.debug.debug_timeout') : config('pso-services.defaults.timeout');
+    }
 }
