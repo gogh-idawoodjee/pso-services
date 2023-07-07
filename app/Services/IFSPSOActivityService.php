@@ -41,7 +41,7 @@ class IFSPSOActivityService extends IFSService
         $hours_to_add = ($request->window_size ?: 0) == 0 ? 8 : ($request->window_size ?: 0);
 
 
-        $activity_build_data = new Request([
+        $activity_build_data = new Collection([
             'activity_id' => $request->activity_id ?: Str::orderedUuid()->getHex()->toString(),
             'lat' => $request->lat,
             'long' => $request->long,
@@ -56,7 +56,7 @@ class IFSPSOActivityService extends IFSService
             'region' => $request->region
         ]);
 
-        $activity = new PSOActivity($activity_build_data);
+        $activity = new PSOActivity(json_decode($activity_build_data->toJson()));
 
         $input_ref = (new InputReference(
             'Instant Activity Generator from ' . $this->service_name,
