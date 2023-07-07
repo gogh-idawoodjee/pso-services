@@ -27,8 +27,8 @@ class IFSPSOResourceService extends IFSService
 
     private Collection $pso_resource;
     private array $utilization;
-    private $events;
-    private $shifts;
+    private array $events;
+    private array $shifts;
     private IFSPSOAssistService $IFSPSOAssistService;
 
 
@@ -37,7 +37,6 @@ class IFSPSOResourceService extends IFSService
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
         $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
         $this->pso_resource = collect();
-
 
     }
 
@@ -60,7 +59,6 @@ class IFSPSOResourceService extends IFSService
         $thisresource_skills = [];
 
 
-//return $resource_raw['Resource_Region'];
         if (Arr::has($resource_raw, 'Resource_Region') && collect($resource_raw['Resource_Region'])->count()) {
             if (collect($resource_raw['Resource_Region'])->has('region_id')) {
 //                $resource_regions = [collect($resource_raw['Resource_Region'])];
@@ -79,7 +77,6 @@ class IFSPSOResourceService extends IFSService
                 $thisresource_regions[] = Arr::has($regions_list[$region['region_id']], 'description') ? $regions_list[$region['region_id']]['description'] : $region['region_id'];
 
             }
-
 
         }
 
@@ -851,6 +848,7 @@ class IFSPSOResourceService extends IFSService
 
     private function ResourceExists($collection = null)
     {
+        // todo fix reference to collection
         $collection = $collection ?: $this->pso_resource;
         if (!Arr::has($collection, 'Resources')) {
             return false;
@@ -905,11 +903,11 @@ class IFSPSOResourceService extends IFSService
         $faker = Factory::create();
 
 
-        $skills = [];
-        $regions = [];
+        $skills = $regions = $resources = $locations = [];
+
         for ($n = 0; $n <= $count_to_use - 1; $n++) {
             // create the resource object
-            $resource_request = new Request([
+            $resource_request = new Collection([
                 'first_name' => $faker->firstName(),
                 'surname' => $faker->lastName(),
                 'resource_type_id' => $request->resource_type_id,
@@ -917,7 +915,7 @@ class IFSPSOResourceService extends IFSService
                 'region' => $request->region
             ]);
 
-            $resource = new PSOResource($resource_request, $request->lat[$n], $request->long[$n]);
+            $resource = new PSOResource(json_decode($resource_request->toJson()), $request->lat[$n], $request->long[$n]);
             $resources[] = $resource->ResourceToJson();
             $locations[] = $resource->ResourceLocation();
             if ($resource->ResourceSkills()) {
@@ -926,7 +924,6 @@ class IFSPSOResourceService extends IFSService
             if ($resource->ResourceRegion()) {
                 $regions[] = $resource->ResourceRegion();
             }
-            // add the pieces to an array?
         }
 
         $desc = 'Add ' . $input_used['min_value'] . ' resources.' . ($values_are_equal == 1 ? 'yes' : ' Limited by ' . $input_used['taken_from']);
