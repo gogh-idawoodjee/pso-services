@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
+use App\Classes\PSOResource;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
 use DateInterval;
 use Exception;
+
+use Faker\Factory;
 use GoogleMaps;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
@@ -607,6 +610,28 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+    private function RAMResourceUpdatePayload($ram_update_payload, $resource_payload, $location_payload, $skills_payload, $division_payload)
+    {
+        $json =
+            [
+                '@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd',
+                'RAM_Update' => $ram_update_payload,
+                'RAM_Resource' => $resource_payload,
+                'RAM_Location' => $location_payload
+            ];
+
+
+        if (count($skills_payload) > 0) {
+            $json = Arr::add($json, 'RAM_Resource_Skill', $skills_payload);
+        }
+        if (count($division_payload) > 0) {
+            $json = Arr::add($json, 'RAM_Resource_Division', $division_payload);
+
+        }
+
+        return ['DsModelling' => $json];
+    }
+
     private function RAMUpdatePayload($dataset_id, $description): array
     {
         return [
@@ -831,6 +856,97 @@ class IFSPSOResourceService extends IFSService
             return false;
         }
         return true;
+    }
+
+    public function createResource(Request $request)
+    {
+
+        // check if the lat/longs are valid
+        foreach ($request->lat as $lat) {
+            if (!is_numeric($lat) || $lat < -90 || $lat > 90) {
+                return $this->IFSPSOAssistService->apiResponse(406, 'Invalid Latitude found in Data', ['invalid_latitude' => $lat], 'submitted_data');
+            }
+        }
+
+        foreach ($request->long as $long) {
+            if (!is_numeric($long) || $long < -180 || $long > 180) {
+                return $this->IFSPSOAssistService->apiResponse(406, 'Invalid Longitude found in Data', ['invalid_longitude' => $long], 'submitted_data');
+            }
+        }
+
+        $counts = [
+            "resources_requested" => $request->resources_to_create ?? 1,
+            "lats" => count($request->lat),
+            "longs" => count($request->long),
+        ];
+
+        $count_to_use = min($counts);
+
+        $values_are_equal = count(array_unique(Arr::flatten($counts), SORT_REGULAR));
+
+        $input_used = [
+            "min_value" => $count_to_use,
+            "taken_from" => $values_are_equal == 1 ? "all values equal, good job" : array_search(min($counts), $counts)
+        ];
+// refactored above
+//        if (count(array_unique(Arr::flatten($counts), SORT_REGULAR)) === 1) {
+//            $input_used = [
+//                "min_value" => $count_to_use,
+//                "taken_from" => "all values equal, good job"
+//            ];
+//
+//        } else {
+//            $input_used = [
+//                "min_value" => $count_to_use,
+//                "taken_from" => array_search(min($counts), $counts)
+//            ];
+//        }
+
+        $faker = Factory::create();
+
+
+        $skills = [];
+        $regions = [];
+        for ($n = 0; $n <= $count_to_use - 1; $n++) {
+            // create the resource object
+            $resource_request = new Request([
+                'first_name' => $faker->firstName(),
+                'surname' => $faker->lastName(),
+                'resource_type_id' => $request->resource_type_id,
+                'skill' => $request->skill,
+                'region' => $request->region
+            ]);
+
+            $resource = new PSOResource($resource_request, $request->lat[$n], $request->long[$n]);
+            $resources[] = $resource->ResourceToJson();
+            $locations[] = $resource->ResourceLocation();
+            if ($resource->ResourceSkills()) {
+                $skills[] = $resource->ResourceSkills();
+            }
+            if ($resource->ResourceRegion()) {
+                $regions[] = $resource->ResourceRegion();
+            }
+            // add the pieces to an array?
+        }
+
+        $desc = 'Add ' . $input_used['min_value'] . ' resources.' . ($values_are_equal == 1 ? 'yes' : ' Limited by ' . $input_used['taken_from']);
+
+
+        $ram_update_payload = $this->RAMUpdatePayload($request->modelling_dataset_id, $desc);
+
+        $full_payload = $this->RAMResourceUpdatePayload($ram_update_payload, $resources, $locations, $skills, $regions);
+
+        return $this->IFSPSOAssistService->processPayload(
+            $request->send_to_pso,
+            $full_payload,
+            $this->token,
+            $request->base_url,
+            $desc,
+            true,
+            $request->modelling_dataset_id,
+            $request->rota_id
+        );
+
     }
 
 }

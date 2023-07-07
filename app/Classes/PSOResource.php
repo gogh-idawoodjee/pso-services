@@ -2,152 +2,121 @@
 
 namespace App\Classes;
 
-use Carbon\Carbon;
-
+use Illuminate\Support\Str;
 
 class PSOResource
 {
 
     private string $resource_class_id;
     private string $resource_type_id;
-
-    private string $description;
-    private string $date_time_created;
+    private string $surname;
+    private string $first_name;
+    private string $resource_id;
 
 
     private array $resource_skill = [];
     private array $resource_region = [];
 
-    private PSOLocation $activity_location;
-    private PSOActivityStatus $activity_status;
+    private PSOLocation $resource_location;
+    private float $lat;
+    private float $long;
 
-
-    public function __construct($resource_data)
+    public function __construct($resource_data, $lat, $long)
     {
 
-        $this->resource_id = $resource_data->resouce_id;
-        $this->resource_class_id = config('pso-services.defaults.activity.class_id');
+        $this->first_name = $resource_data->first_name;
+        $this->surname = $resource_data->surname;
+        $this->resource_id = Str::upper($resource_data->first_name . $resource_data->surname);  //$resource_data->resouce_id;
+        $this->resource_class_id = config('pso-services.defaults.resource.class_id');
 
-        $this->activity_type_id = $activity_data->activity_type_id;
-        $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
-        $this->description = $activity_data->description ?: 'Appointment Request';
-        $this->date_time_created = Carbon::now()->toAtomString();
-        $this->date_time_open = Carbon::now()->toAtomString();
-        $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
-        $this->fixed = (bool)$activity_data->fixed;
+        $this->lat = $lat;
+        $this->long = $long;
 
+        $this->resource_type_id = $resource_data->resource_type_id;
 
         // build the skills
-        if ($activity_data->skill) {
-            foreach ($activity_data->skill as $skill) {
-                $this->addActivitySkill(new PSOActivitySkill($skill));
+        if ($resource_data->skill) {
+
+            foreach ($resource_data->skill as $skill) {
+                $this->addResourceSkill(new PSOSkill($skill));
             }
         }
 
         // build the regions
-        if ($activity_data->region) {
-            foreach ($activity_data->region as $region) {
-                $this->addActivityRegion(new PSOActivityRegion($region));
+        if ($resource_data->region) {
+            foreach ($resource_data->region as $region) {
+                $this->addResourceRegion(new PSORegion($region, "resource"));
             }
         }
 
-        // build the status
-        if ($is_ab_request) {
-            $this->activity_status = new PSOActivityStatus(-1, 1, $activity_data->duration);
-        } else {
-            $this->activity_status = new PSOActivityStatus($activity_data->status_id, $activity_data->visit_id ?: 1, $activity_data->duration, $this->fixed, $activity_data->resource_id);
-        }
-
         // build the location
-        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long));
+        $this->setResourceLocation(new PSOLocation($this->lat, $this->long));
 
-        $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_end));
 
     }
 
-
-    public function FullActivityObject()
+    public function FullResourceObject()
     {
-
         return [
-            'Activity' => $this->ActivityToJson(),
-            'Activity_Status' => $this->ActivityStatus(),
-            'Activity_Skill' => $this->ActivitySkills(),
-            'Location' => $this->ActivityLocation(),
-            'Activity_SLA' => $this->ActivitySLAs(),
-            'Location_Region' => $this->activity_region
+            'RAM_resource' => $this->ResourceToJson(),
+            'Location' => $this->ResourceLocation(),
+            'RAM_Resource_Division' => $this->resource_region,
+            'RAM_Resource_Skill' => $this->resource_skill
         ];
     }
 
-    public function addActivitySkill(PSOActivitySkill $skill)
+    public function addResourceSkill(PSOSkill $skill)
     {
-        $this->activity_skill[] = $skill->toJson($this->activity_id);
-        return $this;
-    }
-
-    public function addActivitySLA(PSOActivitySLA $sla)
-    {
-        $this->activity_sla[] = $sla;
-        return $this;
-    }
-
-    public function addActivityRegion(PSOActivityRegion $region)
-    {
-        $this->activity_region[] = $region->toJson($this->activity_id);
-        return $this;
-
-    }
-
-    public function setActivityLocation(PSOLocation $location)
-    {
-        $this->activity_location = $location;
+        $this->resource_skill[] = $skill->toJson($this->resource_id);
         return $this;
     }
 
 
-    public function ActivityLocation()
+    public function addResourceRegion(PSORegion $region)
     {
-        return $this->activity_location->toJson($this->activity_id);
+        $this->resource_region[] = $region->toJson($this->resource_id);
+        return $this;
 
     }
 
-    public function ActivityStatus()
+    public function setResourceLocation(PSOLocation $location)
     {
-        return $this->activity_status->toJson($this->activity_id);
-    }
-
-    public function ActivitySLAs()
-    {
-        return $this->ActivityDataToJson($this->activity_sla);
-    }
-
-    public function ActivitySkills()
-    {
-        return $this->activity_skill;
+        $this->resource_location = $location;
+        return $this;
     }
 
 
-    public function ActivityToJson()
+    public function ResourceLocation()
+    {
+        return $this->resource_location->toJson($this->resource_id);
+    }
+
+    public function ResourceSkills()
+    {
+        return $this->resource_skill;
+    }
+
+    public function ResourceRegion()
+    {
+        return $this->resource_region;
+    }
+
+    public function ResourceToJson()
     {
         return [
-            'id' => $this->activity_id,
-            'activity_class_id' => $this->activity_class_id,
-            'activity_type_id' => $this->activity_type_id,
-            'location_id' => $this->activity_id,
-            'priority' => $this->priority,
-            'description' => (string)$this->description,
-            'date_time_created' => $this->date_time_created,
-            'date_time_open' => $this->date_time_open,
-            'base_value' => $this->base_value,
-            'do_on_location_incentive' => config('pso-services.defaults.do_on_location_incentive'),
-            'do_in_locality_incentive' => config('pso-services.defaults.do_in_locality_incentive')
+            'id' => $this->resource_id,
+            'ram_resource_class_id' => $this->resource_class_id,
+            'ram_resource_type_id' => $this->resource_type_id,
+            'ram_location_id_start' => $this->resource_id,
+            'ram_location_id_end' => $this->resource_id,
+            'first_name' => $this->first_name,
+            'surname' => $this->surname
         ];
     }
 
     // DRY method
-    private function ActivityDataToJson($activity_data)
+    private function ResourceDataToJson($activity_data)
     {
-
         $data_json = [];
         foreach ($activity_data as $data) {
             $data_json = $data->toJson($this->activity_id);

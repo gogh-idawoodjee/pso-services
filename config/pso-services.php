@@ -41,6 +41,9 @@ return [
             'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7),
             'class_id' => 'CALL'
         ],
+        'resource' => [
+            'class_id' => 'PERSON'
+        ],
         'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
         'timeout' => env('DEFAULT_TIMEOUT', 5),
         'do_on_location_incentive' => 1.5,
