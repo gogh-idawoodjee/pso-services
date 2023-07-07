@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.0.2",
         "alexpechkarev/google-maps": "^9.0",
+        "fakerphp/faker": "^1.23",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.36",
         "laravel/sanctum": "^3.0",
@@ -24,7 +25,6 @@
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.13",
-        "fakerphp/faker": "^1.9.1",
         "laravel/breeze": "^1.15",
         "mockery/mockery": "^1.5",
         "nunomaduro/collision": "^6.1",

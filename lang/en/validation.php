@@ -188,6 +188,7 @@ return [
         'token' => 'PSO Session Token',
         'sla_type' => 'PSO sla_type_id',
         'dse_duration' => 'DSE Duration',
+        'modelling_dataset_id' => 'PSO Modelling dataset_id'
     ],
 
 ];

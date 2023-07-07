@@ -15,6 +15,41 @@ use Illuminate\Validation\ValidationException;
 
 class PSOResourceController extends Controller
 {
+
+    public function store(Request $request)
+    {
+        $request->validate([
+
+            'first_name' => 'string',
+            'surname' => 'string',
+            'resource_type_id' => 'string|required',
+            'resources_to_create' => 'integer|min:1|max:50',
+            'send_to_pso' => 'boolean',
+            'lat' => 'array',
+            'long' => 'array',
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'modelling_dataset_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string'
+        ]);
+
+        PSOHelper::ValidateSendToPSO($request);
+
+        $resource = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        if (!$resource->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+        return $resource->createResource($request);
+
+    }
+
     /**
      * Display a listing of the resource.
      *
