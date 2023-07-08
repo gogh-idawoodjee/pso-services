@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class PSOAppointment extends Model
 {
@@ -20,6 +21,48 @@ class PSOAppointment extends Model
         'appointed_check_complete' => 'boolean',
         'appointed_check_result' => 'boolean'
     ];
+
+    protected function inputRequest(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
+
+    protected function appointmentRequest(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
+
+    protected function appointmentResponse(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
+
+    protected function validOffers(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
+
+    protected function invalidOffers(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
+
+    protected function bestOffer(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => json_decode($value),
+        );
+    }
 
 
 }

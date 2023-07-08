@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PSOHelper;
+use App\Models\PSOAppointment;
 use App\Services\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,6 +11,15 @@ use Illuminate\Validation\ValidationException;
 
 class PSOAppointmentController extends Controller
 {
+
+    // return appointment by request_id
+
+    public function index(PSOAppointment $appointment_request_id)
+    {
+
+        return $appointment_request_id;
+    }
+
     /**
      * see if the appointment is still available
      * still using HTTP POST instead of HTTP GET for show method

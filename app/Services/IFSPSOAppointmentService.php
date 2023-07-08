@@ -55,6 +55,11 @@ class IFSPSOAppointmentService extends IFSService
             if (!$response->collect()->first()) {
                 return $this->IFSPSOAssistService->apiResponse(500, "Check PSO Events. Probably bad data.", $payload);
             }
+
+            if (!Arr::has($response->collect()->first(), 'Appointment_Offer')) {
+                return $this->IFSPSOAssistService->apiResponse('500', 'Double check the gantt for resources and appointment template ID', $payload);
+            }
+
             $appointment_request_id = collect($response->collect()->first()['Appointment_Offer'])->first()['appointment_request_id'];
 
 
@@ -568,6 +573,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->input_request = json_encode($input_request);
         $appointment_request->activity_id = $activity->getActivityID();
         $appointment_request->dataset_id = $dataset_id;
+        $appointment_request->base_url = $input_request['base_url'];
         $appointment_request->input_reference_id = $id;
         $appointment_request->appointment_template_id = $appointment_request_part_payload['appointment_template_id'];
         $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
