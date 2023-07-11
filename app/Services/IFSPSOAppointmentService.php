@@ -125,6 +125,7 @@ class IFSPSOAppointmentService extends IFSService
     private function AppointmentRequestPayloadPart($input_datetime, $activity_id, $appointment_template_id, $appointment_template_duration, $appointment_template_datetime = null, $slot_usage_rule_id = null)
     {
 
+        // todo this needs to be parameterized
         $appointment_duration = PSOHelper::setPSODurationDays($appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
 
         $payload =
@@ -158,7 +159,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->checkResponded($appointment_request_id, $appointment_request->appointed_check_result, $appointment_request->activity_id, $appointment_request->appointed_check_datetime, 'appointed');
         }
         if ($appointment_request->status != 0) {
-            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime, 'accept_decline');
+            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
 
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
@@ -269,7 +270,7 @@ class IFSPSOAppointmentService extends IFSService
         }
 
         if ($appointment_request->status != 0) {
-            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime, 'accept_decline');
+            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
             return $this->checkExpired($appointment_request_id, $appointment_request->activity_id, $appointment_request->offer_expiry_datetime);
@@ -315,8 +316,7 @@ class IFSPSOAppointmentService extends IFSService
             $this->token,
             $appointment_request->activity_id,
             $request->account_id,
-            $appointment_request->dataset_id,
-            false
+            $appointment_request->dataset_id
         );
 
         /* replaced this block with $this->deleteActivity
@@ -359,7 +359,7 @@ class IFSPSOAppointmentService extends IFSService
         }
 
         if ($appointment_request->status != 0) {
-            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime, 'accept_decline');
+            return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
             return $this->checkExpired($appointment_request_id, $appointment_request->activity_id, $appointment_request->offer_expiry_datetime);
@@ -426,6 +426,7 @@ class IFSPSOAppointmentService extends IFSService
         $activity_input_request['activity_id'] = $new_activity_id;
         $activity_input_request['status_id'] = 0;
 
+        // todo update this to collection from request
         $activity = new PSOActivity(new Request($activity_input_request->all()), false);
         $activity_payload_part = $activity->FullActivityObject();
 
@@ -507,6 +508,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(404, 'Activity does not exist in PSO', ['activity_id' => $request->activity_id]);
         }
 
+        // todo update this to collection from request
         $activity_request = new Request(
             [
                 'activity_id' => $activity->getActivityID(),
