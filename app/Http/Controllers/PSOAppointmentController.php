@@ -17,6 +17,8 @@ class PSOAppointmentController extends Controller
     public function index(PSOAppointment $appointment_request_id)
     {
 
+        $appointment_details = $appointment_request_id->toJson();
+
         return $appointment_request_id;
     }
 

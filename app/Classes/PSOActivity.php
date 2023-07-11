@@ -21,6 +21,7 @@ class PSOActivity extends Activity
     private array $activity_sla;
     private PSOLocation $activity_location;
     private PSOActivityStatus $activity_status;
+    private bool $split_allowed;
 
 
     public function __construct($activity_data, $is_ab_request = false)
@@ -28,6 +29,8 @@ class PSOActivity extends Activity
 
         $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
         $this->activity_class_id = 'CALL';
+        // todo make this an input in the API
+        $this->split_allowed = config('pso-services.defaults.activity.split_allowed');
 
         $this->activity_type_id = $activity_data->activity_type_id;
         $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
@@ -60,7 +63,12 @@ class PSOActivity extends Activity
         }
 
         // build the location
-        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long));
+        if (config('pso-services.settings.use_region_as_locality') || $activity_data->region) {
+            $locality = $activity_data->region[0];
+        } else {
+            $locality = null;
+        }
+        $this->setActivityLocation(new PSOLocation($activity_data->lat, $activity_data->long, $locality));
 
         $this->addActivitySLA(new PSOActivitySLA($activity_data->sla_type_id, $activity_data->sla_start, $activity_data->sla_end));
 
@@ -140,6 +148,7 @@ class PSOActivity extends Activity
             'date_time_created' => $this->date_time_created,
             'date_time_open' => $this->date_time_open,
             'base_value' => $this->base_value,
+            'split_allowed' => $this->split_allowed,
             'do_on_location_incentive' => config('pso-services.defaults.do_on_location_incentive'),
             'do_in_locality_incentive' => config('pso-services.defaults.do_in_locality_incentive')
         ];

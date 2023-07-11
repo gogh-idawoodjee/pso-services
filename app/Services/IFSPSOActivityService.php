@@ -102,7 +102,7 @@ class IFSPSOActivityService extends IFSService
 
         // should be assumed that environment and auth for this service is pre-configured
 
-        //$dataset_id = config('pso-services.debug.dataset_id'); // dumbass this is wrong, dataset should be from the broadcast
+        //$dataset_id = config('pso-services.debug.dataset_id'); //  this is wrong, dataset should be from the broadcast
         $base_url = config('pso-services.debug.base_url');
         $activity_part_payload = [];
 

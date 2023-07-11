@@ -60,6 +60,7 @@ class IFSPSOAppointmentService extends IFSService
                 return $this->IFSPSOAssistService->apiResponse('500', 'Double check the gantt for resources and appointment template ID', $payload);
             }
 
+
             $appointment_request_id = collect($response->collect()->first()['Appointment_Offer'])->first()['appointment_request_id'];
 
 
@@ -130,7 +131,7 @@ class IFSPSOAppointmentService extends IFSService
             [
                 'activity_id' => $activity_id,
                 'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
-                'appointment_template_duration' => $appointment_duration,
+                //'appointment_template_duration' => $appointment_duration,
                 'appointment_template_id' => $appointment_template_id,
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'offer_expiry_datetime' => $input_datetime ? Carbon::parse($input_datetime)->addMinutes(5)->toAtomString() : Carbon::now()->addMinutes(5)->toAtomString()
@@ -405,7 +406,8 @@ class IFSPSOAppointmentService extends IFSService
 
         */
         // check if the selected offer is in the valid list
-        $selected_offer = collect(json_decode($appointment_request->valid_offers))->where('id', "=", $request->appointment_offer_id)->values()->first();
+//        return $appointment_request->valid_offers;
+        $selected_offer = collect($appointment_request->valid_offers)->where('id', "=", $request->appointment_offer_id)->values()->first();
         if (!$selected_offer) {
             return $this->IFSPSOAssistService->apiResponse(406, 'Sorry, that offer ID is invalid . Please review valid offers . ', compact('appointment_request_id'));
         }
@@ -417,7 +419,7 @@ class IFSPSOAppointmentService extends IFSService
         // also time to figure out what the new activity ID is
         $new_activity_id = Str::before($appointment_request->activity_id, '_appt');
 
-        $activity_input_request = collect(json_decode($appointment_request->input_request));
+        $activity_input_request = collect($appointment_request->input_request);
         $activity_input_request['sla_end'] = $sla_end;
         $activity_input_request['sla_start'] = $sla_start;
         $activity_input_request['sla_type_id'] = $request->sla_type_id;
@@ -576,7 +578,8 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->base_url = $input_request['base_url'];
         $appointment_request->input_reference_id = $id;
         $appointment_request->appointment_template_id = $appointment_request_part_payload['appointment_template_id'];
-        $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
+        // todo make this optional field
+//        $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
         $appointment_request->slot_usage_rule_id = Arr::has($appointment_request_part_payload, 'slot_usage_rule_id') ? $appointment_request_part_payload['slot_usage_rule_id'] : null;

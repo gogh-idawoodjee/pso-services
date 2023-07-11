@@ -38,16 +38,17 @@ return [
         'activity' => [
             'base_value' => env('DEFAULT_BASE_VALUE', 1000),
             'priority' => env('DEFAULT_PRIORITY', 1),
-            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 7),
-            'class_id' => 'CALL'
+            'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 21),
+            'class_id' => 'CALL',
+            'split_allowed' => true
         ],
         'resource' => [
             'class_id' => 'PERSON'
         ],
         'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
         'timeout' => env('DEFAULT_TIMEOUT', 5),
-        'do_on_location_incentive' => 1.5,
-        'do_in_locality_incentive' => 1.5
+        'do_on_location_incentive' => 2,
+        'do_in_locality_incentive' => 2
 
     ],
 
@@ -73,6 +74,7 @@ return [
         'override_commit_timestamps' => false,
         'enable_debug' => false,
         // if true, appointments cannot be accepted until they appointed first
-        'force_appointed_check' => true
+        'force_appointed_check' => true,
+        'use_region_as_locality' => true
     ]
 ];
