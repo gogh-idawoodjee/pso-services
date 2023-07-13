@@ -248,6 +248,23 @@ class IFSPSOActivityService extends IFSService
 
     }
 
+    public function deleteActivities(Request $request, $description = null)
+    {
+        foreach ($request->activities as $activity) {
+            $delete_activity_payload[] = (new PSODeleteObject(
+                'Activity',
+                'id', $activity
+            ))->toJson();
+        }
+
+        return $delete_activity_payload;
+
+        $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, $description);
+        return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
+
+
+    }
+
     public function deleteSLA(Request $request, $description = null)//: JsonResponse
     {
 

@@ -40,8 +40,11 @@ Route::get('/usage', [PSOAssistController::class, 'index']);
 
 // activity
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
+
 Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
 Route::post('/activity/', [PSOActivityController::class, 'store']);
+
+Route::delete('/activity/', [PSOActivityController::class, 'destroymulti']);
 Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy']);
 
 // appointment

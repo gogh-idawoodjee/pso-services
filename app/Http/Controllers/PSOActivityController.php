@@ -106,4 +106,35 @@ class PSOActivityController extends Controller
         return $activity->deleteActivity($request);
 
     }
+
+    public function destroymulti(Request $request)
+    {
+        //
+
+        $request->validate([
+            'send_to_pso' => 'boolean',
+            'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required_if:send_to_pso,true',
+            'token' => 'string',
+            'activities' => 'array|required',
+            'username' => 'string',
+            'password' => 'string'
+        ]);
+
+
+        PSOHelper::ValidateSendToPSO($request);
+
+        $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+        if (!$activity->isAuthenticated() && $request->send_to_pso) {
+            return response()->json([
+                'status' => 401,
+                'description' => 'did not pass auth'
+            ]);
+
+        }
+        return $activity->deleteActivities($request);
+
+    }
 }

@@ -91,6 +91,10 @@ class IFSPSOAppointmentService extends IFSService
                         ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->toDayDateTimeString());
                 })->first();//->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id');
 
+            $offer_values = collect($response->collect()->first()['Appointment_Offer'])->map(function ($offer) {
+                return collect($offer)->only('id', 'offer_value', 'window_start_datetime', 'prospective_resource_id');
+            })->values();
+
 
             // send it to API response
             $additional_data = [
@@ -99,8 +103,10 @@ class IFSPSOAppointmentService extends IFSService
                     'appointment_request_id' => $appointment_request_id,
                     'summary' => $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.',
                     'best_offer' => $best_offer->get('prospective_resource_id') ? $best_offer : 'no valid offers returned',
-                    'valid_offers' => $valid_offers,
-                    'invalid_offers' => $invalid_offers
+// todo turned the following two off to reduce clutter
+//                    'valid_offers' => $valid_offers,
+//                    'invalid_offers' => $invalid_offers,
+                    'offer_values' => $offer_values
                 ]
             ];
 
@@ -611,6 +617,9 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->accepted_offer_id = $offer;
         $appointment_request->accept_decline_input_reference_id = $id;
         $appointment_request->accept_decline_datetime = Carbon::now()->toAtomString();
+
+        // todo save the offer window that was accepted to $appointment_request->accepted_offer_window_start_datetime;
+
         $appointment_request->save();
     }
 
