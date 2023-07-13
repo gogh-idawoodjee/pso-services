@@ -107,7 +107,7 @@ class PSOActivityController extends Controller
 
     }
 
-    public function destroymulti(Request $request)
+    public function destroyMulti(Request $request)
     {
         //
 

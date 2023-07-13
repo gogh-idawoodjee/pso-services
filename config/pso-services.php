@@ -74,7 +74,7 @@ return [
         'override_commit_timestamps' => false,
         'enable_debug' => false,
         // if true, appointments cannot be accepted until they appointed first
-        'force_appointed_check' => true,
+        'force_appointed_check' => false,
         'use_region_as_locality' => true
     ]
 ];
