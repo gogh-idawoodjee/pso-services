@@ -57,6 +57,7 @@ class PSOActivityController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * // use this for swb broadcast response
      *
      * @param Request $request
      * @param int $id

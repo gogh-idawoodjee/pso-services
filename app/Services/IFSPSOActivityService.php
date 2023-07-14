@@ -96,6 +96,10 @@ class IFSPSOActivityService extends IFSService
         return $this->activity_object['Activity']['id'];
     }
 
+    public function sendSWBResponse()
+    {
+
+    }
 
     public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false)//: JsonResponse
     {

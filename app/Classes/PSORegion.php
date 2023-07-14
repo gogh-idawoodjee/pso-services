@@ -10,10 +10,10 @@ class PSORegion
 
     private string $region_id;
     private string $entity_type;
-    private string $description;
-    private bool $send;
-    private string $ram_division_id; // region/division parent
-    private string $ram_division_type_id; // region/division_category
+    private ?string $description;
+    private ?bool $send;
+    private ?string $ram_division_id;
+    private ?string $ram_division_type_id;
 
 
     public function __construct($region_id, $entity_type = "activity", $description = null, $send = true, $ram_division_id = null, $ram_division_type_id = null)

@@ -401,6 +401,20 @@ class IFSPSOAssistService extends IFSService
             ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
     }
 
+    // todo, find other instances and replace with this
+    public function RAMUpdatePayload($dataset_id, $description): array
+    {
+        return [
+            'organisation_id' => '2',
+            'dataset_id' => $dataset_id,
+            'user_id' => $this->service_name . ' user',
+            'ram_update_type_id' => 'CHANGE',
+            'is_master_data' => true,
+            'description' => $description,
+            'requesting_app_instance_id' => $this->service_name
+        ];
+    }
+
     public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200 = null, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
     {
         if ($send_to_pso) {

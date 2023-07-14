@@ -10,6 +10,7 @@ use App\Http\Controllers\PSOResourceController;
 use App\Http\Controllers\PSOResourceEventController;
 use App\Http\Controllers\PSOResourceShiftController;
 use App\Http\Controllers\PSOSandboxController;
+use App\Http\Controllers\PSORegionController;
 use App\Http\Controllers\PSOUnavailabilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -40,10 +41,8 @@ Route::get('/usage', [PSOAssistController::class, 'index']);
 
 // activity
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
-
 Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
 Route::post('/activity/', [PSOActivityController::class, 'store']);
-
 Route::delete('/activity/', [PSOActivityController::class, 'destroyMulti']);
 Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy']);
 
@@ -54,6 +53,7 @@ Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController:
 Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']);
 Route::get('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'index']);
 
+Route::post('/region', [PSORegionController::class, 'store']);
 
 // resource (???)
 Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update']);
