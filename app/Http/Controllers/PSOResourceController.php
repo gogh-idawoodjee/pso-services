@@ -27,6 +27,8 @@ class PSOResourceController extends Controller
             'send_to_pso' => 'boolean',
             'lat' => 'array',
             'long' => 'array',
+            'names' => 'array',
+            'ids' => 'array',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
             'modelling_dataset_id' => 'string|required',
             'account_id' => 'string|required_if:send_to_pso,true',

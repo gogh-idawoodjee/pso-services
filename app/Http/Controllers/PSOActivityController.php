@@ -25,6 +25,7 @@ class PSOActivityController extends Controller
             'activity_type_id' => 'string|required',
             'time_zone' => 'numeric|between:-24,24', // now made optional
             'relative_day' => 'integer|gt:-1',
+            'priority' => 'integer',
             'relative_day_end' => 'integer|gt:-1|gt:relative_day|nullable|prohibits:window_size',
             'duration' => 'integer|gt:0|required',
             'window_size' => 'integer|in:0,3,4|nullable|prohibits:relative_day_end',

@@ -1,14 +1,16 @@
 <?php
 
+
 namespace App\Classes;
 
+use Illuminate\Support\Arr;
 
 class PSOLocation
 {
 
     private float $latitude;
     private float $longitude;
-    private string $locality;
+    private ?string $locality;
 
 
     public function __construct($lat, $long, $locality = null)
@@ -20,12 +22,16 @@ class PSOLocation
 
     public function toJson($id) // changed from $activity_id
     {
-        return [
+        $json = [
             'id' => $id, // changed from $activity_id
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'locality' => $this->locality
+
         ];
+        if ($this->locality) {
+            $json = Arr::add($json, 'locality', $this->locality);
+        }
+        return $json;
     }
 
 }

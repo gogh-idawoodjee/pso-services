@@ -355,7 +355,7 @@ class IFSPSOResourceService extends IFSService
 
                 $shifts->pull('manual_scheduling_only');
 
-                $shifts->put('manual_scheduling_only', true); // this may need to be renamed to 'checked' if used in VueJS
+                $shifts->put('manual_scheduling_only', true); // this may need to be renamed to 'checked' if used in Vue.js
             }
 
             // todo figure out how to sort
@@ -875,10 +875,20 @@ class IFSPSOResourceService extends IFSService
         $counts = [
             "resources_requested" => $request->resources_to_create ?? 1,
             "lats" => count($request->lat),
-            "longs" => count($request->long),
+            "longs" => count($request->long)
         ];
 
+        if ($request->ids) {
+            $counts = Arr::add($counts, 'ids', count($request->ids));
+        }
+
+        if ($request->names) {
+            $counts = Arr::add($counts, 'names', count($request->names));
+        }
+
+
         $count_to_use = min($counts);
+
 
         $values_are_equal = count(array_unique(Arr::flatten($counts), SORT_REGULAR));
 
@@ -907,13 +917,21 @@ class IFSPSOResourceService extends IFSService
 
         for ($n = 0; $n <= $count_to_use - 1; $n++) {
             // create the resource object
+            $splitname = null;
+            if ($request->names) {
+                $splitname = explode(' ', $request->names[$n], 2);
+            }
             $resource_request = new Collection([
-                'first_name' => $faker->firstName(),
-                'surname' => $faker->lastName(),
+                'first_name' => $splitname ? $splitname[0] : $faker->firstName(),
+                'surname' => $splitname ? (!empty($splitname[1]) ? $splitname[1] : '') : $faker->lastName(),
                 'resource_type_id' => $request->resource_type_id,
                 'skill' => $request->skill,
                 'region' => $request->region
             ]);
+            if ($request->ids) {
+                $resource_request->put('resource_id', $request->ids[$n]);
+            }
+
 
             $resource = new PSOResource(json_decode($resource_request->toJson()), $request->lat[$n], $request->long[$n]);
             $resources[] = $resource->ResourceToJson();

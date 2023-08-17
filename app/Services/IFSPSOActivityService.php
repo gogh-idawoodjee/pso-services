@@ -53,7 +53,12 @@ class IFSPSOActivityService extends IFSService
             'duration' => $request->duration,
             'description' => $request->description ?: 'Instant Activity from ' . $this->service_name,
             'skill' => $request->skill,
-            'region' => $request->region
+            'region' => $request->region,
+            'priority' => $request->priority,
+            'base_value' => $request->base_value,
+            'fixed' => $request->fixed,
+            'visit_id'=>$request->visit_id,
+            'resource_id'=>$request->resource_id,
         ]);
 
         $activity = new PSOActivity(json_decode($activity_build_data->toJson()));
@@ -261,11 +266,8 @@ class IFSPSOActivityService extends IFSService
             ))->toJson();
         }
 
-        return $delete_activity_payload;
-
         $payload = $this->DeleteObjectFull($delete_activity_payload, $request->dataset_id, $description);
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
-
 
     }
 

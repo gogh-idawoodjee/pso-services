@@ -172,7 +172,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->checkExpired($appointment_request_id, $appointment_request->activity_id, $appointment_request->offer_expiry_datetime);
         }
 
-        $selected_offer = collect(json_decode($appointment_request->valid_offers))->where('id', "=", $request->appointment_offer_id)->values()->first();
+        $selected_offer = collect(($appointment_request->valid_offers))->where('id', "=", $request->appointment_offer_id)->values()->first();
         if (!$selected_offer) {
             return $this->IFSPSOAssistService->apiResponse(406, 'Sorry, that offer ID is invalid. Please review valid offers.', compact('appointment_request_id'));
         }

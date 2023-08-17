@@ -24,7 +24,7 @@ class PSORegionController extends Controller
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],
             'dataset_id' => 'string|required',
             'account_id' => 'string|required_if:send_to_pso,true',
-            'description' => 'string',
+            'description' => 'array',
             'region_parent' => 'string',
             'region_category' => 'string',
             'send' => 'boolean',

@@ -20,21 +20,41 @@ class IFSPSOModellingDataService extends IFSService
     public function createDivision(Request $request)
     {
 
-//        return $request;
+        $descriptions = (count($request->description ?: []) == count($request->region)) ? $request->description : null;
 
-        foreach ($request->region as $division) {
+        foreach ($request->region as $key => $division) {
             $division = new PSORegion(
                 $division,
                 'RAM_Division',
-                $request->description,
+                $descriptions ? $descriptions[$key] : null,
                 $request->send ?: true,
                 $request->region_parent,
                 $request->region_category
             );
-            $divisions[]=$division->RAMtoJson();
+            $divisions[] = $division->RAMtoJson();
         }
 
-        return $divisions;
+        $desc = 'add ' . count($request->region) . ' regions to ARP';
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, $desc);
+
+        $full_payload =
+            [
+                '@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd',
+                'RAM_Update' => $ram_update_payload,
+                'RAM_Division' => $divisions
+            ];
+
+        return $this->IFSPSOAssistService->processPayload(
+            $request->send_to_pso,
+            $full_payload,
+            $this->token,
+            $request->base_url,
+            $desc,
+            true,
+            $request->dataset_id,
+            $request->dataset_id
+        );
+
     }
 
 }

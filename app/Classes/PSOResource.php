@@ -26,7 +26,7 @@ class PSOResource
 
         $this->first_name = $resource_data->first_name;
         $this->surname = $resource_data->surname;
-        $this->resource_id = Str::upper($resource_data->first_name . $resource_data->surname);  //$resource_data->resouce_id;
+        $this->resource_id = $resource_data->resource_id ?? Str::upper($resource_data->first_name . $resource_data->surname);  // use the ID if it's sent, otherwise default it to first+last
         $this->resource_class_id = config('pso-services.defaults.resource.class_id');
 
         $this->lat = $lat;
@@ -119,7 +119,7 @@ class PSOResource
     {
         $data_json = [];
         foreach ($activity_data as $data) {
-            $data_json = $data->toJson($this->activity_id);
+            $data_json = $data->toJson($this->resource_id);
         }
         return $data_json;
     }
