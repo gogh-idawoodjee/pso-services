@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Classes\PSORegion;
+use App\Classes\PSORegionType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class IFSPSOModellingDataService extends IFSService
 {
@@ -20,7 +22,7 @@ class IFSPSOModellingDataService extends IFSService
     public function createDivision(Request $request)
     {
 
-        $descriptions = (count($request->description ?: []) == count($request->region)) ? $request->description : null;
+        $descriptions = (count($request->description ?: []) === count($request->region)) ? $request->description : null;
 
         foreach ($request->region as $key => $division) {
             $division = new PSORegion(
@@ -34,6 +36,7 @@ class IFSPSOModellingDataService extends IFSService
             $divisions[] = $division->RAMtoJson();
         }
 
+
         $desc = 'add ' . count($request->region) . ' regions to ARP';
         $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, $desc);
 
@@ -43,6 +46,13 @@ class IFSPSOModellingDataService extends IFSService
                 'RAM_Update' => $ram_update_payload,
                 'RAM_Division' => $divisions
             ];
+
+        if ($request->region_category) {
+            $division_type = new PSORegionType(
+                $request->region_category
+            );
+            $full_payload = Arr::add($full_payload, 'RAM_Division_Type', $division_type->RAMtoJson());
+        }
 
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso,

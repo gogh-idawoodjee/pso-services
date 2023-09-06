@@ -19025,7 +19025,9 @@
      *
      *
      */
-        class Request {
+        class Request {/**
+ * @var mixed|true
+ */public mixed $send_to_pso;
                     /**
          *
          *

@@ -435,15 +435,15 @@ class IFSPSOAssistService extends IFSService
                 // send the good response
                 return $this->apiResponse(200, ("Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : $desc_200)), $payload);
             } else {
-                if ($response->serverError() || $response->json('InternalId') == "-1") {
+                if ($response->serverError() || $response->json('InternalId') === "-1") {
                     return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
                 }
 
-                if ($response->json('Code') == 401 || $response->status() == 401) {
+                if ($response->json('Code') === 401 || $response->status() === 401) {
                     return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
                 }
 
-                if ($response->status() == 500) {
+                if ($response->status() === 500) {
                     return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
                 }
 

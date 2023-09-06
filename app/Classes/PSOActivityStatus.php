@@ -33,7 +33,7 @@ class PSOActivityStatus extends Activity
         $this->visit_id = $visit_id ?: 1;
         $this->resource_id = $resource_id;
         $this->duration = PSOHelper::setPSODuration($duration);
-        $this->fixed = $fixed ?: ($status_id != -1 && $status_id != 0);
+        $this->fixed = $fixed ?: ($status_id !== -1 && $status_id !== 0);
         $this->date_time_fixed = $date_time_fixed;
         $this->date_time_earliest = $date_time_earliest;
         $this->reason = $reason;
@@ -53,10 +53,14 @@ class PSOActivityStatus extends Activity
                 'reason' => $this->reason
             ];
 
-        if ($this->status_id != -1 && $this->status_id != 0) {
+        if ($this->status_id !== -1 && $this->status_id !== 0) {
             $status_json = Arr::add($status_json, 'resource_id', (string)$this->resource_id);
-            if ($this->date_time_fixed) $status_json = Arr::add($status_json, 'date_time_fixed', $this->date_time_fixed);
-            if ($this->date_time_earliest) $status_json = Arr::add($status_json, 'date_time_earliest', $this->date_time_earliest);
+            if ($this->date_time_fixed) {
+                $status_json = Arr::add($status_json, 'date_time_fixed', $this->date_time_fixed);
+            }
+            if ($this->date_time_earliest) {
+                $status_json = Arr::add($status_json, 'date_time_earliest', $this->date_time_earliest);
+            }
         }
 
         return $status_json;

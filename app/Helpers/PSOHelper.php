@@ -27,12 +27,12 @@ class PSOHelper
         return $tz;
     }
 
-    public static function setPSODuration($duration)
+    public static function setPSODuration($duration): string
     {
         return 'PT' . intdiv((int)$duration, 60) . 'H' . ((int)$duration % 60) . 'M';
     }
 
-    public static function setPSODurationDays($duration)
+    public static function setPSODurationDays($duration): string
     {
         return 'P' . $duration . 'D';
     }
@@ -43,15 +43,15 @@ class PSOHelper
     public static function ValidateSendToPSO(Request $request)
     {
         Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso == true && !$request->username && !$request->password)
+            'token' => Rule::requiredIf($request->send_to_pso === true && !$request->username && !$request->password)
         ])->validate();
 
         Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+            'username' => Rule::requiredIf($request->send_to_pso === true && !$request->token)
         ])->validate();
 
         Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso == true && !$request->token)
+            'password' => Rule::requiredIf($request->send_to_pso === true && !$request->token)
         ])->validate();
     }
 
@@ -80,6 +80,9 @@ class PSOHelper
 
     public static function GetTimeOut()
     {
-        return config('pso-services.debug.debug_mode_on') ? config('pso-services.debug.debug_timeout') : config('pso-services.defaults.timeout');
+        if (config('pso-services.debug.debug_mode_on')) {
+            return config('pso-services.debug.debug_timeout');
+        }
+        return config('pso-services.defaults.timeout');
     }
 }

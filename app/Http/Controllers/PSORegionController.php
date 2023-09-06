@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PSOHelper;
-use App\Services\IFSPSOActivityService;
 use App\Services\IFSPSOModellingDataService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PSORegionController extends Controller
 {
@@ -14,7 +15,9 @@ class PSORegionController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
+     * @return JsonResponse
+     * @throws ValidationException
      */
     public function store(Request $request)
     {
@@ -39,7 +42,7 @@ class PSORegionController extends Controller
 
         $region = new IFSPSOModellingDataService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$region->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$region->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
@@ -49,12 +52,11 @@ class PSORegionController extends Controller
         return $region->createDivision($request);
     }
 
-
     /**
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return void
      */
     public function destroy($id)
     {

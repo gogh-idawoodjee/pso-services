@@ -48,8 +48,9 @@ class IFSPSOResourceService extends IFSService
 
         $resource_raw = $this->getResource($resource_id, $dataset_id, $base_url);
 
-        if (!$this->ResourceExists())
+        if (!$this->ResourceExists()) {
             return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', compact('resource_id'));
+        }
 
         $resource = collect($resource_raw['Resources']);
 
@@ -93,7 +94,7 @@ class IFSPSOResourceService extends IFSService
                 $response = GoogleMaps::load('geocoding')
                     ->setParam(['latlng' => $latlong])
                     ->get();
-                $country = json_decode($response)->results[0]->address_components[5]->short_name;
+                $country = json_decode($response, false, 512, JSON_THROW_ON_ERROR)->results[0]->address_components[5]->short_name;
                 return collect(collect($location)->first())->put('country', $country);
             })->values()->groupBy('id')
                 ->map(function ($location) {
@@ -101,7 +102,7 @@ class IFSPSOResourceService extends IFSService
                     $response = GoogleMaps::load('geocoding')
                         ->setParam(['latlng' => $latlong])
                         ->get();
-                    $formatted_address = json_decode($response)->results[0]->formatted_address;
+                    $formatted_address = json_decode($response, false, 512, JSON_THROW_ON_ERROR)->results[0]->formatted_address;
                     return collect(collect($location)->first())->put('formatted_address', $formatted_address);
                 });
 
@@ -164,8 +165,8 @@ class IFSPSOResourceService extends IFSService
         }
 
         if (Arr::has($newresource_locations[$resource['location_id_start']], 'country')) {
-            $region_type = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'state' : 'province';
-            $ziptype = $newresource_locations[$resource['location_id_start']]['country'] == 'US' ? 'zip' : 'post_code';
+            $region_type = $newresource_locations[$resource['location_id_start']]['country'] === 'US' ? 'state' : 'province';
+            $ziptype = $newresource_locations[$resource['location_id_start']]['country'] === 'US' ? 'zip' : 'post_code';
             Arr::add($newresource_locations[$resource['location_id_start']], 'region_type', $region_type);
             Arr::add($newresource_locations[$resource['location_id_start']], 'zip_type', $ziptype);
 
@@ -179,14 +180,14 @@ class IFSPSOResourceService extends IFSService
 
         $resource_location = [
             'start_location' => [$start_location],
-            'end_location' => $resource['location_id_start'] == $resource['location_id_end'] ? [$start_location] :
+            'end_location' => $resource['location_id_start'] === $resource['location_id_end'] ? [$start_location] :
                 [
                     // todo repeat above validation with end_location
                     'id' => $newresource_locations[$resource['location_id_end']]['id'],
                     'address' => $newresource_locations[$resource['location_id_end']]['address_line1'],
                     'city' => $newresource_locations[$resource['location_id_end']]['city'],
-                    $newresource_locations[$resource['location_id_end']]['country'] == 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_end']]['state'],
-                    $newresource_locations[$resource['location_id_end']]['country'] == 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_end']]['post_code_zip'],
+                    $newresource_locations[$resource['location_id_end']]['country'] === 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_end']]['state'],
+                    $newresource_locations[$resource['location_id_end']]['country'] ==='US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_end']]['post_code_zip'],
                     'lat' => $newresource_locations[$resource['location_id_end']]['latitude'],
                     'long' => $newresource_locations[$resource['location_id_end']]['longitude'],
                     'formatted_from_google' => $newresource_locations[$resource['location_id_end']]['formatted_address'],
@@ -194,7 +195,7 @@ class IFSPSOResourceService extends IFSService
         ];
 
 
-        $resource_location = Arr::add($resource_location, 'same_start_and_end_location', $resource['location_id_start'] == $resource['location_id_end']);
+        $resource_location = Arr::add($resource_location, 'same_start_and_end_location', $resource['location_id_start'] === $resource['location_id_end']);
 
 
         $formatted_resource = [
@@ -210,19 +211,19 @@ class IFSPSOResourceService extends IFSService
             'max_travel' =>
                 [
                     'readable' => $resource->get('max_travel') ? CarbonInterval::fromString($resource->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('max_travel'))->forHumans(['options' => CarbonInterface::FLOOR]),
-                    'value' => $resource->get('max_travel') ? $resource->get('max_travel') : $resource_type->get('max_travel'),
+                    'value' => $resource->get('max_travel') ?: $resource_type->get('max_travel'),
                     'source' => $resource->get('max_travel') ? 'resource' : 'inherited from resource_type'
                 ],
             'max_travel_outside_shift_to_first_activity' =>
                 [
                     'readable' => $resource->get('travel_to') ? CarbonInterval::fromString($resource->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_to'))->forHumans(['options' => CarbonInterface::FLOOR]),
-                    'value' => $resource->get('travel_to') ? $resource->get('travel_to') : $resource_type->get('travel_to'),
+                    'value' => $resource->get('travel_to') ?: $resource_type->get('travel_to'),
                     'source' => $resource->get('travel_to') ? 'resource' : 'inherited from resource_type'
                 ],
             'max_travel_outside_shift_to_home' =>
                 [
                     'readable' => $resource->get('travel_from') ? CarbonInterval::fromString($resource->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]) : CarbonInterval::fromString($resource_type->get('travel_from'))->forHumans(['options' => CarbonInterface::FLOOR]),
-                    'value' => $resource->get('travel_from') ? $resource->get('travel_from') : $resource_type->get('travel_from'),
+                    'value' => $resource->get('travel_from') ?: $resource_type->get('travel_from'),
                     'source' => $resource->get('travel_from') ? 'resource' : 'inherited from resource_type'
                 ],
             'locations' => $resource_location,
@@ -512,7 +513,9 @@ class IFSPSOResourceService extends IFSService
     public function updateShift(Request $shift_data, $resource_id)
     {
 
-        if (!$this->ResourceExists()) return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
+        if (!$this->ResourceExists()) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', ['shift_id' => $shift_data->shift_id, 'resource_id' => $resource_id], 'submitted_data');
+        }
 
         $shift_set = $this->getResourceShiftsRaw();
 
@@ -525,10 +528,10 @@ class IFSPSOResourceService extends IFSService
         // the first param is looking at the list of shifts and finding the details on the one we're modifying
 
         $rawshift = collect(collect($shift_set)->firstWhere('id', $shift_data->shift_id));
-        $raw_shift_data['turn_manual_scheduling_on'] = $rawshift->get('manual_scheduling_only') ? $rawshift->get('manual_scheduling_only') : false;
-        $raw_shift_data['shift_type'] = $shift_data->shift_type ? $shift_data->shift_type : $rawshift->get('shift_type_id');
-        $raw_shift_data['start_datetime'] = $shift_data->start_datetime ? $shift_data->start_datetime : $rawshift->get('start_datetime');
-        $raw_shift_data['end_datetime'] = $shift_data->end_datetime ? $shift_data->end_datetime : $rawshift->get('end_datetime');
+        $raw_shift_data['turn_manual_scheduling_on'] = $rawshift->get('manual_scheduling_only') ?: false;
+        $raw_shift_data['shift_type'] = $shift_data->shift_type ?: $rawshift->get('shift_type_id');
+        $raw_shift_data['start_datetime'] = $shift_data->start_datetime ?: $rawshift->get('start_datetime');
+        $raw_shift_data['end_datetime'] = $shift_data->end_datetime ?: $rawshift->get('end_datetime');
         if (Carbon::make($raw_shift_data['end_datetime'])->lt(Carbon::make($raw_shift_data['start_datetime']))) {
             return $this->IFSPSOAssistService->apiResponse(500, 'Start Date cannot be greater than End Date', ['start_datetime' => $raw_shift_data['start_datetime'], 'end_datetime' => $raw_shift_data['end_datetime']], 'submitted_data');
         }
@@ -575,7 +578,7 @@ class IFSPSOResourceService extends IFSService
             $shift_in_question = collect(collect($fresh_shifts)->firstWhere('id', $shift_data->shift_id));
 
             // compare the shift
-            if ($description == $shift_in_question['description']) {
+            if ($description === $shift_in_question['description']) {
                 // if the description matches in the GET we can be certain it worked
                 return $this->IFSPSOAssistService->apiResponse(200, 'Rota Item Updated and Validated', $payload);
 
@@ -729,7 +732,7 @@ class IFSPSOResourceService extends IFSService
 
             $grouped_allocations = collect($schedule->collect()->first()['Allocation'])->mapWithKeys(fn($allocation) => [$allocation['activity_id'] => $allocation])->only($unavailabilities);
 
-            if ($grouped_activities->count() == 0 || $grouped_allocations->count() == 0) {
+            if ($grouped_activities->count() === 0 || $grouped_allocations->count() === 0) {
                 // if none of those exist in the schedule return a 404
                 return $this->IFSPSOAssistService->apiResponse(404, 'no NAs found', ['NAs sent' => $unavailabilities]);
             }
@@ -894,7 +897,7 @@ class IFSPSOResourceService extends IFSService
 
         $input_used = [
             "min_value" => $count_to_use,
-            "taken_from" => $values_are_equal == 1 ? "all values equal, good job" : array_search(min($counts), $counts)
+            "taken_from" => $values_are_equal === 1 ? "all values equal, good job" : array_search(min($counts), $counts)
         ];
 // refactored above
 //        if (count(array_unique(Arr::flatten($counts), SORT_REGULAR)) === 1) {
@@ -933,7 +936,7 @@ class IFSPSOResourceService extends IFSService
             }
 
 
-            $resource = new PSOResource(json_decode($resource_request->toJson()), $request->lat[$n], $request->long[$n]);
+            $resource = new PSOResource(json_decode($resource_request->toJson(), false, 512, JSON_THROW_ON_ERROR), $request->lat[$n], $request->long[$n]);
             $resources[] = $resource->ResourceToJson();
             $locations[] = $resource->ResourceLocation();
             if ($resource->ResourceSkills()) {
@@ -944,7 +947,7 @@ class IFSPSOResourceService extends IFSService
             }
         }
 
-        $desc = 'Add ' . $input_used['min_value'] . ' resources.' . ($values_are_equal == 1 ? 'yes' : ' Limited by ' . $input_used['taken_from']);
+        $desc = 'Add ' . $input_used['min_value'] . ' resources.' . ($values_are_equal === 1 ? 'yes' : ' Limited by ' . $input_used['taken_from']);
 
 
         $ram_update_payload = $this->RAMUpdatePayload($request->modelling_dataset_id, $desc);

@@ -41,7 +41,7 @@ class IFSPSOAppointmentService extends IFSService
             $request->appointment_template_id,
             $request->appointment_template_duration,
             $request->appointment_template_datetime,
-            $request->slot_usage_rule_id ? $request->slot_usage_rule_id : null
+            $request->slot_usage_rule_id ?: null
 
         );
 
@@ -76,7 +76,7 @@ class IFSPSOAppointmentService extends IFSService
 
 
             $invalid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
-                return collect($offer)->get('offer_value') == 0;
+                return collect($offer)->get('offer_value') === 0;
             })->map(function ($offer) {
                 return collect($offer)->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value');
             })->values();
@@ -161,10 +161,10 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(404, 'No Such Appointment Request', compact('appointment_request_id'));
         }
 
-        if ($appointment_request->appointed_check_complete != 0) {
+        if ($appointment_request->appointed_check_complete !== 0) {
             return $this->checkResponded($appointment_request_id, $appointment_request->appointed_check_result, $appointment_request->activity_id, $appointment_request->appointed_check_datetime, 'appointed');
         }
-        if ($appointment_request->status != 0) {
+        if ($appointment_request->status !== 0) {
             return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
 
@@ -213,7 +213,7 @@ class IFSPSOAppointmentService extends IFSService
     {
         $appointment_request->appointed_check_complete = 1;
         $appointment_request->appointed_check_offer_id = $offer_id;
-        $appointment_request->appointed_check_result = $result == 'true' ? 1 : 0;
+        $appointment_request->appointed_check_result = $result === 'true' ? 1 : 0;
         $appointment_request->appointed_check_input_reference_id = $id;
         $appointment_request->appointed_check_datetime = Carbon::now()->toAtomString();
         $appointment_request->save();
@@ -222,19 +222,16 @@ class IFSPSOAppointmentService extends IFSService
     private function checkResponded($appointment_request_id, $status, $activity_id, $datetime, $type = "accept_decline")
     {
 
-        $some_details = [
-            "appointment_request_id" => $appointment_request_id,
-            "activity_id" => $activity_id,
-        ];
+        $some_details = compact('appointment_request_id', 'activity_id');
 
-        if ($type == 'accept_decline') {
+        if ($type === 'accept_decline') {
             $some_details["actioned_time"] = $datetime->diffForHumans();
-            $some_details["status"] = $status == 1 ? "accepted" : "declined";
+            $some_details["status"] = $status === 1 ? "accepted" : "declined";
             $desc = 'Offer Already Responded To';
         }
-        if ($type == 'appointed') {
+        if ($type === 'appointed') {
             $some_details["appointed_time"] = $datetime->diffForHumans();
-            $some_details["status"] = $status == 1 ? "available" : "not available";
+            $some_details["status"] = $status === 1 ? "available" : "not available";
             $desc = 'Appointed Check Already Performed';
         }
 
@@ -275,7 +272,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(404, 'No Such Appointment Request', compact('appointment_request_id'));
         }
 
-        if ($appointment_request->status != 0) {
+        if ($appointment_request->status !== 0) {
             return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
@@ -364,7 +361,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(404, 'No Such Appointment Request', compact('appointment_request_id'));
         }
 
-        if ($appointment_request->status != 0) {
+        if ($appointment_request->status !== 0) {
             return $this->checkResponded($appointment_request_id, $appointment_request->status, $appointment_request->activity_id, $appointment_request->accept_decline_datetime);
         }
         if ($appointment_request->offer_expiry_datetime < Carbon::now()) {
@@ -579,8 +576,8 @@ class IFSPSOAppointmentService extends IFSService
     {
         $appointment_request = new PSOAppointment();
         $appointment_request->id = $appointment_request_part_payload['id'];
-        $appointment_request->appointment_request = json_encode($payload);
-        $appointment_request->input_request = json_encode($input_request);
+        $appointment_request->appointment_request = json_encode($payload, JSON_THROW_ON_ERROR);
+        $appointment_request->input_request = json_encode($input_request, JSON_THROW_ON_ERROR);
         $appointment_request->activity_id = $activity->getActivityID();
         $appointment_request->dataset_id = $dataset_id;
         $appointment_request->base_url = $input_request['base_url'];
@@ -591,10 +588,10 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
         $appointment_request->slot_usage_rule_id = Arr::has($appointment_request_part_payload, 'slot_usage_rule_id') ? $appointment_request_part_payload['slot_usage_rule_id'] : null;
-        $appointment_request->appointment_response = json_encode($response->collect());
-        $appointment_request->valid_offers = json_encode($valid_offers);
-        $appointment_request->invalid_offers = json_encode($invalid_offers);
-        $appointment_request->best_offer = $best_offer->get('prospective_resource_id') ? json_encode($best_offer) : json_encode('no valid offers returned');
+        $appointment_request->appointment_response = json_encode($response->collect(), JSON_THROW_ON_ERROR);
+        $appointment_request->valid_offers = json_encode($valid_offers, JSON_THROW_ON_ERROR);
+        $appointment_request->invalid_offers = json_encode($invalid_offers, JSON_THROW_ON_ERROR);
+        $appointment_request->best_offer = $best_offer->get('prospective_resource_id') ? json_encode($best_offer, JSON_THROW_ON_ERROR) : json_encode('no valid offers returned', JSON_THROW_ON_ERROR);
         $appointment_request->summary = $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.';
         $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
         $appointment_request->total_valid_offers_returned = $valid_offers->count();

@@ -63,7 +63,7 @@ class PSOActivity extends Activity
         }
 
         // build the location
-        if (config('pso-services.settings.use_region_as_locality') && $activity_data->region) {
+        if ( $activity_data->region && config('pso-services.settings.use_region_as_locality') ) {
             $locality = $activity_data->region[0];
         } else {
             $locality = "";

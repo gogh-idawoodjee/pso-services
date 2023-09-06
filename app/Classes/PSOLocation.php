@@ -10,7 +10,7 @@ class PSOLocation
 
     private float $latitude;
     private float $longitude;
-    private ?string $locality;
+    private string|null $locality;
 
 
     public function __construct($lat, $long, $locality = null)

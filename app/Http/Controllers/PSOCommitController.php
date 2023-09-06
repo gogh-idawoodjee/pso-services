@@ -49,8 +49,6 @@ class PSOCommitController extends Controller
             'description' => 'did not pass auth'
         ]);
 
-
     }
-
 
 }

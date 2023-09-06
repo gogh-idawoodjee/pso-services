@@ -38,7 +38,7 @@ class IFSPSOActivityService extends IFSService
 
         $relative_day = $request->relative_day ?: 1;
         $relative_day_end = $request->relative_day_end ?: $relative_day;
-        $hours_to_add = ($request->window_size ?: 0) == 0 ? 8 : ($request->window_size ?: 0);
+        $hours_to_add = ($request->window_size ?: 0) === 0 ? 8 : ($request->window_size ?: 0);
 
 
         $activity_build_data = new Collection([
@@ -61,7 +61,7 @@ class IFSPSOActivityService extends IFSService
             'resource_id'=>$request->resource_id,
         ]);
 
-        $activity = new PSOActivity(json_decode($activity_build_data->toJson()));
+        $activity = new PSOActivity(json_decode($activity_build_data->toJson(), false, 512, JSON_THROW_ON_ERROR));
 
         $input_ref = (new InputReference(
             'Instant Activity Generator from ' . $this->service_name,
@@ -123,7 +123,9 @@ class IFSPSOActivityService extends IFSService
             $dataset_id = collect($pso_sds_broadcast)->get('Plan')[0]['dataset_id'];
 
             // this is to check if the suggestions is an array of objects or an object
-            if (isset($suggestions->plan_id)) $newsuggestions[] = $suggestions; else {
+            if (isset($suggestions->plan_id)) {
+                $newsuggestions[] = $suggestions;
+            } else {
                 $newsuggestions = $suggestions;
             }
 
@@ -163,11 +165,11 @@ class IFSPSOActivityService extends IFSService
             if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
-                'pso_suggestions' => json_encode($newsuggestions),
-                'output_payload' => json_encode($activity_status_payload),
+                'pso_suggestions' => json_encode($newsuggestions, JSON_THROW_ON_ERROR),
+                'output_payload' => json_encode($activity_status_payload, JSON_THROW_ON_ERROR),
                 'pso_response' => $activity_status->body(),
                 'response_time' => $activity_status->transferStats->getTransferTime(),
-                'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats())
+                'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats(), JSON_THROW_ON_ERROR)
             ]);
 
 

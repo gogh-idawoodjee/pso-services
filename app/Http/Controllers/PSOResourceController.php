@@ -16,6 +16,9 @@ use Illuminate\Validation\ValidationException;
 class PSOResourceController extends Controller
 {
 
+    /**
+     * @throws ValidationException
+     */
     public function store(Request $request)
     {
         $request->validate([

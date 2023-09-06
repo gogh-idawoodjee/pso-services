@@ -25,42 +25,42 @@ class PSOAppointment extends Model
     protected function inputRequest(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
     protected function appointmentRequest(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
     protected function appointmentResponse(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
     protected function validOffers(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
     protected function invalidOffers(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
     protected function bestOffer(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => json_decode($value),
+            get: fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
 
