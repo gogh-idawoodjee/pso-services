@@ -6,6 +6,7 @@ use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
 use App\Classes\PSOResource;
 use App\Helpers\PSOHelper;
+use App\Services\IFSPSOModellingDataService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
@@ -21,6 +22,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use JsonException;
 
 class IFSPSOResourceService extends IFSService
 {
@@ -109,7 +111,7 @@ class IFSPSOResourceService extends IFSService
         }
 
 
-        if (Arr::has($resource_raw, 'Resource_Skill') && (collect($resource_raw['Resource_Skill'])->count()) && Arr::has($resource_raw, 'Skill')) {
+        if (Arr::has($resource_raw, 'Resource_Skill') && Arr::has($resource_raw, 'Skill') && (collect($resource_raw['Resource_Skill'])->count())) {
             if (collect($resource_raw['Resource_Skill'])->has('skill_id')) {
 
                 $skills = [collect($resource_raw['Skill'])->groupBy('id')];
@@ -187,7 +189,7 @@ class IFSPSOResourceService extends IFSService
                     'address' => $newresource_locations[$resource['location_id_end']]['address_line1'],
                     'city' => $newresource_locations[$resource['location_id_end']]['city'],
                     $newresource_locations[$resource['location_id_end']]['country'] === 'US' ? 'state' : 'province' => $newresource_locations[$resource['location_id_end']]['state'],
-                    $newresource_locations[$resource['location_id_end']]['country'] ==='US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_end']]['post_code_zip'],
+                    $newresource_locations[$resource['location_id_end']]['country'] === 'US' ? 'zip' : 'post_code' => $newresource_locations[$resource['location_id_end']]['post_code_zip'],
                     'lat' => $newresource_locations[$resource['location_id_end']]['latitude'],
                     'long' => $newresource_locations[$resource['location_id_end']]['longitude'],
                     'formatted_from_google' => $newresource_locations[$resource['location_id_end']]['formatted_address'],
@@ -439,9 +441,9 @@ class IFSPSOResourceService extends IFSService
             // how do we do this if it's only one event ?
             if (isset($events[$item['id']])) {
                 return collect($item)->put('events', $events[$item['id']]);
-            } else {
-                return $item;
             }
+
+            return $item;
         })->
         map(function ($item) use ($plans, $shifts) {
             return collect($item)
@@ -452,6 +454,103 @@ class IFSPSOResourceService extends IFSService
         });
 
         return $this->IFSPSOAssistService->apiResponse(200, 'Resources Returned', $output);
+
+    }
+
+    public function relocateResource(Request $request, $resource_id)
+    {
+
+        // check if the resource exists or fail right away
+        $resource = $this->getResource($resource_id, $request->source_dataset_id, $request->base_url);
+        if (!$this->ResourceExists()) {
+            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist in the source dataset or the dataset is not active', $request->all());
+        }
+
+//        return $resource;
+
+        $resource_type = json_decode(json_encode($resource->all()['Resource_Type'], JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
+        $resource_location = json_decode(json_encode($resource->all()['Location'], JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
+        // push the resource type ID to the ARP
+
+        $resource_type_id = $request->resource_type_id ?? $resource_type->id;
+        $resource_type_desc = $request->resource_type_id ? Str::lower($request->resource_type_id) : ($resource_type->description ?? Str::lower($resource_type_id));
+
+        $resource_type_payload = [
+            'id' => $resource_type_id,
+            'description' => $resource_type_desc
+        ];
+
+        $ram_update_payload = $this->RAMUpdatePayload($request->destination_dataset_id, 'adding resource_type for relocated resource');
+        $resource_type_json =
+            [
+                'DsModelling' => [
+                    '@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd',
+                    'RAM_Update' => $ram_update_payload,
+                    'RAM_Resource' => $resource_type_payload
+                ]
+            ];
+
+        // todo push that resource type to the ARP
+
+        // set some defaults
+        $start_datetime = $request->start_datetime ?? Carbon::tomorrow()->toAtomString();
+        $thisresource_regions = [];
+
+        // compare against the dude
+        $lat = $request->lat ?? $resource_location->latitude;
+        $long = $request->long ?? $resource_location->longitude;
+
+
+        if (Arr::has($resource, 'Resource_Region') && collect($resource['Resource_Region'])->count()) {
+            if (collect($resource['Resource_Region'])->has('region_id')) {
+                $regions = [collect($resource['Resource_Region'])];
+            } else {
+                $regions = collect($resource['Resource_Region']);
+            }
+
+            foreach ($regions as $region) {
+                $thisresource_regions[$region['region_id']] = [
+                    'id' => $region['region_id'],
+                    'override_priority' => $region['override_priority'] ?? 0,
+                    'description' => $region['description'] ?? Str::lower($region['region_id'])
+                ];
+            }
+        }
+
+        // if we're retaining regions, then remove the ones we don't want if any
+        if ($request->retain_regions && count($request->excluded_regions)) {
+            data_forget($thisresource_regions, $request->excluded_regions);
+        }
+
+        // are we trashing all regions?
+        if (!$request->retain_regions) {
+            $thisresource_regions = [];
+        }
+
+        // are we adding any regions?
+        // create regions if needed
+
+        if ($request->regions) {
+
+            $region_request = new Collection([
+                'region' => $request->region,
+                'region_parent' => $request->region_parent,
+                'region_category' => $request->resource_type_id,
+                'send' => true,
+                'dataset_id' => $request->destination_dataset_id
+            ]);
+
+            $region = new IFSPSOModellingDataService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+
+//            $region->createDivision($region_request);
+
+            // add them to the list
+
+            foreach ($request->regions as $region) {
+                $thisresource_regions = Arr::add($thisresource_regions, $region, ['id' => $region]);
+            }
+        }
+
 
     }
 
@@ -598,7 +697,8 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function RAMRotaItemUpdatePayload($ram_update_payload, $rota_item_payload)
+    private
+    function RAMRotaItemUpdatePayload($ram_update_payload, $rota_item_payload)
     {
         return [
             'DsModelling' => [
@@ -632,7 +732,8 @@ class IFSPSOResourceService extends IFSService
         return ['DsModelling' => $json];
     }
 
-    private function RAMUpdatePayload($dataset_id, $description): array
+    private
+    function RAMUpdatePayload($dataset_id, $description): array
     {
         return [
             'organisation_id' => '2',
@@ -645,7 +746,8 @@ class IFSPSOResourceService extends IFSService
     }
 
 
-    private function RAMRotaItemPayload($rawshift, $rota_id, $shift_data, $description)
+    private
+    function RAMRotaItemPayload($rawshift, $rota_id, $shift_data, $description)
     {
 
 
@@ -836,7 +938,8 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
+    private
+    function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
     {
         return [
             'DsModelling' => [
@@ -859,6 +962,9 @@ class IFSPSOResourceService extends IFSService
         return true;
     }
 
+    /**
+     * @throws JsonException
+     */
     public function createResource(Request $request)
     {
 
@@ -897,7 +1003,7 @@ class IFSPSOResourceService extends IFSService
 
         $input_used = [
             "min_value" => $count_to_use,
-            "taken_from" => $values_are_equal === 1 ? "all values equal, good job" : array_search(min($counts), $counts)
+            "taken_from" => $values_are_equal === 1 ? "all values equal, good job" : array_search(min($counts), $counts, true)
         ];
 // refactored above
 //        if (count(array_unique(Arr::flatten($counts), SORT_REGULAR)) === 1) {

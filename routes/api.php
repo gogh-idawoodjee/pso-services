@@ -8,6 +8,7 @@ use App\Http\Controllers\PSOAssistController;
 use App\Http\Controllers\PSOCommitController;
 use App\Http\Controllers\PSOResourceController;
 use App\Http\Controllers\PSOResourceEventController;
+use App\Http\Controllers\PSOResourceRelocationController;
 use App\Http\Controllers\PSOResourceShiftController;
 use App\Http\Controllers\PSOSandboxController;
 use App\Http\Controllers\PSORegionController;
@@ -58,6 +59,8 @@ Route::post('/region', [PSORegionController::class, 'store']);
 // resource (???)
 Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update']);
 Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
+Route::post('/resource/{resource_id}/relocate', [PSOResourceRelocationController::class, 'store']);
+
 Route::post('/resource/', [PSOResourceController::class, 'store']);
 
 Route::get('/resource/', [PSOResourceController::class, 'index']);

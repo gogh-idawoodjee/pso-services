@@ -46,7 +46,7 @@ class PSOAssistController extends Controller
 
         $init = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$init->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$init->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
@@ -88,7 +88,7 @@ class PSOAssistController extends Controller
         $rotatodse = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
 
-        if (!$rotatodse->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$rotatodse->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'

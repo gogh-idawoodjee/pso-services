@@ -43,7 +43,7 @@ class PSOUnavailabilityController extends Controller
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$resource_init->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
@@ -87,7 +87,7 @@ class PSOUnavailabilityController extends Controller
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
-        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$resource_init->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
@@ -126,7 +126,7 @@ class PSOUnavailabilityController extends Controller
 
         $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$resource_init->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$resource_init->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'

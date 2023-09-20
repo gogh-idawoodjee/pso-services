@@ -7,6 +7,7 @@ use App\Services\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use JsonException;
 
 class PSOCommitController extends Controller
 {
@@ -15,6 +16,7 @@ class PSOCommitController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws JsonException
      */
     public function update(Request $request)
     {
@@ -35,6 +37,9 @@ class PSOCommitController extends Controller
 
     }
 
+    /**
+     * @throws JsonException
+     */
     public function store(Request $request): JsonResponse
     {
 

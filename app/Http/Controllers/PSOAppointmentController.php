@@ -44,7 +44,7 @@ class PSOAppointmentController extends Controller
 
         $appointed = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$appointed->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$appointed->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
@@ -98,7 +98,7 @@ class PSOAppointmentController extends Controller
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$appointment->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$appointment->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'

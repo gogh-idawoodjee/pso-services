@@ -11,13 +11,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use JsonException;
 
 
 class PSOResourceController extends Controller
 {
 
     /**
-     * @throws ValidationException
+     * @throws ValidationException|JsonException
      */
     public function store(Request $request)
     {
@@ -44,7 +45,7 @@ class PSOResourceController extends Controller
 
         $resource = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
-        if (!$resource->isAuthenticated() && $request->send_to_pso) {
+        if ($request->send_to_pso && !$resource->isAuthenticated()) {
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
