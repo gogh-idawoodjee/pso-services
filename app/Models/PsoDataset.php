@@ -12,14 +12,11 @@ use Illuminate\Database\Eloquent\Builder;
 class PsoDataset extends Model
 {
     use Uuids;
-
     protected $guarded = [];
-
     public function environment()
     {
         return $this->belongsTo(PsoEnvironment::class, 'pso_environment_id', 'id');
     }
-
     protected function updatedAt(): Attribute
     {
         return Attribute::make(

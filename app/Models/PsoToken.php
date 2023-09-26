@@ -11,14 +11,11 @@ use Illuminate\Database\Eloquent\Builder;
 class PsoToken extends Model
 {
     use Uuids;
-
     protected $guarded = [];
-
     public function SetTokenExpiryAttribute($value)
     {
         $this->attributes['token_expiry'] = $value->addHours(1);
     }
-
     public function getIsValidTokenAttribute()
     {
         return Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry']), false) > 2;

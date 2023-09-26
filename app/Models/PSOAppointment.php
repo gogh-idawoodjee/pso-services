@@ -68,5 +68,4 @@ class PSOAppointment extends Model
         );
     }
 
-
 }

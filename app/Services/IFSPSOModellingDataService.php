@@ -42,9 +42,11 @@ class IFSPSOModellingDataService extends IFSService
 
         $full_payload =
             [
+
                 '@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd',
                 'RAM_Update' => $ram_update_payload,
                 'RAM_Division' => $divisions
+
             ];
 
         if ($request->region_category) {
@@ -54,9 +56,10 @@ class IFSPSOModellingDataService extends IFSService
             $full_payload = Arr::add($full_payload, 'RAM_Division_Type', $division_type->RAMtoJson());
         }
 
+
         return $this->IFSPSOAssistService->processPayload(
             $request->send_to_pso,
-            $full_payload,
+            ['DsModelling' => [$full_payload]],
             $this->token,
             $request->base_url,
             $desc,

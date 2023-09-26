@@ -18,10 +18,8 @@ use Illuminate\Support\Str;
 
 class IFSPSOActivityService extends IFSService
 {
-
     private IFSPSOAssistService $IFSPSOAssistService;
     private Collection $activity_object;
-
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
@@ -29,7 +27,6 @@ class IFSPSOActivityService extends IFSService
         $this->IFSPSOAssistService = new IFSPSOAssistService($base_url, $token, $username, $password, $account_id, $requires_auth);
 
     }
-
 
     public function createActivity(Request $request)
     {
@@ -289,7 +286,6 @@ class IFSPSOActivityService extends IFSService
         return $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $description);
 
     }
-
 
     private function DeleteObjectFull($payload, $dataset_id, $description): array
     {

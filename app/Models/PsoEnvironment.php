@@ -28,13 +28,10 @@ class PsoEnvironment extends Model
     {
         return $this->hasMany(PsoDataset::class);
     }
-
-
     public function defaultdataset()
     {
         return $this->hasOne(PsoDataset::class)->oldest();
     }
-
     protected function password(): Attribute
     {
         return Attribute::make(
@@ -42,7 +39,6 @@ class PsoEnvironment extends Model
             set: fn($value) => Crypt::encrypt($value),
         );
     }
-
     protected function updatedAt(): Attribute
     {
         return Attribute::make(
