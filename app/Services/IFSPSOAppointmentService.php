@@ -14,6 +14,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use JsonException;
 
 
 class IFSPSOAppointmentService extends IFSService
@@ -28,6 +29,9 @@ class IFSPSOAppointmentService extends IFSService
 
     }
 
+    /**
+     * @throws JsonException
+     */
     public function getAppointment(Request $request)//: JsonResponse
     {
 
@@ -61,17 +65,37 @@ class IFSPSOAppointmentService extends IFSService
             }
 
 
+            // todo catch that this should always be an array that is returned instead of just an object
             $appointment_request_id = collect($response->collect()->first()['Appointment_Offer'])->first()['appointment_request_id'];
 
 
             // format it
+
+            $best_offer_value = collect($response->collect()->first()['Appointment_Offer'])->max('offer_value');
+
+            $best_offer = collect($response->collect()->first()['Appointment_Offer'])->where('offer_value', '=', $best_offer_value)
+                ->map(function ($offer) {
+                    return collect($offer)
+                        ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
+                        ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+                        ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+                        ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toFormattedDayDateString())
+                        ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
+                        ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'));
+                })->first();//->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id');
+
+
             $valid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
                 return collect($offer)->get('offer_value') > 0;
-            })->map(function ($offer) {
+            })->map(function ($offer) use ($best_offer) {
                 return collect($offer)
                     ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
-                    ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->toDayDateTimeString())
-                    ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->toDayDateTimeString());
+                    ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+                    ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+                    ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toFormattedDayDateString())
+                    ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
+                    ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
+                    ->put('is_best_offer', $offer['id'] === $best_offer['id']);
             })->values();
 
 
@@ -81,15 +105,6 @@ class IFSPSOAppointmentService extends IFSService
                 return collect($offer)->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value');
             })->values();
 
-            $best_offer_value = collect($response->collect()->first()['Appointment_Offer'])->max('offer_value');
-
-            $best_offer = collect($response->collect()->first()['Appointment_Offer'])->where('offer_value', '=', $best_offer_value)
-                ->map(function ($offer) {
-                    return collect($offer)
-                        ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
-                        ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->toDayDateTimeString())
-                        ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->toDayDateTimeString());
-                })->first();//->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id');
 
             $offer_values = collect($response->collect()->first()['Appointment_Offer'])->map(function ($offer) {
                 return collect($offer)->only('id', 'offer_value', 'window_start_datetime', 'prospective_resource_id');
@@ -103,9 +118,10 @@ class IFSPSOAppointmentService extends IFSService
                     'appointment_request_id' => $appointment_request_id,
                     'summary' => $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.',
                     'best_offer' => $best_offer->get('prospective_resource_id') ? $best_offer : 'no valid offers returned',
-// todo turned the following two off to reduce clutter
-//                    'valid_offers' => $valid_offers,
-//                    'invalid_offers' => $invalid_offers,
+                    // todo turned the following two off to reduce clutter
+                    'valid_offers' => $valid_offers,
+                    // todo invalid offers are blank
+                    'invalid_offers' => $invalid_offers,
                     'offer_values' => $offer_values
                 ]
             ];
@@ -352,6 +368,9 @@ class IFSPSOAppointmentService extends IFSService
     }
 
 
+    /**
+     * @throws JsonException
+     */
     public function acceptAppointment(Request $request, $appointment_request_id)//: JsonResponse
     {
         try {
@@ -489,7 +508,7 @@ class IFSPSOAppointmentService extends IFSService
             ]
         ];
 
-        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer), $request->appointment_offer_id);
+        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer, JSON_THROW_ON_ERROR), $request->appointment_offer_id);
 
 
         return $this->IFSPSOAssistService->processPayload(
@@ -571,6 +590,7 @@ class IFSPSOAppointmentService extends IFSService
      * @param $invalid_offers
      * @param $best_offer
      * @return void
+     * @throws JsonException
      */
     private function save_appointment_request(array $appointment_request_part_payload, $input_request, array $payload, PSOActivity $activity, $dataset_id, $id, PromiseInterface|Response $response, $valid_offers, $invalid_offers, $best_offer): void
     {

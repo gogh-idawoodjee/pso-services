@@ -48,11 +48,11 @@ Route::delete('/activity/', [PSOActivityController::class, 'destroyMulti']);
 Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy']);
 
 // appointment
-Route::post('/appointment', [PSOAppointmentController::class, 'store']);
-Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show']);
-Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'update']);
-Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']);
-Route::get('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'index']);
+Route::post('/appointment', [PSOAppointmentController::class, 'store']); // getAppointment
+Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show']); // checkAppointed
+Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'update']); // acceptAppointment
+Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']); // declineAppointment
+Route::get('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'index']); // getDetails
 
 Route::post('/region', [PSORegionController::class, 'store']);
 
@@ -60,13 +60,14 @@ Route::post('/region', [PSORegionController::class, 'store']);
 Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update']);
 Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
 Route::post('/resource/{resource_id}/relocate', [PSOResourceRelocationController::class, 'store']);
+Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
 
 Route::post('/resource/', [PSOResourceController::class, 'store']);
 
 Route::get('/resource/', [PSOResourceController::class, 'index']);
 Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show']);
 
-Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
+
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 

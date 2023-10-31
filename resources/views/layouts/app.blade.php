@@ -13,6 +13,7 @@
     <!-- Scripts -->
     <link rel="stylesheet" href="/css/app.css">
     @livewireStyles
+    @vite
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
