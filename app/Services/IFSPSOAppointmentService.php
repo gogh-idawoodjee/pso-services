@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Classes\InputReference;
 use App\Classes\PSOActivity;
-
 use App\Helpers\PSOHelper;
 use App\Models\PSOAppointment;
 use Carbon\Carbon;
@@ -13,6 +12,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use JsonException;
 
@@ -36,6 +37,9 @@ class IFSPSOAppointmentService extends IFSService
     {
 
         $activity = new PSOActivity($request, true);
+
+        $request->offsetUnset('password');
+        $request->offsetSet('password', Hash::make($request->password));
 
         // build the full activity object
         $activity_payload = $activity->FullActivityObject();
@@ -74,28 +78,22 @@ class IFSPSOAppointmentService extends IFSService
             $best_offer_value = collect($response->collect()->first()['Appointment_Offer'])->max('offer_value');
 
             $best_offer = collect($response->collect()->first()['Appointment_Offer'])->where('offer_value', '=', $best_offer_value)
-                ->map(function ($offer) {
-                    return collect($offer)
-                        ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
-                        ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
-                        ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
-                        ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toFormattedDayDateString())
-                        ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
-                        ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'));
+                ->map(function ($offer) use ($request) {
+                    return $this->getPut($offer, null, $request->timezone);
+                    //                    return collect($offer)
+//                        ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
+//                        ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+//                        ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
+//                        ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toFormattedDayDateString())
+//                        ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
+//                        ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'));
                 })->first();//->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id');
 
 
             $valid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
                 return collect($offer)->get('offer_value') > 0;
-            })->map(function ($offer) use ($best_offer) {
-                return collect($offer)
-                    ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
-                    ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
-                    ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toDayDateTimeString())
-                    ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->toFormattedDayDateString())
-                    ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
-                    ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone(config('frontend_params.defaults.timezone'))->format('g:i A'))
-                    ->put('is_best_offer', $offer['id'] === $best_offer['id']);
+            })->map(function ($offer) use ($best_offer, $request) {
+                return $this->getPut($offer, $best_offer['id'], $request->timezone);
             })->values();
 
 
@@ -638,6 +636,30 @@ class IFSPSOAppointmentService extends IFSService
         // todo save the offer window that was accepted to $appointment_request->accepted_offer_window_start_datetime;
 
         $appointment_request->save();
+    }
+
+    /**
+     * @param $offer
+     * @param null $id
+     * @param null $timezone
+     * @return Collection
+     * this is a DRY method
+     */
+    public function getPut($offer, $id = null, $timezone = null): Collection
+    {
+        $newcollect = collect($offer)
+            ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
+            ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toDayDateTimeString())
+            ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toDayDateTimeString())
+            ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toFormattedDayDateString())
+            ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->format('g:i A'))
+            ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->format('g:i A'));
+
+        if ($id != null) {
+            $newcollect->put('is_best_offer', $offer['id'] === $id);
+        }
+
+        return $newcollect;
     }
 
 }

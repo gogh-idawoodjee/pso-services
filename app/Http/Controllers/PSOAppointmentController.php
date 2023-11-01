@@ -90,8 +90,9 @@ class PSOAppointmentController extends Controller
             'input_datetime' => 'date_format:Y-m-d\TH:i:s',
 //            'input_datetime' => 'date|before:appointment_template_datetime',
             'lat' => 'numeric|between:-90,90|required',
-            'long' => 'numeric|between:-180,180|required'
-            // todo allow timezone as input
+            'long' => 'numeric|between:-180,180|required',
+            'timezone' => 'timezone:all'
+
         ]);
 
         PSOHelper::ValidateSendToPSO($request);

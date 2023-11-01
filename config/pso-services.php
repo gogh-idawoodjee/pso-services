@@ -48,7 +48,8 @@ return [
         'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
         'timeout' => env('DEFAULT_TIMEOUT', 5),
         'do_on_location_incentive' => 2,
-        'do_in_locality_incentive' => 2
+        'do_in_locality_incentive' => 2,
+        'timezone' => 'Canada/Eastern'
 
     ],
 
