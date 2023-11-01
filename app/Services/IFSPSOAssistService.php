@@ -391,14 +391,18 @@ class IFSPSOAssistService extends IFSService
 
     }
 
-    public function sendPayloadToPSO($payload, $token, $base_url, $requires_pso_response = false): PromiseInterface|Response
+    public function sendPayloadToPSO($payload, $token, $base_url, $requires_pso_response = false)
     {
         $endpoint_segment = $requires_pso_response ? 'appointment' : 'data';
 
-        return Http::timeout(PSOHelper::GetTimeOut())
-            ->withHeaders(['apiKey' => $token])
-            ->connectTimeout(PSOHelper::GetTimeOut())
-            ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
+        try {
+            return Http::timeout(PSOHelper::GetTimeOut())
+                ->withHeaders(['apiKey' => $token])
+                ->connectTimeout(PSOHelper::GetTimeOut())
+                ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response('failed',500);
+        }
     }
 
     // todo, find other instances and replace with this
