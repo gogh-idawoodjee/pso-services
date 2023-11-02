@@ -61,7 +61,7 @@ return [
         'dataset_id' => env('DATASET_ID', 'NORTH'),
         'account_id' => env('ACCOUNT_ID', 'Default'),
         'debug_mode_on' => true,
-        'debug_timeout' => 30
+        'debug_timeout' => 5
     ],
     'settings' => [
         'validate_object_existence' => true,

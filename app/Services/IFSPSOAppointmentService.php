@@ -57,10 +57,11 @@ class IFSPSOAppointmentService extends IFSService
         $payload = $this->AppointmentRequestPayload($input_ref, $appointment_request_part_payload, $activity_payload);
 
         if ($request->send_to_pso) {
-            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url, true);
 
+
+            $response = $this->IFSPSOAssistService->sendPayloadToPSO($payload, $this->token, $request->base_url, true);
             // collect the response from PSO
-            if (!$response->collect()->first()) {
+            if ($response->status() > 200 || !$response->collect()->first()) {
                 return $this->IFSPSOAssistService->apiResponse(500, "Check PSO Events. Probably bad data.", $payload);
             }
 
@@ -95,6 +96,11 @@ class IFSPSOAppointmentService extends IFSService
             })->map(function ($offer) use ($best_offer, $request) {
                 return $this->getPut($offer, $best_offer['id'], $request->timezone);
             })->values();
+
+            // if no valid offers return 404?
+            if (count($valid_offers) <1) {
+                return $this->IFSPSOAssistService->apiResponse(404, "Sorry Bro, no slots returned", $payload);
+            }
 
 
             $invalid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
@@ -371,6 +377,7 @@ class IFSPSOAppointmentService extends IFSService
      */
     public function acceptAppointment(Request $request, $appointment_request_id)//: JsonResponse
     {
+
         try {
             $appointment_request = PSOAppointment::where('id', $appointment_request_id)->firstOrFail();
 
@@ -432,9 +439,24 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(406, 'Sorry, that offer ID is invalid . Please review valid offers . ', compact('appointment_request_id'));
         }
 
+
         // need to get sla_start and sla_end from the offer sent in
         $sla_start = $selected_offer->window_start_datetime;
         $sla_end = $selected_offer->window_end_datetime;
+
+
+        // return values formatting
+        $timezone = collect($appointment_request->input_request)->has('timezone') ? $appointment_request->input_request->timezone : config('pso-services.defaults.timezone');
+        $assignment_start_raw = $selected_offer->prospective_allocation_start;
+        $activity_duration = $appointment_request->input_request->duration;
+
+
+        $assignment_finish = Carbon::parse($assignment_start_raw)->setTimezone($timezone)->addMinutes($activity_duration)->format('g:i A');
+        $assignment_start = Carbon::parse($assignment_start_raw)->setTimezone($timezone)->format('g:i A');
+        $prospective_resource = $selected_offer->prospective_resource_id;
+        $selected_date = Carbon::parse($sla_start)->setTimezone($timezone)->format('l \\t\\h\\e jS \\of F Y');
+        $selected_window = Carbon::parse($sla_start)->setTimezone($timezone)->format('g:i A') . " - " . Carbon::parse($sla_end)->setTimezone($timezone)->format('g:i A');
+        $pso_allocation = $assignment_start . " - " . $assignment_finish;
 
         // also time to figure out what the new activity ID is
         $new_activity_id = Str::before($appointment_request->activity_id, '_appt');
@@ -509,13 +531,33 @@ class IFSPSOAppointmentService extends IFSService
         $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer, JSON_THROW_ON_ERROR), $request->appointment_offer_id);
 
 
-        return $this->IFSPSOAssistService->processPayload(
-            true,
+// old version using processpayload -- moving to sendpayloadtoPSO
+        //        return $this->IFSPSOAssistService->processPayload(
+//            true,
+//            $full_activity_payload,
+//            $this->token,
+//            $request->base_url,
+//            'Appointed Activity Sent'
+//        );
+        $this->IFSPSOAssistService->sendPayloadToPSO($full_activity_payload, $this->token, $request->base_url);
+        return $this->IFSPSOAssistService->apiResponse(
+            200,
+            "Appointment Booked",
             $full_activity_payload,
-            $this->token,
-            $request->base_url,
-            'Appointed Activity Sent');
-
+            'original_payload',
+            [
+                'data' => [
+                    'activity_id' => $new_activity_id,
+                    'resource_id' => $prospective_resource,
+                    'assignment_start' => $assignment_start,
+                    'assignment_finish' => $assignment_finish,
+                    'pso_allocation' => $pso_allocation,
+                    'selected_date' => $selected_date,
+                    'selected_window' => $selected_window
+                ],
+                'description' => 'bookingresponse'
+            ]
+        );
 
     }
 
@@ -648,7 +690,7 @@ class IFSPSOAppointmentService extends IFSService
     public function getPut($offer, $id = null, $timezone = null): Collection
     {
         $newcollect = collect($offer)
-            ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id')
+            ->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value', 'prospective_resource_id', 'prospective_allocation_start')
             ->put('window_start_english', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toDayDateTimeString())
             ->put('window_end_english', Carbon::parse($offer['window_end_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toDayDateTimeString())
             ->put('window_day_english', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->toFormattedDayDateString())
