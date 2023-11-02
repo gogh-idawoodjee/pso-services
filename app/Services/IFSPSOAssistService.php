@@ -5,8 +5,7 @@ namespace App\Services;
 use App\Classes\InputReference;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
-use GuzzleHttp\Promise\PromiseInterface;
-use Illuminate\Http\Client\Response;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -400,8 +399,8 @@ class IFSPSOAssistService extends IFSService
                 ->withHeaders(['apiKey' => $token])
                 ->connectTimeout(PSOHelper::GetTimeOut())
                 ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return response('failed',500);
+        } catch (ConnectionException $e) {
+            return response('failed', 500);
         }
     }
 
@@ -438,19 +437,18 @@ class IFSPSOAssistService extends IFSService
                 }
                 // send the good response
                 return $this->apiResponse(200, ("Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : $desc_200)), $payload);
-            } else {
-                if ($response->serverError() || $response->json('InternalId') === "-1") {
-                    return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-                }
+            }
 
-                if ($response->json('Code') === 401 || $response->status() === 401) {
-                    return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
-                }
+            if ($response->serverError() || $response->json('InternalId') === "-1") {
+                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+            }
 
-                if ($response->status() === 500) {
-                    return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-                }
+            if ($response->json('Code') === 401 || $response->status() === 401) {
+                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+            }
 
+            if ($response->status() === 500) {
+                return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
             }
             return $this->apiResponse(418, "None of the above", $payload, null, ['description' => 'PSO Response', 'data' => $response->object()]);
         }
