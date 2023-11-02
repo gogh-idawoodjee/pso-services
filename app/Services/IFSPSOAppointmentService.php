@@ -85,19 +85,19 @@ class IFSPSOAppointmentService extends IFSService
 
 
             $valid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
-                return collect($offer)->get('offer_value') > 0;
+                return collect($offer)->get('offer_value') != "0";
             })->map(function ($offer) use ($best_offer, $request) {
                 return $this->getPut($offer, $best_offer['id'], $request->timezone);
             })->values();
 
             // if no valid offers return 404?
-            if ($valid_offers) {
+            if (!count($valid_offers)) {
                 return $this->IFSPSOAssistService->apiResponse(404, "Sorry Bro, no slots returned", $payload);
             }
 
 
             $invalid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
-                return collect($offer)->get('offer_value') === 0;
+                return collect($offer)->get('offer_value') === "0";
             })->map(function ($offer) {
                 return collect($offer)->only('id', 'window_start_datetime', 'window_end_datetime', 'offer_value');
             })->values();
@@ -117,7 +117,6 @@ class IFSPSOAppointmentService extends IFSService
                     'best_offer' => $best_offer->get('prospective_resource_id') ? $best_offer : 'no valid offers returned',
                     // todo turned the following two off to reduce clutter
                     'valid_offers' => $valid_offers,
-                    // todo invalid offers are blank
                     'invalid_offers' => $invalid_offers,
                     'offer_values' => $offer_values
                 ]
@@ -381,7 +380,7 @@ class IFSPSOAppointmentService extends IFSService
         $pso_allocation = $assignment_start . " - " . $assignment_finish;
 
         // also time to figure out what the new activity ID is
-        $new_activity_id = Str::before($appointment_request->activity_id, '_appt');
+        $new_activity_id = Str::before($appointment_request->activity_id, config('pso-services.defaults.activity.appointment_booking_suffix'));
 
         $activity_input_request = collect($appointment_request->input_request);
         $activity_input_request['sla_end'] = $sla_end;
@@ -404,7 +403,7 @@ class IFSPSOAppointmentService extends IFSService
             $appointment_request->dataset_id,
             true
         );
-        
+
         // generate the new SLA
         // $new_sla = (new PSOActivitySLA($request->sla_type_id, $sla_start, $sla_end, $request->sla_priority, $request->sla_start_based))->toJson($new_activity_id);
         // send the SLA -- no don't send it yet, it needs to be in one payload because we have a new activity ID
@@ -433,7 +432,7 @@ class IFSPSOAppointmentService extends IFSService
             ]
         ];
 
-        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer, JSON_THROW_ON_ERROR), $request->appointment_offer_id);
+        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer, JSON_THROW_ON_ERROR), $request->appointment_offer_id, $sla_start);
 
 
 // old version using processpayload -- moving to sendpayloadtoPSO
@@ -548,8 +547,8 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->base_url = $input_request['base_url'];
         $appointment_request->input_reference_id = $id;
         $appointment_request->appointment_template_id = $appointment_request_part_payload['appointment_template_id'];
-        // todo make this optional field
-//        $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
+
+        $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
         $appointment_request->slot_usage_rule_id = Arr::has($appointment_request_part_payload, 'slot_usage_rule_id') ? $appointment_request_part_payload['slot_usage_rule_id'] : null;
@@ -572,15 +571,14 @@ class IFSPSOAppointmentService extends IFSService
      * @param int $offer
      * @return void
      */
-    private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status, $accepted_offer = null, int $offer = 0): void
+    private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status, $accepted_offer = null, int $offer = 0, $accepted_offer_window_start_datetime = null): void
     {
         $appointment_request->status = $status;
         $appointment_request->accepted_offer = $accepted_offer;
         $appointment_request->accepted_offer_id = $offer;
         $appointment_request->accept_decline_input_reference_id = $id;
         $appointment_request->accept_decline_datetime = Carbon::now()->toAtomString();
-
-        // todo save the offer window that was accepted to $appointment_request->accepted_offer_window_start_datetime;
+        $appointment_request->accepted_offer_window_start_datetime = $accepted_offer_window_start_datetime;
 
         $appointment_request->save();
     }

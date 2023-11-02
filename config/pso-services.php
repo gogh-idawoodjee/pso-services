@@ -2,6 +2,7 @@
 
 return [
 
+
     'statuses' => [
         'statuses_greater_than_alloc' => [
             'travelling',
@@ -40,7 +41,8 @@ return [
             'priority' => env('DEFAULT_PRIORITY', 1),
             'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 21),
             'class_id' => 'CALL',
-            'split_allowed' => true
+            'split_allowed' => true,
+            'appointment_booking_suffix' => '_appt'
         ],
         'resource' => [
             'class_id' => 'PERSON'
