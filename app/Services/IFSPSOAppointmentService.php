@@ -53,6 +53,7 @@ class IFSPSOAppointmentService extends IFSService
 
         );
 
+
         $input_ref = (new InputReference($request->description ?: 'Appointment Request', 'CHANGE', $request->dataset_id, $request->input_datetime))->toJson();
         $payload = $this->AppointmentRequestPayload($input_ref, $appointment_request_part_payload, $activity_payload);
 
@@ -85,7 +86,7 @@ class IFSPSOAppointmentService extends IFSService
 
 
             $valid_offers = collect($response->collect()->first()['Appointment_Offer'])->filter(function ($offer) {
-                return collect($offer)->get('offer_value') != "0";
+                return collect($offer)->get('offer_value') !== "0";
             })->map(function ($offer) use ($best_offer, $request) {
                 return $this->getPut($offer, $best_offer['id'], $request->timezone);
             })->values();
@@ -144,13 +145,14 @@ class IFSPSOAppointmentService extends IFSService
     {
 
         // todo this needs to be parameterized
+        // moore importantly, it needs to be checked against the sla_end and match accordingly
         $appointment_duration = PSOHelper::setPSODurationDays($appointment_template_duration ?: config('pso-services.defaults.activity.appointment_template_duration'));
 
         $payload =
             [
                 'activity_id' => $activity_id,
                 'appointment_template_datetime' => $appointment_template_datetime ?: Carbon::now()->toAtomString(),
-                //'appointment_template_duration' => $appointment_duration,
+                'appointment_template_duration' => $appointment_duration,
                 'appointment_template_id' => $appointment_template_id,
                 'id' => Str::orderedUuid()->getHex()->toString(),
                 'offer_expiry_datetime' => $input_datetime ? Carbon::parse($input_datetime)->addMinutes(5)->toAtomString() : Carbon::now()->addMinutes(5)->toAtomString()
@@ -239,12 +241,12 @@ class IFSPSOAppointmentService extends IFSService
         if ($type === 'accept_decline') {
             $some_details["actioned_time"] = $datetime->diffForHumans();
             $some_details["status"] = $status === 1 ? "accepted" : "declined";
-            $desc = 'Offer Already Responded To';
+            $desc = 'The Offer Has Already Been Responded To';
         }
         if ($type === 'appointed') {
             $some_details["appointed_time"] = $datetime->diffForHumans();
             $some_details["status"] = $status === 1 ? "available" : "not available";
-            $desc = 'Appointed Check Already Performed';
+            $desc = 'Appointed Check Has Been Already Performed';
         }
 
         return $this->IFSPSOAssistService->apiResponse(
@@ -266,7 +268,7 @@ class IFSPSOAppointmentService extends IFSService
 
         return $this->IFSPSOAssistService->apiResponse(
             409,
-            'Offer Already Expired',
+            'The Offer Has Already Expired',
             $some_details,
             'additional_details');
     }
@@ -600,7 +602,7 @@ class IFSPSOAppointmentService extends IFSService
             ->put('window_start_time', Carbon::parse($offer['window_start_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->format('g:i A'))
             ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->format('g:i A'));
 
-        if ($id != null) {
+        if ($id !== null) {
             $newcollect->put('is_best_offer', $offer['id'] === $id);
         }
 
