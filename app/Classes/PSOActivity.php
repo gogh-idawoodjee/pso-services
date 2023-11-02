@@ -27,7 +27,7 @@ class PSOActivity extends Activity
     public function __construct($activity_data, $is_ab_request = false)
     {
 
-        $this->activity_id = $is_ab_request ? $activity_data->activity_id . '_appt' : $activity_data->activity_id;
+        $this->activity_id = $is_ab_request ? $activity_data->activity_id . config('pso-services.defaults.activity.appointment_booking_suffix') : $activity_data->activity_id;
         $this->activity_class_id = 'CALL';
         // todo make this an input in the API
         $this->split_allowed = config('pso-services.defaults.activity.split_allowed');
