@@ -15,7 +15,6 @@ class IFSService
     protected $token;
     private $base_url;
     protected $service_name;
-    public $authresponse;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -65,8 +64,7 @@ class IFSService
                     ]);
 
 
-
-            } catch (Exception $e) {
+            } catch (Exception) {
 
                 // todo need to catch this fail and bubble it up to is_authenticated
             }
@@ -87,11 +85,15 @@ class IFSService
 
     private function validateToken($base_url, $token): bool
     {
-        $response = Http::withHeaders(['apiKey' => $token])->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session');
-        if ($response->failed()) {
+        try {
+            $response = Http::withHeaders(['apiKey' => $token])->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session');
+            if ($response->failed()) {
+                return false;
+            }
+            return true;
+        } catch (Exception) {
             return false;
         }
-        return true;
 
     }
 }
