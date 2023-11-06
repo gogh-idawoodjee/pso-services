@@ -406,6 +406,7 @@ class IFSPSOAppointmentService extends IFSService
             true
         );
 
+
         // generate the new SLA
         // $new_sla = (new PSOActivitySLA($request->sla_type_id, $sla_start, $sla_end, $request->sla_priority, $request->sla_start_based))->toJson($new_activity_id);
         // send the SLA -- no don't send it yet, it needs to be in one payload because we have a new activity ID
@@ -469,17 +470,19 @@ class IFSPSOAppointmentService extends IFSService
 
     private function deleteActivity($base_url, $request, $token, $activity_id, $account_id, $dataset_id, $accept_decline = false)
     {
+
         $activity = new IFSPSOActivityService($base_url, $token, null, null, $account_id, true);
         $activity->getActivity($request, $activity_id, $dataset_id);
 
-        if (!$activity->activityExists()) {
+        if (!$accept_decline && !$activity->activityExists()) {
+            // if it's accept/decline, ignore the check
             return $this->IFSPSOAssistService->apiResponse(404, 'Activity does not exist in PSO', ['activity_id' => $request->activity_id]);
         }
 
         // todo update this to collection from request
         $activity_request = new Request(
             [
-                'activity_id' => $activity->getActivityID(),
+                'activity_id' => $activity_id,
                 'dataset_id' => $dataset_id,
                 'base_url' => $base_url,
                 'send_to_pso' => true
@@ -487,6 +490,7 @@ class IFSPSOAppointmentService extends IFSService
 
         $desc = $accept_decline ? "accepted appointment" : "declined appointments";
         $activity->deleteActivity($activity_request, "deleting temp activity - " . $desc);
+
     }
 
     private function AppointmentOfferResponsePayload($input_reference, $offer_response)
@@ -571,6 +575,7 @@ class IFSPSOAppointmentService extends IFSService
      * @param $status
      * @param null $accepted_offer
      * @param int $offer
+     * @param null $accepted_offer_window_start_datetime
      * @return void
      */
     private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status, $accepted_offer = null, int $offer = 0, $accepted_offer_window_start_datetime = null): void
