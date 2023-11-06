@@ -143,6 +143,9 @@ class IFSPSOAssistService extends IFSService
         $schedule_events = [];
         $schedule_exception_responses = [];
 
+        if (!$schedule->collect()) {
+            return false;
+        }
         $fullschedule = $schedule->collect()->first();
         // only run through the whole thing if we at least have an activity
         if (Arr::has($fullschedule, 'Activity')) {
@@ -219,6 +222,21 @@ class IFSPSOAssistService extends IFSService
                 $required_statuses = $activity_statuses->whereIn('activity_id', $activity_keys)->values();
             }
 
+
+            if (Arr::has($fullschedule, 'Activity_SLA')) {
+
+                $activity_sla = collect($fullschedule['Activity_SLA']);
+                if ($activity_sla->count()) {
+                    $activity_slas = $activity_sla;
+                    // overwrite it if it's not already an array
+                    if ($activity_sla->has('sla_type_id')) {
+                        $activity_slas = [$activity_sla];
+                    }
+                }
+                $activity_slas = collect($activity_slas);
+                $required_slas = $activity_slas->whereIn('activity_id', $activity_keys)->values();
+            }
+
             if (Arr::has($fullschedule, 'Location')) {
 
                 $location = collect($fullschedule['Location']);
@@ -248,9 +266,9 @@ class IFSPSOAssistService extends IFSService
             }
         }
         return [
-            // todo, dude you forgot activity SLA?!
             'Activity' => $activities,
             'Activity_Status' => $required_statuses,
+            'Activity_SLA' => $required_slas,
             'Activity_Skill' => $required_skills,
             'Location' => $required_locations,
             'Location_Region' => $required_location_regions,
@@ -263,6 +281,7 @@ class IFSPSOAssistService extends IFSService
     {
 
         $description = $request->description ?: 'Init via ' . $this->service_name;
+        $request->keep_pso_data === true ? $description .= ' (Keeping PSO Data by Request)' : '';
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
         $dse_duration = PSOHelper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
@@ -300,7 +319,7 @@ class IFSPSOAssistService extends IFSService
 
         }
 
-        if ($request->keep_pso_data) {
+        if ($request->keep_pso_data && $this->getSchedule($request->base_url, $request->dataset_id)) {
 
             $init_payload = $init_payload->merge($this->getScheduleData($this->getSchedule($request->base_url, $request->dataset_id)));
         }
@@ -313,8 +332,9 @@ class IFSPSOAssistService extends IFSService
     {
 
         $payload = $this->initializePSOPayload($request);
+        $desc = 'Initialize via ' . $this->service_name . ($request->keep_pso_data === true ? ' Keeping PSO Data' : '');
 
-        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, 'Initialize via ' . $this->service_name);
+        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $desc);
     }
 
     public function getUsageData($request)
@@ -399,7 +419,7 @@ class IFSPSOAssistService extends IFSService
                 ->withHeaders(['apiKey' => $token])
                 ->connectTimeout(PSOHelper::GetTimeOut())
                 ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             return response('failed', 500);
         }
     }
