@@ -6,7 +6,6 @@ use App\Classes\InputReference;
 use App\Classes\PSODeleteObject;
 use App\Classes\PSOResource;
 use App\Helpers\PSOHelper;
-use App\Services\IFSPSOModellingDataService;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
@@ -457,6 +456,9 @@ class IFSPSOResourceService extends IFSService
 
     }
 
+    /**
+     * @throws JsonException
+     */
     public function relocateResource(Request $request, $resource_id)
     {
 
@@ -480,7 +482,9 @@ class IFSPSOResourceService extends IFSService
             'description' => $resource_type_desc
         ];
 
-        $ram_update_payload = $this->RAMUpdatePayload($request->destination_dataset_id, 'adding resource_type for relocated resource');
+//        $ram_update_payload = $this->RAMUpdatePayload($request->destination_dataset_id, 'adding resource_type for relocated resource');
+        // refactored using assist service
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->destination_dataset_id, 'adding resource_type for relocated resource');
         $resource_type_json =
             [
                 'DsModelling' => [
@@ -550,7 +554,6 @@ class IFSPSOResourceService extends IFSService
                 $thisresource_regions = Arr::add($thisresource_regions, $region, ['id' => $region]);
             }
         }
-
 
     }
 
@@ -649,7 +652,7 @@ class IFSPSOResourceService extends IFSService
             $description
         );
 
-        $ram_update_payload = $this->RAMUpdatePayload($shift_data->dataset_id, $description);
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($shift_data->dataset_id, $description);
 
         // now we build the payload and send the stuff send that stuff
         $payload = $this->RAMRotaItemUpdatePayload($ram_update_payload, $ram_rota_item_payload);
@@ -732,22 +735,21 @@ class IFSPSOResourceService extends IFSService
         return ['DsModelling' => $json];
     }
 
-    private
-    function RAMUpdatePayload($dataset_id, $description): array
-    {
-        return [
-            'organisation_id' => '2',
-            'dataset_id' => $dataset_id,
-            'user_id' => $this->service_name . ' user',
-            'ram_update_type_id' => 'CHANGE',
-            'is_master_data' => true,
-            'description' => $description
-        ];
-    }
+    // no longer required, uses the assist service instead ... think about changing the assist service functions to a trait
+//    private function RAMUpdatePayload($dataset_id, $description): array
+//    {
+//        return [
+//            'organisation_id' => '2',
+//            'dataset_id' => $dataset_id,
+//            'user_id' => $this->service_name . ' user',
+//            'ram_update_type_id' => 'CHANGE',
+//            'is_master_data' => true,
+//            'description' => $description
+//        ];
+//    }
 
 
-    private
-    function RAMRotaItemPayload($rawshift, $rota_id, $shift_data, $description)
+    private function RAMRotaItemPayload($rawshift, $rota_id, $shift_data, $description)
     {
 
 
@@ -792,7 +794,7 @@ class IFSPSOResourceService extends IFSService
 
         $base_time = $request->base_time . ':00' . $tz;
 
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Create Unavailability via ' . $this->service_name);
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, 'Create Unavailability via ' . $this->service_name);
         $ram_unavailability_payload = $this->RAMUnavailabilityPayloadPart($resource_id, $time_pattern_id, $request->category_id, $request->description);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $payload = $this->RAMUnavailabilityPayload($ram_update_payload, $ram_unavailability_payload, $ram_time_pattern_payload);
@@ -853,7 +855,7 @@ class IFSPSOResourceService extends IFSService
         $description = ($request->description ?: $grouped_activities->first()['description']) . ' - Updated via ' . $this->service_name . ' on ' . Carbon::now()->toDayDateTimeString();
 
         $base_time = ($request->base_time ? $request->base_time . ':00' : Str::of($grouped_allocations->first()['activity_start'])->substr(1, 19)) . $tz;
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability via ' . $this->service_name);
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, ($grouped_activities->count() > 0 ? 'Mass ' : '') . 'Update Unavailability via ' . $this->service_name);
         $ram_time_pattern_payload = $this->RAMTimePatternPayload($time_pattern_id, $base_time, $duration);
         $ram_unavailability_payload = [];
         foreach ($grouped_activities as $na) {
@@ -913,7 +915,7 @@ class IFSPSOResourceService extends IFSService
 
     public function DeleteUnavailability(Request $request): JsonResponse
     {
-        $ram_update_payload = $this->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . $this->service_name);
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . $this->service_name);
 
         $ram_data_update = (new PSODeleteObject(
             'RAM_Unavailability', 'id', '$request->unavailability_id',
@@ -938,8 +940,7 @@ class IFSPSOResourceService extends IFSService
 
     }
 
-    private
-    function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
+    private function RAMDataDeletePayload($ram_update_payload, $ram_data_update): array
     {
         return [
             'DsModelling' => [
@@ -1056,7 +1057,7 @@ class IFSPSOResourceService extends IFSService
         $desc = 'Add ' . $input_used['min_value'] . ' resources.' . ($values_are_equal === 1 ? 'yes' : ' Limited by ' . $input_used['taken_from']);
 
 
-        $ram_update_payload = $this->RAMUpdatePayload($request->modelling_dataset_id, $desc);
+        $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->modelling_dataset_id, $desc);
 
         $full_payload = $this->RAMResourceUpdatePayload($ram_update_payload, $resources, $locations, $skills, $regions);
 
