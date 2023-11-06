@@ -2,7 +2,6 @@
 
 return [
 
-
     'statuses' => [
         'statuses_greater_than_alloc' => [
             'travelling',
@@ -69,7 +68,7 @@ return [
         'validate_object_existence' => true,
         'enable_commit_service_log' => true,
         'enable_swb_response_service_log' => true,
-        'service_name' => 'the thingy',
+        'service_name' => 'Ish PSO Services',
         // used only in the USAGE output
         'use_system_date_format' => false,
         // if true, adds date_time_fixed during commit
