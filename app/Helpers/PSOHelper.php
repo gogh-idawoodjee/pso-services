@@ -85,4 +85,12 @@ class PSOHelper
         }
         return config('pso-services.defaults.timeout');
     }
+
+    public static function notAuth()
+    {
+        return response()->json([
+            'status' => 401,
+            'description' => 'did not pass auth'
+        ], 401);
+    }
 }
