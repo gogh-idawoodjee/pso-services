@@ -116,7 +116,7 @@ class IFSPSOAppointmentService extends IFSService
                     'appointment_request_id' => $appointment_request_id,
                     'summary' => $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.',
                     'best_offer' => $best_offer->get('prospective_resource_id') ? $best_offer : 'no valid offers returned',
-                    // todo turned the following two off to reduce clutter
+
                     'valid_offers' => $valid_offers,
                     'invalid_offers' => $invalid_offers,
                     'offer_values' => $offer_values
@@ -391,8 +391,11 @@ class IFSPSOAppointmentService extends IFSService
         $activity_input_request['activity_id'] = $new_activity_id;
         $activity_input_request['status_id'] = 0;
 
-        // todo update this to collection from request
-        $activity = new PSOActivity(new Request($activity_input_request->all()), false);
+        // update this to collection from request or from request to collection
+//        $activity = new PSOActivity(new Request($activity_input_request->all()), false); // old
+        $activity = new PSOActivity(json_decode(json_encode($activity_input_request->all())), false); // new
+
+
         $activity_payload_part = $activity->FullActivityObject();
 
 
