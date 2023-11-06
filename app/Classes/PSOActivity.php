@@ -22,6 +22,8 @@ class PSOActivity extends Activity
     private PSOLocation $activity_location;
     private PSOActivityStatus $activity_status;
     private bool $split_allowed;
+    public $visit_id;
+    public string|null $resource_id;
 
 
     public function __construct($activity_data, $is_ab_request = false)
@@ -34,22 +36,24 @@ class PSOActivity extends Activity
 
         $this->activity_type_id = $activity_data->activity_type_id;
         $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
-        $this->description = $activity_data->description ?: 'Appointment Request';
+        $this->description = isset($activity_data->description) ?: 'Appointment Request';
         $this->date_time_created = Carbon::now()->toAtomString();
         $this->date_time_open = Carbon::now()->toAtomString();
         $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
-        $this->fixed = (bool)$activity_data->fixed;
+        $this->fixed = (bool)isset($activity_data->fixed);
+        $this->visit_id = isset($activity_data->visit_id) ?: 1;
+        $this->resource_id = isset($activity_data->resource_id) ?: null;
 
 
         // build the skills
-        if ($activity_data->skill) {
+        if (isset($activity_data->skill)) {
             foreach ($activity_data->skill as $skill) {
                 $this->addActivitySkill(new PSOSkill($skill));
             }
         }
 
         // build the regions
-        if ($activity_data->region) {
+        if (isset($activity_data->region)) {
             foreach ($activity_data->region as $region) {
                 $this->addActivityRegion(new PSORegion($region));
             }
@@ -59,11 +63,11 @@ class PSOActivity extends Activity
         if ($is_ab_request) {
             $this->activity_status = new PSOActivityStatus(-1, 1, $activity_data->duration);
         } else {
-            $this->activity_status = new PSOActivityStatus($activity_data->status_id, $activity_data->visit_id ?: 1, $activity_data->duration, $this->fixed, $activity_data->resource_id);
+            $this->activity_status = new PSOActivityStatus($activity_data->status_id, $this->visit_id ?: 1, $activity_data->duration, $this->fixed, $this->resource_id);
         }
 
         // build the location
-        if ( $activity_data->region && config('pso-services.settings.use_region_as_locality') ) {
+        if (isset($activity_data->region) && config('pso-services.settings.use_region_as_locality')) {
             $locality = $activity_data->region[0];
         } else {
             $locality = "";
