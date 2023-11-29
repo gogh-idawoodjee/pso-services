@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /** @mixin Builder */
-class PSOCommitLog extends Model
+class PSOTravelLog extends Model
 {
     use HasFactory;
     use Uuids;
+     
 
-    protected $table='psocommitlog';
+    protected $table = 'psotravellog';
     protected $guarded = [];
 }
