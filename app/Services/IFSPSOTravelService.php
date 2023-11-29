@@ -55,11 +55,16 @@ class IFSPSOTravelService extends IFSService
 
         // get distance
         $google_values = $this->getGoogleValues($start_address, $end_address);
-        $formatted_google_duration = CarbonInterval::seconds($google_values['duration']['value'])->cascade()->forHumans();
+//        return $google_values;
+        $distance = $formatted_google_duration = 'unable to google';
+        if ($google_values['status'] === "OK") {
+            $formatted_google_duration = CarbonInterval::seconds($google_values['duration']['value'])->cascade()->forHumans();
+            $distance = $google_values['distance']['value'];
+        }
 
         $formatted_google = [
 
-            'distance' => $google_values['distance']['value'],
+            'distance' => $distance,
             'duration' => $formatted_google_duration
 
         ];
