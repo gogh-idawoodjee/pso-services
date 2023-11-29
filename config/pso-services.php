@@ -57,9 +57,9 @@ return [
 
     'debug' => [
         'webhook_uuid' => '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3',
-        'base_url' => env('BASE_URL', 'https://thetechnodro.me:950'),
-        'username' => env('PSO_USERNAME', 'admin'),
-        'password' => env('PSO_PASSWORD', 'Ohyouthinkdarknessisyourally1!'),
+        'base_url' => env('BASE_URL', 'https://pso.thetechnodro.me'),
+        'username' => env('PSO_USERNAME'),
+        'password' => env('PSO_PASSWORD'),
         'dataset_id' => env('DATASET_ID', 'NORTH'),
         'account_id' => env('ACCOUNT_ID', 'Default'),
         'debug_mode_on' => true,
