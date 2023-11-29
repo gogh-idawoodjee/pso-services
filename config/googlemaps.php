@@ -14,8 +14,8 @@ return [
     |
     */
 
-    'key' => env('GOOGLE_MAPS_DISTANCE_API_KEY'),
-    //'AIzaSyADN0rljLNljk2EjPgjp-l2b8TrX7Ntkcg',
+    'key' => env('GOOGLE_MAPS_API_KEY'),
+
 
     /*
     |--------------------------------------------------------------------------

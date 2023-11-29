@@ -80,6 +80,6 @@ return [
         // if true, appointments cannot be accepted until they appointed first
         'force_appointed_check' => false,
         'use_region_as_locality' => true,
-        'google_key' => env('GOOGLE_MAPS_DISTANCE_API_KEY')
+        'google_key' => env('GOOGLE_MAPS_API_KEY')
     ]
 ];
