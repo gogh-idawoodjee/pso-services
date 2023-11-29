@@ -342,6 +342,7 @@ class IFSPSOAppointmentService extends IFSService
     {
 
         try {
+            
             $appointment_request = PSOAppointment::where('id', $appointment_request_id)->firstOrFail();
 
         } catch (ModelNotFoundException) {
@@ -393,7 +394,7 @@ class IFSPSOAppointmentService extends IFSService
 
         // update this to collection from request or from request to collection
 //        $activity = new PSOActivity(new Request($activity_input_request->all()), false); // old
-        $activity = new PSOActivity(json_decode(json_encode($activity_input_request->all())), false); // new
+        $activity = new PSOActivity(json_decode(json_encode($activity_input_request->all(), JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR), false); // new
 
 
         $activity_payload_part = $activity->FullActivityObject();
@@ -569,6 +570,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
         $appointment_request->total_valid_offers_returned = $valid_offers->count();
         $appointment_request->total_invalid_offers_returned = $invalid_offers->count();
+        $appointment_request->user_id = auth()->user()->id;
         $appointment_request->save();
     }
 
@@ -611,6 +613,7 @@ class IFSPSOAppointmentService extends IFSService
             ->put('window_end_time', Carbon::parse($offer['window_end_datetime'])->setTimezone($timezone ?? config('pso-services.defaults.timezone'))->format('g:i A'));
 
         if ($id !== null) {
+            // an ID will only be sent on the valid offers object and not on the best offer object
             $newcollect->put('is_best_offer', $offer['id'] === $id);
         }
 
