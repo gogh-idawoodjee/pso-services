@@ -50,7 +50,8 @@ return [
         'timeout' => env('DEFAULT_TIMEOUT', 5),
         'do_on_location_incentive' => 2,
         'do_in_locality_incentive' => 2,
-        'timezone' => 'Canada/Eastern'
+        'timezone' => 'Canada/Eastern',
+        'travel_broadcast_api' => 'https://ish-services.thetechnodro.me/api/travelanalyzerservice'
 
     ],
 
@@ -78,6 +79,7 @@ return [
         'enable_debug' => false,
         // if true, appointments cannot be accepted until they appointed first
         'force_appointed_check' => false,
-        'use_region_as_locality' => true
+        'use_region_as_locality' => true,
+        'google_key' => env('GOOGLE_MAPS_DISTANCE_API_KEY')
     ]
 ];

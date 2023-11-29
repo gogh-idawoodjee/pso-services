@@ -12,6 +12,7 @@ use App\Http\Controllers\PSOResourceRelocationController;
 use App\Http\Controllers\PSOResourceShiftController;
 use App\Http\Controllers\PSOSandboxController;
 use App\Http\Controllers\PSORegionController;
+use App\Http\Controllers\PSOTravelLogController;
 use App\Http\Controllers\PSOUnavailabilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // commit
 Route::post('/commit', [PSOCommitController::class, 'update']);
 Route::post('/commit/test', [PSOCommitController::class, 'store']);
+
+// travel
+Route::post('/travelanalyzer', [PSOTravelLogController::class, 'store']);
+Route::post('/travelanalyzerservice', [PSOTravelLogController::class, 'update']);
 
 // assist
 Route::post('/load', [PSOAssistController::class, 'store']);
