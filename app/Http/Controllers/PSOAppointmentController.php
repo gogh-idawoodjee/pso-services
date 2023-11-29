@@ -45,10 +45,7 @@ class PSOAppointmentController extends Controller
         $appointed = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         if ($request->send_to_pso && !$appointed->isAuthenticated()) {
-            return response()->json([
-                'status' => 401,
-                'description' => 'did not pass auth'
-            ]);
+            return PSOHelper::notAuth();
 
         }
 
@@ -101,10 +98,7 @@ class PSOAppointmentController extends Controller
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
         if ($request->send_to_pso && !$appointment->isAuthenticated()) {
-            return response()->json([
-                'status' => 401,
-                'description' => 'did not pass auth'
-            ]);
+            return PSOHelper::notAuth();
 
         }
 
@@ -141,10 +135,7 @@ class PSOAppointmentController extends Controller
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
         if (!$appointment->isAuthenticated()) {
-            return response()->json([
-                'status' => 401,
-                'description' => 'did not pass auth'
-            ]);
+            return PSOHelper::notAuth();
 
         }
 
@@ -174,12 +165,9 @@ class PSOAppointmentController extends Controller
 
         $appointment = new IFSPSOAppointmentService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
 
-        if (!$appointment->isAuthenticated()) {
-            return response()->json([
-                'status' => 401,
-                'description' => 'did not pass auth'
-            ]);
 
+        if (!$appointment->isAuthenticated()) {
+            return PSOHelper::notAuth();
         }
         return $appointment->declineAppointment($request, $appointment_request_id);
 
