@@ -99,7 +99,7 @@ class IFSPSOAssistService extends IFSService
             ];
     }
 
-    private function BroadcastPayload($broadcast_type, $broadcast_url)
+    public function BroadcastPayload($broadcast_type, $broadcast_url)
     {
         $broadcast_id = Str::orderedUuid()->getHex()->toString();
         return [
@@ -138,6 +138,7 @@ class IFSPSOAssistService extends IFSService
         $activities = [];
         $required_statuses = [];
         $required_skills = [];
+        $required_slas = [];
         $required_locations = [];
         $required_location_regions = [];
         $schedule_events = [];
@@ -227,10 +228,10 @@ class IFSPSOAssistService extends IFSService
 
                 $activity_sla = collect($fullschedule['Activity_SLA']);
                 if ($activity_sla->count()) {
-                    $activity_slas = $activity_sla;
-                    // overwrite it if it's not already an array
                     if ($activity_sla->has('sla_type_id')) {
                         $activity_slas = [$activity_sla];
+                    } else {
+                        $activity_slas = $activity_sla;
                     }
                 }
                 $activity_slas = collect($activity_slas);
