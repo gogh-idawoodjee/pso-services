@@ -34,12 +34,13 @@ class InputReference
     }
 
 
-    public function toJson(): array
+    public function toJson($id = null): array
     {
+
         $input_reference =
             [
                 'datetime' => $this->datetime ?: Carbon::now()->toAtomString(),
-                'id' => Str::orderedUuid()->getHex()->toString(),
+                'id' => $id ?: Str::orderedUuid()->getHex()->toString(),
                 'description' => $this->description,
                 'input_type' => strtoupper($this->input_type),
                 'organisation_id' => '2',
@@ -54,7 +55,7 @@ class InputReference
             $input_reference = Arr::add($input_reference, 'process_type', strtoupper($this->process_type));
         }
 
-        if ($this->appointment_window != null) {
+        if ($this->appointment_window !== null) {
             $input_reference = Arr::add($input_reference, 'appointment_window_duration', $this->appointment_window);
         }
 
