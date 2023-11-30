@@ -49,22 +49,26 @@ class IFSPSOTravelService extends IFSService
 
 
         // reverse geocode
-        $start_address = $this->reverseGeocode($request->lat_from, $request->long_from);
-        $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
+//        $start_address = $this->reverseGeocode($request->lat_from, $request->long_from);
+//        $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
 
 
         // get distance
-        $google_values = $this->getGoogleValues($start_address, $end_address);
+//        $google_values = $this->getGoogleValues($start_address, $end_address);
+        $google_values = $this->getGoogleValues($request->lat_from, $request->long_from, $request->lat_to, $request->long_to);
 //        return $google_values;
-        $distance = $formatted_google_duration = 'unable to google';
+        $distance = $distance_km = $formatted_google_duration = 'unable to google';
+
         if ($google_values['status'] === "OK") {
             $formatted_google_duration = CarbonInterval::seconds($google_values['duration']['value'])->cascade()->forHumans();
             $distance = $google_values['distance']['value'];
+            $distance_km = $distance / 1000;
         }
 
         $formatted_google = [
 
             'distance' => $distance,
+            'distance_km' => $distance_km,
             'duration' => $formatted_google_duration
 
         ];
@@ -82,22 +86,30 @@ class IFSPSOTravelService extends IFSService
             'travel_detail_request' => [
                 'id' => $pso_result->travel_detail_request_id,
                 'google_result' => $formatted_google,
-                'pso_result' => ['distance' => $pso_result->distance, 'duration' => $formatted_pso_duration]
+                'pso_result' => [
+                    'distance' => $pso_result->distance,
+                    'distance_km' => $pso_result->distance / 1000,
+                    'duration' => $formatted_pso_duration
+                ]
             ]
         ];
 
     }
 
-    private function getGoogleValues($start, $end)
+//    private function getGoogleValues($start, $end)
+    private function getGoogleValues($lat_from, $long_from, $lat_to, $long_to)
     {
 
-        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=" . $start . "&origins=" . $end . "&key=" . config('pso-services.settings.google_key');
+
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=" . $lat_from . "%2C" . $long_from . "&origins=" . $lat_to . "%2C" . $long_to . "&key=" . config('pso-services.settings.google_key');
+//        dd($url);
         $response = Http::timeout(5)
             ->connectTimeout(5)
             ->withHeaders(['accept' => 'application/json'])
             ->get($url);
 
         return $response->collect()['rows'][0]['elements'][0];
+//        return $response->collect();
 
 
     }
@@ -188,7 +200,7 @@ class IFSPSOTravelService extends IFSService
                 'latitude_from' => $request->lat_from,
                 'latitude_to' => $request->lat_to,
                 'longitude_from' => $request->long_from,
-                'longitude_to' => $request->long_from]
+                'longitude_to' => $request->long_to]
         ];
     }
 
