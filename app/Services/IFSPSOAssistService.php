@@ -148,6 +148,8 @@ class IFSPSOAssistService extends IFSService
             return false;
         }
         $fullschedule = $schedule->collect()->first();
+
+
         // only run through the whole thing if we at least have an activity
         if (Arr::has($fullschedule, 'Activity')) {
             $activity = collect($fullschedule['Activity']);
@@ -241,6 +243,7 @@ class IFSPSOAssistService extends IFSService
             if (Arr::has($fullschedule, 'Location')) {
 
                 $location = collect($fullschedule['Location']);
+
                 if ($location->count()) {
                     if ($location->has('id')) {
                         $locations = [$location];
@@ -249,12 +252,15 @@ class IFSPSOAssistService extends IFSService
                     }
                 }
                 $locations = collect($locations);
+
                 $required_locations = $locations->whereIn('id', $activity_locations)->values();
+
             }
 
             if (Arr::has($fullschedule, 'Location_Region')) {
 
                 $location_region = collect($fullschedule['Location_Region']);
+
                 if ($location_region->count()) {
                     if ($location_region->has('location_id')) {
                         $location_regions = [$location_region];
@@ -263,19 +269,24 @@ class IFSPSOAssistService extends IFSService
                     }
                 }
                 $location_regions = collect($location_regions);
-                $required_locations = $location_regions->whereIn('activity_id', $activity_locations)->values();
+
+                $required_locations_regions = $location_regions;//->whereIn('activity_id', $activity_locations)->values();
             }
         }
+
+
         return [
             'Activity' => $activities,
             'Activity_Status' => $required_statuses,
             'Activity_SLA' => $required_slas,
             'Activity_Skill' => $required_skills,
             'Location' => $required_locations,
-            'Location_Region' => $required_location_regions,
+            'Location_Region' => $required_locations_regions,
             'Schedule_Event' => $schedule_events,
             'Schedule_Exception_Response' => $schedule_exception_responses
         ];
+
+        
     }
 
     private function initializePSOPayload(Request $request)
