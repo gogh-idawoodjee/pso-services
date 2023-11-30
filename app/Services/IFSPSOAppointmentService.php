@@ -342,7 +342,7 @@ class IFSPSOAppointmentService extends IFSService
     {
 
         try {
-            
+
             $appointment_request = PSOAppointment::where('id', $appointment_request_id)->firstOrFail();
 
         } catch (ModelNotFoundException) {
@@ -570,7 +570,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
         $appointment_request->total_valid_offers_returned = $valid_offers->count();
         $appointment_request->total_invalid_offers_returned = $invalid_offers->count();
-        $appointment_request->user_id = auth()->user()->id;
+//        $appointment_request->user_id = 'test';
         $appointment_request->save();
     }
 
