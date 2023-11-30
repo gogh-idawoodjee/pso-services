@@ -40,7 +40,7 @@ class PSOActivity extends Activity
         $this->date_time_created = Carbon::now()->toAtomString();
         $this->date_time_open = Carbon::now()->toAtomString();
         $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
-        $this->fixed = (bool)isset($activity_data->fixed);
+        $this->fixed = isset($activity_data->fixed);
         $this->visit_id = isset($activity_data->visit_id) ?: 1;
         $this->resource_id = isset($activity_data->resource_id) ?: null;
 
@@ -55,7 +55,7 @@ class PSOActivity extends Activity
         // build the regions
         if (isset($activity_data->region)) {
             foreach ($activity_data->region as $region) {
-                $this->addActivityRegion(new PSORegion($region));
+                $this->addActivityRegion(new PSORegion($region, 'activity'));
             }
         }
 
@@ -106,6 +106,7 @@ class PSOActivity extends Activity
 
     public function addActivityRegion(PSORegion $region)
     {
+
         $this->activity_region[] = $region->toJson($this->activity_id);
         return $this;
 
