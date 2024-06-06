@@ -3,22 +3,205 @@
 namespace App\Http\Controllers;
 
 
-use App\Services\IFSPSOAssistService;
+use App\Jobs\BookAppointments;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Carbon\CarbonInterval;
 
-use App\Services\IFSPSOScheduleService;
-use App\Services\IFSPSOResourceService;
 use Illuminate\Http\Response;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 
 class PSOSandboxController extends Controller
 {
+
+
+    public function runLoadTestJob(Request $request)
+    {
+        $request->validate([
+            'dataset_id' => 'required',
+            'task_count' => 'required|numeric',
+            'task_prefix' => 'required',
+            'relative_start' => 'required|numeric',
+            'check_appointed' => 'boolean'
+
+        ]);
+
+
+
+        $loop_count = $request->task_count;
+        $run_id = Str::orderedUuid()->getHex()->toString();
+        $dataset_id = $request->dataset_id;
+
+//        $data_lat = [
+//            "43.647",
+//            "43.669",
+//            "43.656",
+//            "43.652",
+//            "43.648",
+//            "43.361",
+//            "43.633",
+//            "43.592",
+//            "43.718",
+//            "43.726"
+//        ];
+        $data_lat = $request->data_lat;
+        $data_long = $request->data_long;
+
+        $data_durations = [
+            90,
+            120,
+            45
+
+        ];
+
+        $data_activity_types = [
+            "AC01",
+            "AE08",
+            "AH08",
+            "FP10",
+            "HB08",
+            "AC00"
+        ];
+
+        BookAppointments::dispatch(
+            $loop_count,
+            $request->task_prefix,
+            $data_lat,
+            $data_long,
+            $data_durations,
+            $data_activity_types,
+            $run_id,
+            $dataset_id,
+            $request->relative_start,
+            $request->check_appointed
+        );
+
+        return ['Run is Running'];
+
+
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+//    public function runLoadtest(Request $request)
+//    {
+//
+//
+//        $request->validate([
+//            'dataset_id' => 'required',
+//            'task_count' => 'required|numeric',
+//            'task_prefix' => 'required',
+//            'relative_start' => 'required|numeric',
+//            'check_appointed' => 'boolean'
+//
+//        ]);
+//
+//
+//        $loop_count = $request->task_count;
+//        $run_id = Str::orderedUuid()->getHex()->toString();
+//        $dataset_id = $request->dataset_id;
+//
+//        $data_lat = [
+//            "43.647",
+//            "43.669",
+//            "43.656",
+//            "43.652",
+//            "43.648",
+//            "43.361",
+//            "43.633",
+//            "43.592",
+//            "43.718",
+//            "43.726"
+//        ];
+//        $data_long = [
+//            "-79.377",
+//            "-79.388",
+//            "-79.38",
+//            "-79.384",
+//            "-79.38",
+//            "-79.821",
+//            "-79.556",
+//            "-79.641",
+//            "-79.601",
+//            "-79.455"
+//        ];
+//
+//        $data_durations = [
+//            90,
+//            120,
+//            180
+//
+//        ];
+//
+//        $data_activity_types = [
+//            "AC01",
+//            "AE08",
+//            "AH08",
+//            "FP10",
+//            "HB08",
+//            "AC00"
+//        ];
+//
+//
+//        // get data
+//        for ($i = 0; $i < $loop_count; $i++) {
+//
+//            $activity_id = $request->task_prefix . $i;
+//            $randomlatlong = array_rand($data_lat);
+//            $lat = $data_lat[$randomlatlong];
+//            $long = $data_long[$randomlatlong];
+//            $duration = array_rand($data_durations);
+//            $activity_type = array_rand($data_activity_types);
+//
+//
+//            $appointments = $this->rltGetAppointment(
+//                $activity_id,
+//                $data_activity_types[$activity_type],
+//                $data_durations[$duration],
+//                $lat,
+//                $long,
+//                $run_id,
+//                $dataset_id,
+//                $request->relative_start);
+//
+//
+//            if ($this->hasOffers($appointments)) {
+//
+//                $appointment_request_id = $appointments['appointment_offers']['appointment_request_id'];
+//
+//                if ($request->check_appointed) {
+//                    $check_appointment = $this->checkAppointed($appointment_request_id, $this->bestOffer($appointments)['id'], $dataset_id);
+//                    if ($this->offerIsAvailable($check_appointment)) {
+//
+//                        $accept = $this->acceptAppointment($appointment_request_id, $this->bestOffer($appointments)['id'], $dataset_id);
+//                    }
+//                } else {
+//                    $accept = $this->acceptAppointment($appointment_request_id, $this->bestOffer($appointments)['id'], $dataset_id);
+//                }
+//
+//
+//            } else {
+//
+//                $this->deleteActivity($activity_id, $dataset_id);
+//            }
+//
+//
+//            // loop
+//            // appointments not returned
+//            // set appointment template datetime = date of last appointment slot + 1
+//            // continue
+//        }
+//        return ['Run Complete'];
+//
+//
+//    }
+
+
+    /**
+     * @throws ConnectionException
+     */
 
 
 
@@ -27,207 +210,198 @@ class PSOSandboxController extends Controller
      *
      * @return Response
      */
-    public function index()
-    {
-        //
-
-        $IFSPSOAssistService = new IFSPSOAssistService(
-            config('pso-services.debug.base_url'),
-            null,
-//            config('pso-services.debug.username'),
-            'admin',
-            config('pso-services.debug.password'),
-            "Default", true);
-
-        return $IFSPSOAssistService->token;
-        /*
-                $usage = Http::withHeaders([
-                    'apiKey' => $this->IFSPSOAssistService->token
-                ])->get(
-                    config('pso-services.debug.base_url') . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
-                    [
-                        'minimumDateTime' => '2022-11-01',
-                        'maximumDateTime' => '2022-11-02'
-                    ]);
-
-                $data = collect($usage->collect()->first());
-        //        return $data;
-
-                $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
-
-                    $type = match ($item['ScheduleDataUsageType']) {
-                        0 => 'Resource_Count',
-                        1 => 'Activity_Count',
-                        2 => 'DSE_Window',
-                        3 => 'ABE_Window',
-                        4 => 'Dataset_Count',
-                    };
-
-                    return collect($item)->put('count_type', $type);
-                })->mapToGroups(function ($item, $key) {
-
-                    return [$item['DatasetId'] => $item];
-                });
-
-
-                foreach ($mystuff as $dataset => $value) {
-                    $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
-                        return [$item['count_type'] => $item];
-
-                    });
-                }
-                return $newdata;
-
-        //        $newdata = $data->where('ScheduleDataUsageType', 0)->mapToGroups(function ($item, $key) {
-        //            return [$item['DatasetId'] => $item];
-        //        });
-
-                return $mystuff;
-
-                $pso_schedule = Http::withHeaders([
-                    'apiKey' => $this->token
-                ])->get(
-                    'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-        //            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
-                    [
-                        'includeInput' => 'true',
-                        'includeOutput' => 'true',
-                        'datasetId' => $dataset_id
-                    ]);
-
-                return collect($pso_schedule->collect()->first());
-
-                $test = new IFSPSOAssistService('doobas');
-                return $test;
-
-                /*
-                        $schedule = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
-                        return $schedule->getResDetails();
-                //        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first())->get('Resources');
-                        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first());
-                        return $resources;
-                        foreach ($resources as $resource) {
-                            echo $resource['first_name'];
-                        }
-                */
-
-        $dataset_id = "W&C Prod";
-        $resource = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
-        $test = $resource->getResource('21307', 'W&C Prod');
-//        return $test;
-        $shifts = $resource->getResourceShiftsRaw();
-
-        return $resource->setEvent('x', 'RO', '21307', $dataset_id);
-        return $shifts;
-
-
-        return $resource->setManualScheduling('blahblah', 'c9e4c906937b4b2199fcf7b40c1038dc', $shifts, $dataset_id, $dataset_id, 'Manual Scheduling Shift', true);
-
+//    public function index()
+//    {
+//        //
+//
+//        $IFSPSOAssistService = new IFSPSOAssistService(
+//            config('pso-services.debug.base_url'),
+//            null,
+////            config('pso-services.debug.username'),
+//            'admin',
+//            config('pso-services.debug.password'),
+//            "Default", true);
+//
+////        return $IFSPSOAssistService->token;
+//        /*
+//                $usage = Http::withHeaders([
+//                    'apiKey' => $this->IFSPSOAssistService->token
+//                ])->get(
+//                    config('pso-services.debug.base_url') . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/usage',
+//                    [
+//                        'minimumDateTime' => '2022-11-01',
+//                        'maximumDateTime' => '2022-11-02'
+//                    ]);
+//
+//                $data = collect($usage->collect()->first());
+//        //        return $data;
+//
+//                $mystuff = collect($usage->collect()->first())->map(function ($item, $key) {
+//
+//                    $type = match ($item['ScheduleDataUsageType']) {
+//                        0 => 'Resource_Count',
+//                        1 => 'Activity_Count',
+//                        2 => 'DSE_Window',
+//                        3 => 'ABE_Window',
+//                        4 => 'Dataset_Count',
+//                    };
+//
+//                    return collect($item)->put('count_type', $type);
+//                })->mapToGroups(function ($item, $key) {
+//
+//                    return [$item['DatasetId'] => $item];
+//                });
+//
+//
+//                foreach ($mystuff as $dataset => $value) {
+//                    $newdata[$dataset] = collect($value)->mapToGroups(function ($item, $key) {
+//                        return [$item['count_type'] => $item];
+//
+//                    });
+//                }
+//                return $newdata;
+//
+//        //        $newdata = $data->where('ScheduleDataUsageType', 0)->mapToGroups(function ($item, $key) {
+//        //            return [$item['DatasetId'] => $item];
+//        //        });
+//
+//                return $mystuff;
+//
+//                $pso_schedule = Http::withHeaders([
+//                    'apiKey' => $this->token
+//                ])->get(
+//                    'https://' . $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+//        //            'https://' . 'webhook.site/b54231dc-f3c4-42de-af86-11db17198493' . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
+//                    [
+//                        'includeInput' => 'true',
+//                        'includeOutput' => 'true',
+//                        'datasetId' => $dataset_id
+//                    ]);
+//
+//                return collect($pso_schedule->collect()->first());
+//
+//                $test = new IFSPSOAssistService('doobas');
+//                return $test;
+//
+//                /*
+//                        $schedule = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
+//                        return $schedule->getResDetails();
+//                //        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first())->get('Resources');
+//                        $resources =collect($schedule->getSchedule('W&C Prod')->collect()->first());
+//                        return $resources;
+//                        foreach ($resources as $resource) {
+//                            echo $resource['first_name'];
+//                        }
+//                */
+//
+//        $dataset_id = "W&C Prod";
+//        $resource = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
+//        $test = $resource->getResource('21307', 'W&C Prod');
+////        return $test;
+//        $shifts = $resource->getResourceShiftsRaw();
+//
+//        return $resource->setEvent('x', 'RO', '21307', $dataset_id);
+//        return $shifts;
+//
+//
+//        return $resource->setManualScheduling('blahblah', 'c9e4c906937b4b2199fcf7b40c1038dc', $shifts, $dataset_id, $dataset_id, 'Manual Scheduling Shift', true);
+//
+////        return $this->resource;
+//
+//
+//        return $shifts;
+//
+//
+//        if (isset($this->resource['Plan_Route'])) {
+//            if (isset($this->resource['Plan_Route']['plan_id'])) {
+//                $mystuff['dates'][] = ['date' => $this->resource['Plan_Route']['shift_start_datetime']];
+//                $mystuff['utilization'][] = ['utilization' => $this->resource['Plan_Route']['utilisation']];
+//                $mystuff['travel'][] = ['travel' => $this->resource['Plan_Route']['average_travel_time']];
+//
+//            } else {
+//                $mystuff['dates'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
+//                    return ['date' => $item['shift_start_datetime']];
+//                });
+//                $mystuff['utilization'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
+//                    return ['utilization' => $item['utilisation']];
+//                });
+//                $mystuff['travel'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
+//                    return ['travel' => CarbonInterval::make(new \DateInterval($item['average_travel_time']))->i];
+//                });
+//            }
+//        }
+//
+////        return $mystuff;
+//
+//        if (isset($this->resource['Schedule_Event'])) {
+//            if (isset($this->resource['Schedule_Event']['id'])) {
+//                $events[] = $this->resource['Schedule_Event'];
+//            } else {
+//                $events = $this->resource['Schedule_Event'];
+//            }
+//        }
+//
+//
+//        if (isset($this->resource['Shift'])) {
+//            if (isset($this->resource['Shift']['id'])) {
+//                $shifts[] = $this->resource['Shift'];
+//            } else {
+//                $shifts = $this->resource['Shift'];
+//            }
+//        }
+//
+//        $newshifts = collect($shifts)->map(function ($item, $key) {
+//            $shiftdate = Carbon::createFromDate($item['start_datetime'])->toDateString();
+//            $starttime = Carbon::createFromDate($item['start_datetime'])->toTimeString();
+//            $endtime = Carbon::createFromDate($item['end_datetime'])->toTimeString();
+//            $times = $starttime . ' - ' . $endtime;
+//            $difference = Carbon::createFromDate($item['start_datetime'])->diffInHours(Carbon::createFromDate($item['end_datetime']));
+//
+//
+//            $shifts = collect($item)
+//                ->put('shift_date', $shiftdate)
+//                ->put('shift_times', $times)
+//                ->put('shift_duration', $difference);
+//
+//            if (!isset($item['manual_scheduling_only'])) {
+//                $shifts->put('manual_scheduling_only', false);
+//            }
+//
+//            $shifts->pull('start_datetime');
+//            $shifts->pull('end_datetime');
+//            $shifts->pull('actual');
+//            $shifts->pull('split_allowed');
+//            $shifts->pull('resource_id');
+//
+//            return $shifts;
+//        });
+//
+//        $newneshifts = $newshifts->map(function ($item, $key) {
+//            $stuff = collect($item);
+//            $stuff->pull('start_datetime');
+//            $stuff->pull('end_datetime');
+//            $stuff->pull('actual');
+//            $stuff->pull('split_allowed');
+//            $stuff->pull('resource_id');
+//            return $stuff->all();
+//
+//        });
+////        return $newneshifts;
+//        return $newshifts;
+//
+//
+////        return $events;
+//
+////        return $mystuff['travel'];
+//
 //        return $this->resource;
+//        $sched = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
+//        return $sched->getScheduleAsCollection('W&C Prod');
+//
+//        $res = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
+//        return $res->getScheduleableResources('W&C Prod');
+//    }
 
-
-        return $shifts;
-
-
-        if (isset($this->resource['Plan_Route'])) {
-            if (isset($this->resource['Plan_Route']['plan_id'])) {
-                $mystuff['dates'][] = ['date' => $this->resource['Plan_Route']['shift_start_datetime']];
-                $mystuff['utilization'][] = ['utilization' => $this->resource['Plan_Route']['utilisation']];
-                $mystuff['travel'][] = ['travel' => $this->resource['Plan_Route']['average_travel_time']];
-
-            } else {
-                $mystuff['dates'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
-                    return ['date' => $item['shift_start_datetime']];
-                });
-                $mystuff['utilization'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
-                    return ['utilization' => $item['utilisation']];
-                });
-                $mystuff['travel'] = collect($this->resource['Plan_Route'])->map(function ($item, $key) {
-                    return ['travel' => CarbonInterval::make(new \DateInterval($item['average_travel_time']))->i];
-                });
-            }
-        }
-
-//        return $mystuff;
-
-        if (isset($this->resource['Schedule_Event'])) {
-            if (isset($this->resource['Schedule_Event']['id'])) {
-                $events[] = $this->resource['Schedule_Event'];
-            } else {
-                $events = $this->resource['Schedule_Event'];
-            }
-        }
-
-
-        if (isset($this->resource['Shift'])) {
-            if (isset($this->resource['Shift']['id'])) {
-                $shifts[] = $this->resource['Shift'];
-            } else {
-                $shifts = $this->resource['Shift'];
-            }
-        }
-
-        $newshifts = collect($shifts)->map(function ($item, $key) {
-            $shiftdate = Carbon::createFromDate($item['start_datetime'])->toDateString();
-            $starttime = Carbon::createFromDate($item['start_datetime'])->toTimeString();
-            $endtime = Carbon::createFromDate($item['end_datetime'])->toTimeString();
-            $times = $starttime . ' - ' . $endtime;
-            $difference = Carbon::createFromDate($item['start_datetime'])->diffInHours(Carbon::createFromDate($item['end_datetime']));
-
-
-            $shifts = collect($item)
-                ->put('shift_date', $shiftdate)
-                ->put('shift_times', $times)
-                ->put('shift_duration', $difference);
-
-            if (!isset($item['manual_scheduling_only'])) {
-                $shifts->put('manual_scheduling_only', false);
-            }
-
-            $shifts->pull('start_datetime');
-            $shifts->pull('end_datetime');
-            $shifts->pull('actual');
-            $shifts->pull('split_allowed');
-            $shifts->pull('resource_id');
-
-            return $shifts;
-        });
-
-        $newneshifts = $newshifts->map(function ($item, $key) {
-            $stuff = collect($item);
-            $stuff->pull('start_datetime');
-            $stuff->pull('end_datetime');
-            $stuff->pull('actual');
-            $stuff->pull('split_allowed');
-            $stuff->pull('resource_id');
-            return $stuff->all();
-
-        });
-//        return $newneshifts;
-        return $newshifts;
-
-
-//        return $events;
-
-//        return $mystuff['travel'];
-
-        return $this->resource;
-        $sched = new IFSPSOScheduleService('cb847e5e-8747-4a02-9322-76530ef38a19');
-        return $sched->getScheduleAsCollection('W&C Prod');
-
-        $res = new IFSPSOResourceService('cb847e5e-8747-4a02-9322-76530ef38a19');
-        return $res->getScheduleableResources('W&C Prod');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -235,65 +409,21 @@ class PSOSandboxController extends Controller
      * @param Request $request
      * @return array|JsonResponse
      */
-    public function store(Request $request)
-    {
-        //
-        Log::info('received request from 1111PSO');
+//    public function store(Request $request)
+//    {
+//        //
+//        Log::info('received request from 1111PSO');
+//
+//        return response()->json([
+//            'status' => 418,
+//            'description' => 'here is a 418',
+//        ], 418, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+//
+//
+//        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+//
+//        return $resource_init->getResourceForWebApp($request->resource_id, $request->dataset_id, $request->base_url);
+//    }
 
-        return response()->json([
-            'status' => 418,
-            'description' => 'here is a 418',
-        ], 418, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
-
-        $resource_init = new IFSPSOResourceService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
-
-        return $resource_init->getResourceForWebApp($request->resource_id, $request->dataset_id, $request->base_url);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param int $id
-     * @return Response
-     */
-    public function show()
-    {
-        //
-//        return
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param int $id
-     * @return Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

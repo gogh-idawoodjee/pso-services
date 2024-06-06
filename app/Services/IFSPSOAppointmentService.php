@@ -93,7 +93,23 @@ class IFSPSOAppointmentService extends IFSService
 
             // if no valid offers return 404?
             if (!count($valid_offers)) {
-                return $this->IFSPSOAssistService->apiResponse(404, "Sorry Bro, no slots returned", $payload);
+
+                $this->save_appointment_request(
+                    $appointment_request_part_payload,
+                    $request->all(), // right now we're storing this in a json dump, probably should be cleaned up
+                    $payload,
+                    $activity,
+                    $request->dataset_id,
+                    $input_ref['id'],
+                    $response,
+                    null,
+                    null,
+                    null,
+                    $request->run_id
+                );
+
+
+                return $this->IFSPSOAssistService->apiResponse(404, "Sorry Bro, no slots returned", $payload, "original_request", ['description' => 'appointment_request_id', 'data' => $appointment_request_id]);
             }
 
 
@@ -133,7 +149,8 @@ class IFSPSOAppointmentService extends IFSService
                 $response,
                 $valid_offers,
                 $invalid_offers,
-                $best_offer
+                $best_offer,
+                $request->run_id
             );
 
             return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Offers Received", ["appointment_request_input" => $payload, "pso_response" => $response->collect()], 'actual_transactions', $additional_data);
@@ -165,17 +182,24 @@ class IFSPSOAppointmentService extends IFSService
         return $payload;
     }
 
+    /**
+     * @throws JsonException
+     */
     public function checkAppointed($request, $appointment_request_id)
     {
 
+
         try {
             $appointment_request = PSOAppointment::where('id', $appointment_request_id)->firstOrFail();
+
+//return $appointment_request;
 
         } catch (ModelNotFoundException) {
             return $this->IFSPSOAssistService->apiResponse(404, 'No Such Appointment Request', compact('appointment_request_id'));
         }
 
-        if ($appointment_request->appointed_check_complete !== 0) {
+//        if ($appointment_request->appointed_check_complete !== 0 || $appointment_request->appointed_check_complete == false) {
+        if ($appointment_request->appointed_check_complete) {
             return $this->checkResponded($appointment_request_id, $appointment_request->appointed_check_result, $appointment_request->activity_id, $appointment_request->appointed_check_datetime, 'appointed');
         }
         if ($appointment_request->status !== 0) {
@@ -191,7 +215,7 @@ class IFSPSOAppointmentService extends IFSService
             return $this->IFSPSOAssistService->apiResponse(406, 'Sorry, that offer ID is invalid. Please review valid offers.', compact('appointment_request_id'));
         }
 
-        $input_ref = (new InputReference($request->description ?: 'Appointment Slot Check', 'CHANGE', $appointment_request->dataset_id))->toJson();
+        $input_ref = (new InputReference($request->description ?: 'Appointment Slot Check for ' . $appointment_request->activity_id, 'CHANGE', $appointment_request->dataset_id))->toJson();
         $offer_response_payload = $this->AppointmentOfferResponsePayloadPart($appointment_request_id, $request->appointment_offer_id);
         $payload = $this->AppointmentOfferResponsePayload($input_ref, $offer_response_payload);
 
@@ -216,25 +240,35 @@ class IFSPSOAppointmentService extends IFSService
                 ]
             ];
 
-            $this->appoint_offer($appointment_request, $input_ref['id'], $request->appointment_offer_id, $summary['appointed']);
-            return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Slot Validated", $payload, 'appointment_summary_slot_check', $additional_data);
+            $this->appoint_offer($appointment_request, $input_ref['id'], $request->appointment_offer_id, $summary['appointed'], $payload);
+            if ($summary['appointed'] === 'true') {
+                return $this->IFSPSOAssistService->apiResponse(200, "Payload sent to PSO. Slot is Available", $payload, 'appointment_summary_slot_check', $additional_data);
+            } else {
+                return $this->IFSPSOAssistService->apiResponse(404, "Payload sent to PSO. Slot is Not Available", $payload, 'appointment_summary_slot_check', $additional_data);
+
+            }
         }
         return $this->IFSPSOAssistService->apiResponse(202, "Payload not sent to PSO.", $payload, 'appointed_check');
 
     }
 
-    private function appoint_offer(PSOAppointment $appointment_request, $id, $offer_id, $result)
+    /**
+     * @throws JsonException
+     */
+    private function appoint_offer(PSOAppointment $appointment_request, $id, $offer_id, $result, $payload)
     {
         $appointment_request->appointed_check_complete = 1;
         $appointment_request->appointed_check_offer_id = $offer_id;
         $appointment_request->appointed_check_result = $result === 'true' ? 1 : 0;
         $appointment_request->appointed_check_input_reference_id = $id;
         $appointment_request->appointed_check_datetime = Carbon::now()->toAtomString();
+        $appointment_request->appointed_check_payload = json_encode($payload, JSON_THROW_ON_ERROR);
         $appointment_request->save();
     }
 
     private function checkResponded($appointment_request_id, $status, $activity_id, $datetime, $type = "accept_decline")
     {
+
 
         $some_details = compact('appointment_request_id', 'activity_id');
 
@@ -384,6 +418,7 @@ class IFSPSOAppointmentService extends IFSService
 
         // also time to figure out what the new activity ID is
         $new_activity_id = Str::before($appointment_request->activity_id, config('pso-services.defaults.activity.appointment_booking_suffix'));
+//        $new_activity_id = $appointment_request->activity_id;
 
         $activity_input_request = collect($appointment_request->input_request);
         $activity_input_request['sla_end'] = $sla_end;
@@ -394,12 +429,15 @@ class IFSPSOAppointmentService extends IFSService
 
         // update this to collection from request or from request to collection
 //        $activity = new PSOActivity(new Request($activity_input_request->all()), false); // old
+
         $activity = new PSOActivity(json_decode(json_encode($activity_input_request->all(), JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR), false); // new
 
 
         $activity_payload_part = $activity->FullActivityObject();
 
 
+        /* no longer needed, no temp activity
+        // todo make this parameter based with the temp activity
         $this->deleteActivity(
             $request->base_url,
             $request,
@@ -408,7 +446,7 @@ class IFSPSOAppointmentService extends IFSService
             $request->account_id,
             $appointment_request->dataset_id,
             true
-        );
+        ); */
 
 
         // generate the new SLA
@@ -419,12 +457,12 @@ class IFSPSOAppointmentService extends IFSService
 
         // accept the slot
         $accept_payload = $this->AppointmentOfferResponsePayloadPart($appointment_request_id, $request->appointment_offer_id, true);
-        $input_ref = (new InputReference($request->description ?: 'Accepted Appointment Slot', 'CHANGE', $appointment_request->dataset_id))->toJson();
+        $input_ref = (new InputReference($request->description ?: 'Accepted Appointment Slot for ' . $new_activity_id, 'CHANGE', $appointment_request->dataset_id))->toJson();
         $this->IFSPSOAssistService->processPayload(true, $this->AppointmentOfferResponsePayload($input_ref, $accept_payload), $this->token, $request->base_url, 'appointment_offer_accepted');
 
         // create the new activity
         // damn we need all the stuff, skills, regions, location etc. because we trashed the original
-        $input_ref = (new InputReference('Appointed Activity Confirmed', 'CHANGE', $appointment_request->dataset_id, $request->input_datetime))->toJson();
+        $input_ref = (new InputReference('Appointed Activity Confirmed for ' . $new_activity_id, 'CHANGE', $appointment_request->dataset_id, $request->input_datetime))->toJson();
 
         $full_activity_payload = [
             'dsScheduleData' => [
@@ -439,7 +477,15 @@ class IFSPSOAppointmentService extends IFSService
             ]
         ];
 
-        $this->accept_decline_appointment_request($appointment_request, $input_ref['id'], 1, json_encode($selected_offer, JSON_THROW_ON_ERROR), $request->appointment_offer_id, $sla_start);
+        $this->accept_decline_appointment_request(
+            $appointment_request,
+            $input_ref['id'],
+            1,
+            json_encode($selected_offer, JSON_THROW_ON_ERROR),
+            $request->appointment_offer_id,
+            $sla_start,
+            $this->AppointmentOfferResponsePayload($input_ref, $accept_payload),
+            $full_activity_payload);
 
 
 // old version using processpayload -- moving to sendpayloadtoPSO
@@ -451,6 +497,16 @@ class IFSPSOAppointmentService extends IFSService
 //            'Appointed Activity Sent'
 //        );
         $this->IFSPSOAssistService->sendPayloadToPSO($full_activity_payload, $this->token, $request->base_url);
+
+        // trash the appointment SLA
+
+        $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
+        $request->sla_type_id = 'APPOINTMENT';
+        $request->activity_id = $new_activity_id;
+        $request->priority = 2;
+        $request->start_based = true;
+
+        $activity->deleteSLA($request);
         return $this->IFSPSOAssistService->apiResponse(
             200,
             "Appointment Booked",
@@ -546,7 +602,7 @@ class IFSPSOAppointmentService extends IFSService
      * @return void
      * @throws JsonException
      */
-    private function save_appointment_request(array $appointment_request_part_payload, $input_request, array $payload, PSOActivity $activity, $dataset_id, $id, PromiseInterface|Response $response, $valid_offers, $invalid_offers, $best_offer): void
+    private function save_appointment_request(array $appointment_request_part_payload, $input_request, array $payload, PSOActivity $activity, $dataset_id, $id, PromiseInterface|Response $response, $valid_offers, $invalid_offers, $best_offer, $run_id = null): void
     {
         $appointment_request = new PSOAppointment();
         $appointment_request->id = $appointment_request_part_payload['id'];
@@ -557,7 +613,7 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->base_url = $input_request['base_url'];
         $appointment_request->input_reference_id = $id;
         $appointment_request->appointment_template_id = $appointment_request_part_payload['appointment_template_id'];
-
+        $appointment_request->run_id = $run_id;
         $appointment_request->appointment_template_duration = $appointment_request_part_payload['appointment_template_duration'];
         $appointment_request->appointment_template_datetime = $appointment_request_part_payload['appointment_template_datetime'];
         $appointment_request->offer_expiry_datetime = $appointment_request_part_payload['offer_expiry_datetime'];
@@ -565,11 +621,19 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->appointment_response = json_encode($response->collect(), JSON_THROW_ON_ERROR);
         $appointment_request->valid_offers = json_encode($valid_offers, JSON_THROW_ON_ERROR);
         $appointment_request->invalid_offers = json_encode($invalid_offers, JSON_THROW_ON_ERROR);
-        $appointment_request->best_offer = $best_offer->get('prospective_resource_id') ? json_encode($best_offer, JSON_THROW_ON_ERROR) : json_encode('no valid offers returned', JSON_THROW_ON_ERROR);
-        $appointment_request->summary = $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.';
+        if ($best_offer) {
+            $appointment_request->best_offer = $best_offer->get('prospective_resource_id') ? json_encode($best_offer, JSON_THROW_ON_ERROR) : json_encode('no valid offers returned', JSON_THROW_ON_ERROR);
+        } else {
+            json_encode('no valid offers returned', JSON_THROW_ON_ERROR);
+        }
+        if ($valid_offers) {
+            $appointment_request->summary = $valid_offers->count() . ' valid offers out of ' . collect($response->collect()->first()['Appointment_Offer'])->count() . ' returned.';
+        } else {
+            $appointment_request->summary = 'no valid offers returned';
+        }
         $appointment_request->total_offers_returned = collect($response->collect()->first()['Appointment_Offer'])->count();
-        $appointment_request->total_valid_offers_returned = $valid_offers->count();
-        $appointment_request->total_invalid_offers_returned = $invalid_offers->count();
+        $appointment_request->total_valid_offers_returned = $valid_offers ? $valid_offers->count() : 0;
+        $appointment_request->total_invalid_offers_returned = $invalid_offers ? $invalid_offers->count() : null;
 //        $appointment_request->user_id = 'test';
         $appointment_request->save();
     }
@@ -582,8 +646,9 @@ class IFSPSOAppointmentService extends IFSService
      * @param int $offer
      * @param null $accepted_offer_window_start_datetime
      * @return void
+     * @throws JsonException
      */
-    private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status, $accepted_offer = null, int $offer = 0, $accepted_offer_window_start_datetime = null): void
+    private function accept_decline_appointment_request(PSOAppointment $appointment_request, $id, $status, $accepted_offer = null, int $offer = 0, $accepted_offer_window_start_datetime = null, $a_d_payload = null, $b_a_payload = null): void
     {
         $appointment_request->status = $status;
         $appointment_request->accepted_offer = $accepted_offer;
@@ -591,6 +656,8 @@ class IFSPSOAppointmentService extends IFSService
         $appointment_request->accept_decline_input_reference_id = $id;
         $appointment_request->accept_decline_datetime = Carbon::now()->toAtomString();
         $appointment_request->accepted_offer_window_start_datetime = $accepted_offer_window_start_datetime;
+        $appointment_request->accept_decline_payload = json_encode($a_d_payload, JSON_THROW_ON_ERROR);
+        $appointment_request->book_appointment_payload = $b_a_payload ? json_encode($b_a_payload, JSON_THROW_ON_ERROR) : null;
 
         $appointment_request->save();
     }

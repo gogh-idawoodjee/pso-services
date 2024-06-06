@@ -5,7 +5,7 @@ use App\Http\Controllers\EnvironmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResourceController;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Counter;
+
 
 
 /*
@@ -20,26 +20,27 @@ use App\Livewire\Counter;
 */
 
 
-Route::get('/counter', Counter::class);
+
 Route::get('/', function () {
     return view('dashboard');
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+//    return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/environment', [EnvironmentController::class, 'index'])->name('env.index');
-    Route::get('/environment/{id}', [EnvironmentController::class, 'edit'])->name('env.edit');
-    Route::get('/assist/init', [AssistController::class, 'index'])->name('assist.index');
-    Route::get('/assist/rota', [AssistController::class, 'update'])->name('assist.update');
-    Route::get('/assist/usage', [AssistController::class, 'show'])->name('assist.show');
-    Route::get('/resource', [ResourceController::class, 'index'])->name('resource.show');
+    // I think all this has moved to the front-end project
+//    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+//    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+//    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+//
+//    Route::get('/environment', [EnvironmentController::class, 'index'])->name('env.index');
+//    Route::get('/environment/{id}', [EnvironmentController::class, 'edit'])->name('env.edit');
+//    Route::get('/assist/init', [AssistController::class, 'index'])->name('assist.index');
+//    Route::get('/assist/rota', [AssistController::class, 'update'])->name('assist.update');
+//    Route::get('/assist/usage', [AssistController::class, 'show'])->name('assist.show');
+//    Route::get('/resource', [ResourceController::class, 'index'])->name('resource.show');
 });
 
 require __DIR__ . '/auth.php';

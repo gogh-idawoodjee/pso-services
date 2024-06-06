@@ -3,6 +3,7 @@
 namespace App\Classes;
 
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class PSORegion
@@ -35,16 +36,38 @@ class PSORegion
         ];
     }
 
+    public function setDivisionType($type)
+    {
+        $this->ram_division_type_id = $type;
+    }
+
+    public function setParentDivision($parent)
+    {
+        $this->ram_division_id = $parent;
+    }
+
     public function RAMtoJson()
     {
         // used for modelling
-        return [
+        $json = [
             'id' => $this->region_id,
             'description' => $this->description ?: Str::lower($this->region_id),
-            'send' => $this->send,
-            'ram_division_id' => $this->ram_division_id,
-            'ram_division_type_id' => $this->ram_division_type_id,
+            'send' => $this->send
+            //,
+            //'ram_division_id' => $this->ram_division_id
+            //,
+            //'ram_division_type_id' => $this->ram_division_type_id,
         ];
+        if ($this->ram_division_type_id) {
+
+            $json = Arr::add($json, 'ram_division_type_id', $this->ram_division_type_id);
+        }
+        if ($this->ram_division_id) {
+
+            $json = Arr::add($json, 'ram_division_id', $this->ram_division_id);
+        }
+
+        return $json;
 
     }
 

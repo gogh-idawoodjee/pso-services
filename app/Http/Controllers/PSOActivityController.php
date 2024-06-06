@@ -89,6 +89,7 @@ class PSOActivityController extends Controller
             'password' => 'string'
         ]);
 
+
         $request->merge(compact('activity_id'));
 
         PSOHelper::ValidateSendToPSO($request);
@@ -101,6 +102,7 @@ class PSOActivityController extends Controller
 
         }
         return $activity->deleteActivity($request);
+
 
     }
 

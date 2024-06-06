@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Resource;
+namespace old\Livewire\Resource;
 
 use App\Models\PsoEnvironment;
 use App\Services\IFSPSOResourceService;

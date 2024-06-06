@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Livewire\Getcrazy;
+namespace old\Livewire\Getcrazy;
 
 
-use Livewire\Component;
 use App\Services\IFSPSOResourceService;
+use Livewire\Component;
 
 class PsoResource extends Component
 {

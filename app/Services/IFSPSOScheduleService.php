@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Http;
 class IFSPSOScheduleService extends IFSService
 {
 
+    private IFSPSOAssistService $IFSPSOAssistService;
+
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
     {
         parent::__construct($base_url, $token, $username, $password, $account_id, $requires_auth, $pso_environment);
@@ -38,7 +40,7 @@ class IFSPSOScheduleService extends IFSService
 
     }
 
-    public static function getSchedule($base_url, $dataset_id, $token, $include_input = true, $include_output = true)
+    public static function getSchedule($base_url, $dataset_id, $token, $include_input = 'true', $include_output = 'true')
     {
         try {
             $schedule = Http::withHeaders([
@@ -48,15 +50,17 @@ class IFSPSOScheduleService extends IFSService
                 ->get(
                     $base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/data',
                     [
-                        'includeInput' => 'true',
-                        'includeOutput' => 'true',
+                        'includeInput' => $include_input,
+                        'includeOutput' => $include_output,
                         'datasetId' => $dataset_id
                     ]);
 
         } catch (ConnectionException) {
             return false;
         }
+
         return $schedule;
+
     }
 
 

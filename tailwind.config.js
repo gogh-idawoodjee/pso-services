@@ -5,7 +5,6 @@ module.exports = {
         "./resources/**/*.js",
         "./resources/**/*.vue",
 
-        'node_modules/preline/dist/*.js',
         './src/**/*.{html,js}'
     ],
     theme: {
@@ -14,7 +13,6 @@ module.exports = {
     darkMode: 'class',
     plugins: [
         require('flowbite/plugin'),
-        require('@tailwindcss/forms'),
-        require('preline/plugin')
+        require('@tailwindcss/forms')
     ],
 }

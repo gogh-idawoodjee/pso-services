@@ -109,6 +109,7 @@ class PSOAssistController extends Controller
             'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
             'dataset_id' => 'string|required',
             'account_id' => 'string|required',
+
             'token' => 'string|required',
             'mindate' => 'date_format:Y-m-d',
             'maxdate' => 'date_format:Y-m-d'
@@ -125,6 +126,65 @@ class PSOAssistController extends Controller
             'status' => 401,
             'description' => 'did not pass auth'
         ]);
+    }
+
+    // generic delete
+
+    public function destroy(Request $request)
+    {
+
+
+        $request->validate([
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string',
+            'object_type' => 'string|required',
+            'object_pk_name' => 'string|required',
+            'object_pk' => 'string|required',
+            'send_to_pso' => 'boolean'
+
+        ]);
+
+
+        PSOHelper::ValidateSendToPSO($request);
+
+        $delete_object = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+
+        if ($request->send_to_pso && !$delete_object->isAuthenticated()) {
+            return PSOHelper::notAuth();
+        }
+
+        return $delete_object->genericDelete($request);
+    }
+
+    public function cleanup(Request $request)
+    {
+
+
+        $request->validate([
+            'base_url' => ['url', 'required', 'not_regex:/prod|prd/i'],
+            'dataset_id' => 'string|required',
+            'account_id' => 'string|required',
+            'token' => 'string',
+            'username' => 'string',
+            'password' => 'string',
+            'send_to_pso' => 'boolean'
+
+        ]);
+
+
+        PSOHelper::ValidateSendToPSO($request);
+
+        $cleanup = new IFSPSOAssistService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+
+        if ($request->send_to_pso && !$cleanup->isAuthenticated()) {
+            return PSOHelper::notAuth();
+        }
+
+        return $cleanup->cleanupDataset($request);
     }
 
 }

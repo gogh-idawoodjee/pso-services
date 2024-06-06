@@ -27,6 +27,11 @@ class PSOHelper
         return $tz;
     }
 
+
+    /**
+     * @param $duration //in minutes
+     * @return string
+     */
     public static function setPSODuration($duration): string
     {
         return 'PT' . intdiv((int)$duration, 60) . 'H' . ((int)$duration % 60) . 'M';

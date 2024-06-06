@@ -36,21 +36,21 @@ return [
 
     'defaults' => [
         'activity' => [
-            'base_value' => env('DEFAULT_BASE_VALUE', 1000),
+            'base_value' => env('DEFAULT_BASE_VALUE', 2000),
             'priority' => env('DEFAULT_PRIORITY', 1),
             'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 21),
             'class_id' => 'CALL',
             'split_allowed' => true,
-            'appointment_booking_suffix' => '_appt'
+            'appointment_booking_suffix' => ''
         ],
         'resource' => [
             'class_id' => 'PERSON'
         ],
         'process_type' => env('DEFAULT_PROCESS_TYPE', 'APPOINTMENT'),
         'timeout' => env('DEFAULT_TIMEOUT', 5),
-        'do_on_location_incentive' => 2,
-        'do_in_locality_incentive' => 2,
-        'timezone' => 'Canada/Eastern',
+        'do_on_location_incentive' => 1,
+        'do_in_locality_incentive' => 1,
+        'timezone' => 'America/Toronto',
         'travel_broadcast_api' => 'https://ish-services.thetechnodro.me/api/travelanalyzerservice'
 
     ],
@@ -75,7 +75,8 @@ return [
         // if true, adds date_time_fixed during commit
         'fix_committed_activities' => true,
         // should be true if your input_datetime is in the past; see PSOActivityStatus class
-        'override_commit_timestamps' => false,
+        'override_commit_timestamps' => true,
+        'override_commit_timestamp_value' => '2024-05-17T08:00:08+00:00',
         'enable_debug' => false,
         // if true, appointments cannot be accepted until they appointed first
         'force_appointed_check' => false,

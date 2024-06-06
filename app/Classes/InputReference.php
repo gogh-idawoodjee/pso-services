@@ -45,6 +45,7 @@ class InputReference
                 'input_type' => strtoupper($this->input_type),
                 'organisation_id' => '2',
                 'dataset_id' => $this->dataset_id,
+                'user_id' => config('pso-services.settings.service_name')
             ];
 
         if ($this->dse_duration) {

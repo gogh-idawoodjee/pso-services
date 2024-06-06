@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace old\Livewire;
 
 use App\Models\PsoEnvironment;
 use App\Services\IFSPSOAssistService;

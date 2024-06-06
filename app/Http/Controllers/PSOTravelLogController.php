@@ -30,16 +30,19 @@ class PSOTravelLogController extends Controller
             'lat_from' => 'numeric|between:-90,90|required',
             'long_from' => 'numeric|between:-180,180|required',
             'lat_to' => 'numeric|between:-90,90|required',
-            'long_to' => 'numeric|between:-180,180|required'
+            'long_to' => 'numeric|between:-180,180|required',
+            'google_api_key' => 'string|required'
         ]);
 
 
         PSOHelper::ValidateSendToPSO($request);
 
+
         $travel = new IFSPSOTravelService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
 
         if ($request->send_to_pso && !$travel->isAuthenticated()) {
+
             return PSOHelper::notAuth();
         }
 

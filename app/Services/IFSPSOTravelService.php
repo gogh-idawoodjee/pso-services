@@ -30,42 +30,105 @@ class IFSPSOTravelService extends IFSService
 
     /**
      * @throws JsonException
+     */
+    private function createTravelLog($payload, $id)
+    {
+
+        $travellog = new PSOTravelLog();
+
+        $travellog->id = $id;
+
+        $travellog->input_payload = json_encode($payload, JSON_THROW_ON_ERROR);
+        $travellog->save();
+
+        return $travellog;
+
+    }
+
+
+    /**
+     * @throws JsonException
      * @throws Exception
      */
     public function analyzetravel(Request $request)
     {
+
         // 1) receive PSO creds + coords - done
         // 2) send to PSO - done
         // 3) broadcast back to second endpoint
         // 4) stuff gets stored
         // 5) stuff gets returned
 
-        $travellog = new PSOTravelLog();
         $id = Str::orderedUuid()->getHex()->toString();
-        $travellog->id = $id;
         $payload = $this->travelPayload($request, $id);
-        $travellog->input_payload = json_encode($payload, JSON_THROW_ON_ERROR);
-        $travellog->save();
+        $travellog = $this->createTravelLog($payload, $id);
 
 
         // reverse geocode
-//        $start_address = $this->reverseGeocode($request->lat_from, $request->long_from);
-//        $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
+        $start_address = $this->reverseGeocode($request->lat_from, $request->long_from);
+        $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
 
+        $formatted_google = $this->formatGoogle($request);
+
+        $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
+        // wait a moment?
+        sleep(5);
+        // now go back and get the stuff
+        $travellog->refresh();
+//        dd($travellog->pso_response);
+        if ($travellog->pso_response) {
+            // why are we diong this? // because after we refresh, we expect a broadcast back to our receiving service which populates pso_response
+            $pso_result = json_decode($travellog->pso_response, false, 512, JSON_THROW_ON_ERROR);
+            $dateformat = str_contains($pso_result->time, '.') ? 'd.H:i:s' : 'H:i:s';
+            $formatted_pso_duration = CarbonInterval::createFromFormat($dateformat, $pso_result->time)->forHumans();
+
+            return [
+                'travel_detail_request' => [
+                    'id' => $pso_result->travel_detail_request_id,
+                    'from_address' => [
+                        'address' => $start_address['address'],
+                        'accuracy' => $start_address['accuracy']
+                    ],
+                    'to_address' => [
+                        'address' => $end_address['address'],
+                        'accuracy' => $end_address['accuracy']
+                    ],
+                    'google_result' => $formatted_google,
+                    'pso_result' => [
+                        'distance' => $pso_result->distance,
+                        'distance_km' => $pso_result->distance / 1000,
+                        'duration' => $formatted_pso_duration
+                    ]
+                ]
+            ];
+        }
+        return response()->json([
+            'status' => 500,
+            'description' => 'something looks off, double check everything'
+
+        ], 500, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
+
+    }
+
+    private function formatGoogle($request)
+    {
 
         // get distance
-//        $google_values = $this->getGoogleValues($start_address, $end_address);
-        $google_values = $this->getGoogleValues($request->lat_from, $request->long_from, $request->lat_to, $request->long_to);
-//        return $google_values;
+
+        $google_values = $this->getGoogleValues($request->lat_from, $request->long_from, $request->lat_to, $request->long_to, $request->google_api_key);
+
         $distance = $distance_km = $formatted_google_duration = 'unable to google';
 
         if ($google_values['status'] === "OK") {
             $formatted_google_duration = CarbonInterval::seconds($google_values['duration']['value'])->cascade()->forHumans();
+
             $distance = $google_values['distance']['value'];
             $distance_km = $distance / 1000;
+//            $distance_km = Number::format($distance / 1000);
+//            $distance = Number::format($google_values['distance']['value']);
         }
 
-        $formatted_google = [
+        return [
 
             'distance' => $distance,
             'distance_km' => $distance_km,
@@ -73,35 +136,17 @@ class IFSPSOTravelService extends IFSService
 
         ];
 
-
-        $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
-        // wait a moment?
-        sleep(5);
-        // now go back and get the stuff
-        $travellog->refresh();
-        $pso_result = json_decode($travellog->pso_response, false, 512, JSON_THROW_ON_ERROR);
-        $formatted_pso_duration = CarbonInterval::createFromFormat('H:i:s', $pso_result->time)->forHumans();
-
-        return [
-            'travel_detail_request' => [
-                'id' => $pso_result->travel_detail_request_id,
-                'google_result' => $formatted_google,
-                'pso_result' => [
-                    'distance' => $pso_result->distance,
-                    'distance_km' => $pso_result->distance / 1000,
-                    'duration' => $formatted_pso_duration
-                ]
-            ]
-        ];
-
     }
 
 //    private function getGoogleValues($start, $end)
-    private function getGoogleValues($lat_from, $long_from, $lat_to, $long_to)
+    private function getGoogleValues($lat_from, $long_from, $lat_to, $long_to, $api_key)
     {
 
+        if ($api_key === "ish") {
+            $api_key = config('pso-services.settings.google_key');
+        }
 
-        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=" . $lat_from . "%2C" . $long_from . "&origins=" . $lat_to . "%2C" . $long_to . "&key=" . config('pso-services.settings.google_key');
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=" . $lat_from . "%2C" . $long_from . "&origins=" . $lat_to . "%2C" . $long_to . "&key=" . $api_key;
 //        dd($url);
         $response = Http::timeout(5)
             ->connectTimeout(5)
@@ -125,7 +170,10 @@ class IFSPSOTravelService extends IFSService
         $geocoder->setApiKey(config('geocoder.key'));
 
         $address_dump = $geocoder->getAddressForCoordinates($lat, $long);
-        return $address_dump['formatted_address'];
+        return [
+            'address' => $address_dump['formatted_address'],
+            'accuracy' => $address_dump['accuracy']
+        ];
 
     }
 
@@ -135,10 +183,11 @@ class IFSPSOTravelService extends IFSService
     public function receivePSOBroadcast(Request $request)
     {
 
+
         $detail = $request->Travel_Detail;
         $input_ref = $request->Plan[0]['input_reference_id'];
 
-        $mapped = Arr::mapWithKeys($detail, function (array $item, int $key) {
+        $mapped = Arr::mapWithKeys($detail, static function (array $item) {
             return [
                 $item['travel_detail_request_id'] => [
                     'distance' => $item['distance'],

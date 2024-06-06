@@ -24,8 +24,9 @@ class PSOResourceController extends Controller
     {
         $request->validate([
 
-            'first_name' => 'string',
-            'surname' => 'string',
+
+            'first_name' => 'string', // todo what is this for?
+            'surname' => 'string', // todo what is this for?
             'resource_type_id' => 'string|required',
             'resources_to_create' => 'integer|min:1|max:50',
             'send_to_pso' => 'boolean',

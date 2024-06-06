@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Classes\InputReference;
+use App\Classes\PSODeleteObject;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
@@ -16,6 +17,52 @@ use Illuminate\Support\Str;
 
 class IFSPSOAssistService extends IFSService
 {
+
+    public function cleanupDataset($request)
+    {
+
+        // get the schedule
+        $schedule = $this->getSchedule($request->base_url, $request->dataset_id, 'true', 'true');
+        // get the current time at midnight
+        $midnight = Carbon::now()->setTimezone('America/Toronto')->startOfDay();
+
+        // get the allocations
+
+        foreach ($schedule['dsScheduleData']['Allocation'] as $allocation) {
+            if (Arr::has($allocation, 'activity_end')) {
+
+                $time = Carbon::parse($allocation['activity_end']);
+                // find just the expired ones
+                if ($time <= $midnight) {
+                    $activities[] = $allocation['activity_id'];
+                }
+            }
+        }
+
+        if (count($activities) > 0) {
+            if ($this->deleteActivities($request, $activities)) {
+                return [count(($activities)) . ' records cleaned up'];
+            }
+            return ['nothing to clean up'];
+        }
+
+
+        return ($activities);
+    }
+
+    private function deleteActivities($request, $activities)
+    {
+
+        $activity = new IFSPSOActivityService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, true);
+        $request->activities = $activities;
+
+        if ($request->send_to_pso && !$activity->isAuthenticated()) {
+            return PSOHelper::notAuth();
+
+        }
+        return $activity->deleteActivities($request);
+
+    }
 
     private function SourceDataParameter($rota_id)
     {
@@ -64,7 +111,6 @@ class IFSPSOAssistService extends IFSService
 
     public function sendRotaToDSE($dataset_id, $rota_id, $base_url, $date = null, $send_to_pso = null, $include_broadcast = null, $broadcast_type = null, $broadcast_url = null, $desc200 = null)//: JsonResponse
     {
-        Log::debug('sending rota to dse, this is the service itself');
 
         $payload = $this->RotaToDSEPayload($dataset_id, $rota_id, $date, $include_broadcast, $broadcast_type, $broadcast_url, $desc200);
 
@@ -126,9 +172,9 @@ class IFSPSOAssistService extends IFSService
         ];
     }
 
-    private function getSchedule($base_url, $dataset_id)
+    private function getSchedule($base_url, $dataset_id, $include_input = 'false', $include_output = 'false')
     {
-        return IFSPSOScheduleService::getSchedule($base_url, $dataset_id, $this->token, false, false);
+        return IFSPSOScheduleService::getSchedule($base_url, $dataset_id, $this->token, $include_input, $include_output);
     }
 
     private function getScheduleData($schedule)
@@ -140,7 +186,7 @@ class IFSPSOAssistService extends IFSService
         $required_skills = [];
         $required_slas = [];
         $required_locations = [];
-        $required_location_regions = [];
+        $required_locations_regions = [];
         $schedule_events = [];
         $schedule_exception_responses = [];
 
@@ -152,6 +198,7 @@ class IFSPSOAssistService extends IFSService
 
         // only run through the whole thing if we at least have an activity
         if (Arr::has($fullschedule, 'Activity')) {
+
             $activity = collect($fullschedule['Activity']);
 
 
@@ -286,14 +333,16 @@ class IFSPSOAssistService extends IFSService
             'Schedule_Exception_Response' => $schedule_exception_responses
         ];
 
-        
+
     }
 
     private function initializePSOPayload(Request $request)
     {
 
         $description = $request->description ?: 'Init via ' . $this->service_name;
-        $request->keep_pso_data === true ? $description .= ' (Keeping PSO Data by Request)' : '';
+        if ($request->keep_pso_data === true) {
+            $description .= ' (Keeping PSO Data by Request)';
+        }
         $datetime = $request->datetime ?: Carbon::now()->toAtomString();
         $dse_duration = PSOHelper::setPSODurationDays($request->dse_duration); // this doesn't need the helper elf we're expecting a solid number of days only here
         if ($request->appointment_window) {
@@ -333,7 +382,8 @@ class IFSPSOAssistService extends IFSService
 
         if ($request->keep_pso_data && $this->getSchedule($request->base_url, $request->dataset_id)) {
 
-            $init_payload = $init_payload->merge($this->getScheduleData($this->getSchedule($request->base_url, $request->dataset_id)));
+            $init_payload = $init_payload->merge($this->getScheduleData($this->getSchedule($request->base_url, $request->dataset_id, 'true', 'true')));
+
         }
 
 
@@ -349,6 +399,47 @@ class IFSPSOAssistService extends IFSService
         return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url, $desc);
     }
 
+
+    public function genericDelete(Request $request)
+    {
+
+        $delete_sla_payload = (new PSODeleteObject(
+            $request->object_type,
+            $request->object_pk_name, $request->object_pk,
+            $request->object_pk_name2, $request->object_pk2,
+            $request->object_pk_name3, $request->object_pk3,
+            $request->object_pk_name4, $request->object_pk4,
+        ))->toJson();
+
+        $payload = $this->DeleteObjectFull($delete_sla_payload, $request->dataset_id, $request->object_type);
+
+        return $this->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
+
+    }
+
+
+    // todo DRY this out, it exists in PSOActivityService
+    private function DeleteObjectFull($payload, $dataset_id, $description): array
+    {
+
+        $input_ref = (
+        new InputReference(("Deleting " . $description . " via " . $this->service_name),
+            'CHANGE',
+            $dataset_id))
+            ->toJson();
+
+        return [
+            'dsScheduleData' => [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                'Input_Reference' => $input_ref,
+                'Object_Deletion' => $payload
+            ]
+        ];
+    }
+
+    /**
+     * @throws ConnectionException
+     */
     public function getUsageData($request)
     {
 
@@ -456,7 +547,8 @@ class IFSPSOAssistService extends IFSService
             $response = $this->sendPayloadToPSO($payload, $token, $base_url);
 
             if ($response->json('InternalId') > -1) {
-                // update the rota
+                // update the rota 
+
                 if ($requires_rota_update) {
                     $this->sendRotaToDSE(
                         $dataset_id,

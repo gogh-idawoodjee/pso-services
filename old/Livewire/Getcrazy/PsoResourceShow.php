@@ -1,12 +1,9 @@
 <?php
 
-namespace App\Http\Livewire\Getcrazy;
+namespace old\Livewire\Getcrazy;
 
 use App\Services\IFSPSOResourceService;
-use Illuminate\Support\Collection;
 use Livewire\Component;
-use Carbon\Carbon;
-use Carbon\CarbonInterval;
 
 class PsoResourceShow extends Component
 {

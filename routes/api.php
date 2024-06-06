@@ -6,6 +6,7 @@ use App\Http\Controllers\PSOActivityStatusController;
 use App\Http\Controllers\PSOAppointmentController;
 use App\Http\Controllers\PSOAssistController;
 use App\Http\Controllers\PSOCommitController;
+use App\Http\Controllers\PSOExceptionController;
 use App\Http\Controllers\PSOResourceController;
 use App\Http\Controllers\PSOResourceEventController;
 use App\Http\Controllers\PSOResourceRelocationController;
@@ -31,19 +32,24 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+//Route::middleware(['treblle'])->group(function () {
 // commit
 Route::post('/commit', [PSOCommitController::class, 'update']);
 Route::post('/commit/test', [PSOCommitController::class, 'store']);
 
 // travel
 Route::post('/travelanalyzer', [PSOTravelLogController::class, 'store']);
-Route::post('/travelanalyzerservice', [PSOTravelLogController::class, 'update']);
+Route::post('/travelanalyzerservice', [PSOTravelLogController::class, 'update']); // this is the broadcast listener?
 
 // assist
 Route::post('/load', [PSOAssistController::class, 'store']);
 Route::patch('/rotatodse', [PSOAssistController::class, 'update']);
 Route::get('/usage', [PSOAssistController::class, 'index']);
+Route::delete('/delete', [PSOAssistController::class, 'destroy']);
+Route::delete('cleanup', [PSOAssistController::class, 'cleanup']);
 
+// exception
+Route::post('/exception', [PSOExceptionController::class, 'store']);
 
 // activity
 Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
@@ -76,6 +82,8 @@ Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show']);
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
 
-Route::post('/sandbox', [PSOSandboxController::class, 'test']);
+
+Route::post('/loadtest', [PSOSandboxController::class, 'runLoadTestJob']);
+//});
 
 //Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']); // doesn't exist yet

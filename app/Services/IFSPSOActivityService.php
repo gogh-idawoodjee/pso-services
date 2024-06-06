@@ -9,11 +9,13 @@ use App\Classes\PSODeleteObject;
 use App\Helpers\PSOHelper;
 use App\Models\PSOCommitLog;
 use Carbon\Carbon;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use JsonException;
 
 
 class IFSPSOActivityService extends IFSService
@@ -28,6 +30,9 @@ class IFSPSOActivityService extends IFSService
 
     }
 
+    /**
+     * @throws JsonException
+     */
     public function createActivity(Request $request)
     {
 
@@ -54,8 +59,8 @@ class IFSPSOActivityService extends IFSService
             'priority' => $request->priority,
             'base_value' => $request->base_value,
             'fixed' => $request->fixed,
-            'visit_id'=>$request->visit_id,
-            'resource_id'=>$request->resource_id,
+            'visit_id' => $request->visit_id,
+            'resource_id' => $request->resource_id,
         ]);
 
         $activity = new PSOActivity(json_decode($activity_build_data->toJson(), false, 512, JSON_THROW_ON_ERROR));
@@ -73,6 +78,9 @@ class IFSPSOActivityService extends IFSService
 
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function getActivity(Request $request, $activity_id, $dataset_id)//: Collection
     {
 
@@ -103,6 +111,9 @@ class IFSPSOActivityService extends IFSService
 
     }
 
+    /**
+     * @throws JsonException|ConnectionException
+     */
     public function sendCommitActivity($pso_sds_broadcast, $debug_mode = false)//: JsonResponse
     {
 
@@ -137,12 +148,14 @@ class IFSPSOActivityService extends IFSService
                     config('pso-services.statuses.commit_status'),
                     $suggestion['visit_id'],
                     $difference,
-                    true,
+                    $suggestion['fixed_resource'],
                     $suggestion['resource_id'],
                     'From the Commit Service via ' . $this->service_name,
                     config("pso-services.settings.fix_committed_activities") ? $suggestion['expected_start_datetime'] : null,
-                    null, //$suggestion['expected_start_datetime'],
-                    $suggestion['expected_start_datetime']
+//                    null, //$suggestion['expected_start_datetime'],
+                    $suggestion['expected_start_datetime'],
+                    config('pso-services.settings.override_commit_timestamp_value')
+
                 )
                 )->toJson($suggestion['activity_id']);
             }
@@ -159,19 +172,21 @@ class IFSPSOActivityService extends IFSService
                     $activity_status_payload
                 );
 
-            if (config('pso-services.settings.enable_commit_service_log')) PSOCommitLog::create([
-                'id' => Str::orderedUuid()->getHex()->toString(),
-                'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
-                'pso_suggestions' => json_encode($newsuggestions, JSON_THROW_ON_ERROR),
-                'output_payload' => json_encode($activity_status_payload, JSON_THROW_ON_ERROR),
-                'pso_response' => $activity_status->body(),
-                'response_time' => $activity_status->transferStats->getTransferTime(),
-                'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats(), JSON_THROW_ON_ERROR)
-            ]);
+            if (config('pso-services.settings.enable_commit_service_log')) {
+                PSOCommitLog::create([
+                    'id' => Str::orderedUuid()->getHex()->toString(),
+                    'input_reference' => $activity_status_payload['dsScheduleData']['Input_Reference']['id'],
+                    'pso_suggestions' => json_encode($newsuggestions, JSON_THROW_ON_ERROR),
+                    'output_payload' => json_encode($activity_status_payload, JSON_THROW_ON_ERROR),
+                    'pso_response' => $activity_status->body(),
+                    'response_time' => $activity_status->transferStats->getTransferTime(),
+                    'transfer_stats' => json_encode($activity_status->transferStats->getHandlerStats(), JSON_THROW_ON_ERROR)
+                ]);
+            }
 
 
             if ($debug_mode) {
-                $pso_resource = Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
+                Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $activity_status_payload);
             }
 
             return response()->json([
@@ -179,7 +194,6 @@ class IFSPSOActivityService extends IFSService
                 'description' => 'Service has sent payload to PSO',
                 'original_payload' => [$activity_status_payload]
             ], 200, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
 
         }
     }

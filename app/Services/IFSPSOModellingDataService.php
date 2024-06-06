@@ -29,10 +29,18 @@ class IFSPSOModellingDataService extends IFSService
                 $division,
                 'RAM_Division',
                 $descriptions ? $descriptions[$key] : null,
-                $request->send ?: true,
-                $request->region_parent,
-                $request->region_category
+                $request->send ?: true
+                //,
+                //$request->region_parent
             );
+            if ($request->region_parent) {
+                // since this can't be null, let's not set it unless it's there
+                $division->setParentDivision($request->region_parent);
+            }
+            if ($request->region_category) {
+                // since this can't be null, let's not set it unless it's there
+                $division->setDivisionType($request->region_category);
+            }
             $divisions[] = $division->RAMtoJson();
         }
 

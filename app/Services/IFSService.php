@@ -12,9 +12,9 @@ class IFSService
 {
     protected PsoEnvironment $pso_environment;
     // todo make sure this need to be protected and not public
-    protected $token;
-    private $base_url;
-    protected $service_name;
+    protected string|null $token;
+    private string|null $base_url;
+    protected string $service_name;
 
 
     public function __construct($base_url, $token, $username, $password, $account_id = null, $requires_auth = false, $pso_environment = null)
@@ -87,6 +87,7 @@ class IFSService
     {
         try {
             $response = Http::withHeaders(['apiKey' => $token])->get($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/session');
+
             if ($response->failed()) {
                 return false;
             }

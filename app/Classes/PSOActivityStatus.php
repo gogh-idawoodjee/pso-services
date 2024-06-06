@@ -14,7 +14,7 @@ class PSOActivityStatus extends Activity
     private string|null $date_time_earliest;
     private int $visit_id;
     private bool $fixed;
-    private string $date_time_stamp;
+    private string|null $date_time_stamp;
     private string $duration;
     private string|null $resource_id;
     private string|null $reason;
@@ -23,11 +23,15 @@ class PSOActivityStatus extends Activity
     {
         $this->status_id = $status_id;
 
-        $this->date_time_status = $timestamp_override;
+        $timestamp_override = config('pso-services.settings.override_commit_timestamp_value');
+
+        $this->date_time_status = Carbon::now()->toAtomString();
         $this->date_time_stamp = Carbon::now()->toAtomString();
 
-        if (!config("pso-services.settings.override_commit_timestamps")) {
-            $this->date_time_status = Carbon::now()->toAtomString();
+        if (config("pso-services.settings.override_commit_timestamps")) {
+            $this->date_time_status = $timestamp_override;
+            $this->date_time_stamp = $timestamp_override;
+
 
         }
         $this->visit_id = $visit_id ?: 1;
@@ -49,9 +53,9 @@ class PSOActivityStatus extends Activity
                 'visit_id' => $this->visit_id,
                 'fixed' => $this->fixed,
                 'date_time_stamp' => $this->date_time_stamp,
-                'duration' => $this->duration,
-                'reason' => $this->reason
-            ];
+//                'duration' => $this->duration,
+            'reason' => $this->reason
+        ];
 
         if ($this->status_id !== -1 && $this->status_id !== 0) {
             $status_json = Arr::add($status_json, 'resource_id', (string)$this->resource_id);

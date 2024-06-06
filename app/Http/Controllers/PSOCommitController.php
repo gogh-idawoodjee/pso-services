@@ -26,14 +26,13 @@ class PSOCommitController extends Controller
             config('pso-services.debug.base_url'),
             null,
             config('pso-services.debug.username'),
-            env('PSO_PASSWORD'),
+            config('pso-services.debug.password'),
             config('pso-services.debug.account_id'),
             true,
             null
         );
 
-
-        return $commit->sendCommitActivity($request->all());
+        return $commit->sendCommitActivity($request->all(), config('pso-services.settings.enable_debug'));
 
     }
 

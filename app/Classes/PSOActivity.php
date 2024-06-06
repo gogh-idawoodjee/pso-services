@@ -2,6 +2,7 @@
 
 namespace App\Classes;
 
+use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 
 
@@ -13,6 +14,7 @@ class PSOActivity extends Activity
     private int $priority;
     private bool $fixed;
     private string $description;
+    private string $duration;
     private string $date_time_created;
     private string $date_time_open;
     private int $base_value;
@@ -35,14 +37,15 @@ class PSOActivity extends Activity
         $this->split_allowed = config('pso-services.defaults.activity.split_allowed');
 
         $this->activity_type_id = $activity_data->activity_type_id;
-        $this->priority = $activity_data->priority ?: config('pso-services.defaults.activity.priority');
-        $this->description = isset($activity_data->description) ?: 'Appointment Request';
+        $this->priority = $activity_data->priority ?? config('pso-services.defaults.activity.priority');
+        $this->description = isset($activity_data->description) ?? 'Appointment Request';
         $this->date_time_created = Carbon::now()->toAtomString();
         $this->date_time_open = Carbon::now()->toAtomString();
-        $this->base_value = $activity_data->base_value ?: config('pso-services.defaults.activity.base_value');
+        $this->base_value = $activity_data->base_value ?? config('pso-services.defaults.activity.base_value');
         $this->fixed = isset($activity_data->fixed);
         $this->visit_id = isset($activity_data->visit_id) ?: 1;
         $this->resource_id = isset($activity_data->resource_id) ?: null;
+        $this->duration = PSOHelper::setPSODuration($activity_data->duration);
 
 
         // build the skills
@@ -149,6 +152,7 @@ class PSOActivity extends Activity
             'activity_type_id' => $this->activity_type_id,
             'location_id' => $this->activity_id,
             'priority' => $this->priority,
+            'duration' => $this->duration,
             'description' => (string)$this->description,
             'date_time_created' => $this->date_time_created,
             'date_time_open' => $this->date_time_open,
