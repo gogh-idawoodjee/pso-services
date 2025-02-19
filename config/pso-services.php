@@ -75,7 +75,7 @@ return [
         // if true, adds date_time_fixed during commit
         'fix_committed_activities' => true,
         // should be true if your input_datetime is in the past; see PSOActivityStatus class
-        'override_commit_timestamps' => true,
+        'override_commit_timestamps' => false,
         'override_commit_timestamp_value' => '2024-05-17T08:00:08+00:00',
         'enable_debug' => false,
         // if true, appointments cannot be accepted until they appointed first

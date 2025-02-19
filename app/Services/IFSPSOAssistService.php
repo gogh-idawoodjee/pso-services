@@ -21,33 +21,33 @@ class IFSPSOAssistService extends IFSService
     public function cleanupDataset($request)
     {
 
+        $activities = [];
         // get the schedule
         $schedule = $this->getSchedule($request->base_url, $request->dataset_id, 'true', 'true');
         // get the current time at midnight
         $midnight = Carbon::now()->setTimezone('America/Toronto')->startOfDay();
 
         // get the allocations
+        if (array_key_exists('Allocation', $schedule['dsScheduleData'])) {
+            foreach ($schedule['dsScheduleData']['Allocation'] as $allocation) {
+                if (Arr::has($allocation, 'activity_end')) {
 
-        foreach ($schedule['dsScheduleData']['Allocation'] as $allocation) {
-            if (Arr::has($allocation, 'activity_end')) {
-
-                $time = Carbon::parse($allocation['activity_end']);
-                // find just the expired ones
-                if ($time <= $midnight) {
-                    $activities[] = $allocation['activity_id'];
+                    $time = Carbon::parse($allocation['activity_end']);
+                    // find just the expired ones
+                    if ($time <= $midnight) {
+                        $activities[] = $allocation['activity_id'];
+                    }
                 }
             }
         }
-
         if (count($activities) > 0) {
             if ($this->deleteActivities($request, $activities)) {
                 return [count(($activities)) . ' records cleaned up'];
             }
-            return ['nothing to clean up'];
         }
 
+        return ['nothing to clean up'];
 
-        return ($activities);
     }
 
     private function deleteActivities($request, $activities)
@@ -547,7 +547,7 @@ class IFSPSOAssistService extends IFSService
             $response = $this->sendPayloadToPSO($payload, $token, $base_url);
 
             if ($response->json('InternalId') > -1) {
-                // update the rota 
+                // update the rota
 
                 if ($requires_rota_update) {
                     $this->sendRotaToDSE(
