@@ -23,20 +23,20 @@ enum ActivityStatus: string
     public function label(): string
     {
         return match ($this) {
-            ActivityStatus::IGNORE => 'Ignore',
-            ActivityStatus::UNALLOCATED => 'Unallocated',
-            ActivityStatus::ALLOCATED => 'Allocated',
-            ActivityStatus::COMMITTED => 'Committed',
-            ActivityStatus::SENT => 'Sent',
-            ActivityStatus::DOWNLOADED => 'Downloaded',
-            ActivityStatus::ACCEPTED => 'Accepted',
-            ActivityStatus::TRAVELLING => 'Travelling',
-            ActivityStatus::WAITING => 'Wiating',
-            ActivityStatus::ONSITE => 'Onsite',
-            ActivityStatus::PENDINGCOMPLETION => 'Pending Completion',
-            ActivityStatus::VISITCOMPLETE => 'Visit Complete',
-            ActivityStatus::INCOMPLETE => 'Incomplete',
-            ActivityStatus::COMPLETED => 'Completed',
+            self::IGNORE => 'Ignore',
+            self::UNALLOCATED => 'Unallocated',
+            self::ALLOCATED => 'Allocated',
+            self::COMMITTED => 'Committed',
+            self::SENT => 'Sent',
+            self::DOWNLOADED => 'Downloaded',
+            self::ACCEPTED => 'Accepted',
+            self::TRAVELLING => 'Travelling',
+            self::WAITING => 'Wiating',
+            self::ONSITE => 'Onsite',
+            self::PENDINGCOMPLETION => 'Pending Completion',
+            self::VISITCOMPLETE => 'Visit Complete',
+            self::INCOMPLETE => 'Incomplete',
+            self::COMPLETED => 'Completed',
         };
     }
 
