@@ -1,11 +1,7 @@
 <?php
 
-use App\Http\Controllers\AssistController;
-use App\Http\Controllers\EnvironmentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ResourceController;
-use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\Route;
 
 
 /*
@@ -20,8 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-
-Route::get('/', function () {
+Route::get('/', static function () {
     return url('https://out-of-jam.stoplight.io/docs/ish-pso-services/');
 });
 //
