@@ -22,12 +22,12 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    return view('dashboard');
+    return url('https://out-of-jam.stoplight.io/docs/ish-pso-services/');
 });
-
-Route::get('/dashboard', function () {
-//    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+//
+//Route::get('/dashboard', function () {
+////    return view('dashboard');
+//})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // I think all this has moved to the front-end project
