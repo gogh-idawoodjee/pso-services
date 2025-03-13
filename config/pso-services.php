@@ -31,7 +31,7 @@ return [
             'completed' => 70,
             'incomplete' => 80
         ],
-        'commit_status' => 30
+        'commit_status' => \App\Enums\ActivityStatus::COMMITTED
     ],
 
     'defaults' => [

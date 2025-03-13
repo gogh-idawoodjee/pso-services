@@ -2,10 +2,10 @@
 
 namespace App\Rules;
 
-use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
-class NoProdURL implements Rule
+class NoProdURL extends Rule
 {
     /**
      * Create a new rule instance.
