@@ -599,6 +599,7 @@ class IFSPSOAppointmentService extends IFSService
      * @param $valid_offers
      * @param $invalid_offers
      * @param $best_offer
+     * @param null $run_id
      * @return void
      * @throws JsonException
      */
@@ -645,6 +646,8 @@ class IFSPSOAppointmentService extends IFSService
      * @param null $accepted_offer
      * @param int $offer
      * @param null $accepted_offer_window_start_datetime
+     * @param null $a_d_payload
+     * @param null $b_a_payload
      * @return void
      * @throws JsonException
      */

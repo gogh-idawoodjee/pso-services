@@ -51,7 +51,7 @@ class PSOActivityStatusController extends Controller
             'username' => 'string',
             'password' => 'string',
             'resource_id' => 'string|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
-            'date_time_fixed' => 'date_format:Y-m-d\TH:i|required_if:status,travelling,committed,sent,downloaded,accepted,waiting,onsite,pendingcompletion,visitcomplete,completed,incomplete',
+            'date_time_fixed' => 'date_format:Y-m-d\TH:i',
         ]);
 
         $request->merge(compact('activity_id'));
