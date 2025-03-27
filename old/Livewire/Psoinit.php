@@ -98,7 +98,7 @@ class Psoinit extends Component
             $response = $init->InitializePSO(new Request($this->init_data));
             $this->http_status = json_decode($response->content())->status;
             $this->description = json_decode($response->content())->description;
-            $this->original_payload = json_encode(json_decode($response->content())->original_payload[0], JSON_PRETTY_PRINT);
+            $this->original_payload = json_encode(json_decode($response->content())->original_payload[0], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         }
 
     }

@@ -18,6 +18,7 @@ return [
         ],
         'all' => [
             'travelling' => 50,
+            'allocated' => 0,
             'ignore' => -1,
             'committed' => 30,
             'sent' => 32,

@@ -42,6 +42,13 @@ class PSOActivityStatusController extends Controller
             'status' => Rule::in($statuses)
         ])->validate();
 
+        // todo make this in the new proper format
+//        Validator::make($request->all(), [
+//
+//            'role_id' => Rule::requiredIf($request->user()->is_admin),
+//
+//        ]);
+
         $request->validate([
             'send_to_pso' => 'boolean',
             'base_url' => ['url', 'required_if:send_to_pso,true', 'not_regex:/prod|prd/i'],

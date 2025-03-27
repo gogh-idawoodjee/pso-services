@@ -21,7 +21,7 @@ class Index extends Component
     public $datasets;
     public $dataset;
     public $environment;
-    public $resources=[];
+    public $resources = [];
 
 
     protected $rules = [
@@ -104,12 +104,12 @@ class Index extends Component
             $usage_data = $resource_init->getScheduleableResources(new Request($this->usage_data));
             $this->http_status = json_decode($usage_data->content())->status;
             if ($this->http_status == 200) {
-                $this->usage_response = json_encode(json_decode($usage_data->content())->original_payload[0], JSON_PRETTY_PRINT);
+                $this->usage_response = json_encode(json_decode($usage_data->content())->original_payload[0], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                 $this->resources = json_decode($usage_data->content())->original_payload[0];
             }
 
             if ($this->http_status == 404) {
-                $this->usage_response = json_encode(json_decode($usage_data->content()), JSON_PRETTY_PRINT);
+                $this->usage_response = json_encode(json_decode($usage_data->content()), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
             }
         }
 

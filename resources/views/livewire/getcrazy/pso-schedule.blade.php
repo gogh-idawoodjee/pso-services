@@ -34,7 +34,7 @@
                 </div>
 
 
-                <pre><code class="language-json">{{json_encode($scheduleOutput,JSON_PRETTY_PRINT)}}</code></pre>
+                <pre><code class="language-json">{{json_encode($scheduleOutput,JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)}}</code></pre>
 
             </div>
 
