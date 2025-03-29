@@ -24,7 +24,6 @@
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.0",
-        "laravel/breeze": "^2.0",
         "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^10.0",
         "roave/security-advisories": "dev-latest",

@@ -4,41 +4,10 @@
     "description": "Ish PSO Services",
     "author": "Ishy Dee",
     "private": true,
-    "scripts": {
-        "dev": "npm run development",
-        "development": "mix",
-        "watch": "concurrently \"postcss ./src/css/app.css -o ./dist/css/_app.css --watch\" \"mix watch\"",
-        "watch-poll": "mix watch -- --watch-options-poll=1000",
-        "hot": "mix watch --hot",
-        "prod": "npm run production",
-        "start": "vite",
-        "production": "vite build"
-    },
-    "dependencies": {
-        "@left4code/tw-starter": "^3.1.35",
-        "js-beautify": "^1.7.5",
-        "pristinejs": "^0.1.9",
-        "simplebar": "^5.3.6"
-    },
+    "scripts": {},
+    "dependencies": {},
     "devDependencies": {
-        "@tailwindcss/forms": "^0.5.2",
-        "@vitejs/plugin-vue": "^5.2.3",
-        "@vue/compiler-sfc": "^3.2.45",
-        "alpinejs": "^3.4.2",
-        "autoprefixer": "^10.4.16",
         "axios": "1.8.4",
-        "browser-sync": "^3.0.3",
-
-        "concurrently": "^9.1.2",
-        "dotenv": "^16.0.3",
-        "flowbite": "^3.1.2",
-        "laravel-vite-plugin": "^1.2.0",
-        "postcss": "^8.5.3",
-        "postcss-advanced-variables": "^3.0.1",
-        "postcss-cli": "^11.0.1",
-        "postcss-import": "^16.1.0",
-        "resolve-url-loader": "^5.0.0",
-        "tailwindcss": "^4.0.17",
-        "vite": "^6.2.3"
+        "dotenv": "^16.0.3"
     }
 }
