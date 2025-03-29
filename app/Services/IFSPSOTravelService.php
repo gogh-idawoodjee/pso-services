@@ -11,6 +11,7 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
 
@@ -69,13 +70,14 @@ class IFSPSOTravelService extends IFSService
         $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
 
         $formatted_google = $this->formatGoogle($request);
+        Log::info($payload);
 
         $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
         // wait a moment?
         sleep(5);
         // now go back and get the stuff
         $travellog->refresh();
-        dd($travellog->pso_response);
+
         if ($travellog->pso_response) {
             // why are we diong this? // because after we refresh, we expect a broadcast back to our receiving service which populates pso_response
             $pso_result = json_decode($travellog->pso_response, false, 512, JSON_THROW_ON_ERROR);

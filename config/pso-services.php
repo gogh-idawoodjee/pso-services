@@ -52,7 +52,7 @@ return [
         'do_on_location_incentive' => 1,
         'do_in_locality_incentive' => 1,
         'timezone' => 'America/Toronto',
-        'travel_broadcast_api' => 'https://ish-services.thetechnodro.me/api/travelanalyzerservice'
+        'travel_broadcast_api' => 'http://pso-services-6g6mj.kinsta.app/api/travelanalyzerservice'
 
     ],
 
