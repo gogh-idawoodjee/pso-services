@@ -19,7 +19,7 @@
         "monolog/monolog": "^3.0",
         "nesbot/carbon": "^3.8",
         "ohseesoftware/laravel-vite-manifest": "^v1.2.0",
-        "spatie/geocoder": "^3.15",
+        "spatie/geocoder": "^3.15"
 
     },
     "require-dev": {
