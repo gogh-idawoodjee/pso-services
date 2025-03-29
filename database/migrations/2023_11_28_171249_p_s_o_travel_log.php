@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('psotravellog', function (Blueprint $table) {
             $table->uuid('id');
-            $table->uuid('input_reference');
+            $table->uuid('input_reference')->nullable();
             $table->json('input_payload');
-            $table->json('output_payload');
-            $table->json('pso_response');
-            $table->text('response_time');
-            $table->json('transfer_stats');
+            $table->json('output_payload')->nullable();
+            $table->json('pso_response')->nullable();
+            $table->text('response_time')->nullable();
+            $table->json('transfer_stats')->nullable();
             $table->timestamps();
         });
     }

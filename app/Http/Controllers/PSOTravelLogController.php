@@ -38,6 +38,7 @@ class PSOTravelLogController extends Controller
         PSOHelper::ValidateSendToPSO($request);
 
 
+
         $travel = new IFSPSOTravelService($request->base_url, $request->token, $request->username, $request->password, $request->account_id, $request->send_to_pso);
 
 

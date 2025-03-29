@@ -19,16 +19,13 @@
         "monolog/monolog": "^3.0",
         "nesbot/carbon": "^3.8",
         "ohseesoftware/laravel-vite-manifest": "^v1.2.0",
-        "sentry/sentry-laravel": "^4.5",
         "spatie/geocoder": "^3.15",
-        "spatie/laravel-backup": "^9.2",
-        "treblle/treblle-laravel": "^4.4"
+
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.0",
         "laravel/breeze": "^2.0",
         "mockery/mockery": "^1.5",
-
         "phpunit/phpunit": "^10.0",
         "roave/security-advisories": "dev-latest",
         "spatie/laravel-ignition": "^2.0"

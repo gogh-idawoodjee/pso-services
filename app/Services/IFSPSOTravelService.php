@@ -75,7 +75,7 @@ class IFSPSOTravelService extends IFSService
         sleep(5);
         // now go back and get the stuff
         $travellog->refresh();
-//        dd($travellog->pso_response);
+        dd($travellog->pso_response);
         if ($travellog->pso_response) {
             // why are we diong this? // because after we refresh, we expect a broadcast back to our receiving service which populates pso_response
             $pso_result = json_decode($travellog->pso_response, false, 512, JSON_THROW_ON_ERROR);

@@ -21,8 +21,10 @@ class PSOActivityController extends Controller
      */
     public function store(Request $request)
     {
+        // todo skill
+
         $request->validate([
-            'activity_id' => 'string',
+            'activity_id' => 'string|nullable',
             'activity_type_id' => 'string|required',
             'time_zone' => 'numeric|between:-24,24', // now made optional
             'relative_day' => 'integer|gt:-1',

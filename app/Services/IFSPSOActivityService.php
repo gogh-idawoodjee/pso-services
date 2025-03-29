@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
 
@@ -42,13 +43,12 @@ class IFSPSOActivityService extends IFSService
         $relative_day_end = $request->relative_day_end ?: $relative_day;
         $hours_to_add = ($request->window_size ?: 0) === 0 ? 8 : ($request->window_size ?: 0);
 
-
         $activity_build_data = new Collection([
             'activity_id' => $request->activity_id ?: Str::orderedUuid()->getHex()->toString(),
             'lat' => $request->lat,
             'long' => $request->long,
             'sla_start' => Carbon::now()->addDays($relative_day)->setTime(8, 0)->toDateTimeLocalString() . $tz,
-            'sla_end' => Carbon::now()->addDays($relative_day_end)->setTime(8 + $hours_to_add, 0)->toDateTimeLocalString() . $tz,
+            'sla_end' => Carbon::now()->addDays((int)$relative_day_end)->setTime((8 + $hours_to_add), 0)->toDateTimeLocalString() . $tz,
             'sla_type_id' => $request->sla_type_id,
             'activity_type_id' => $request->activity_type_id,
             'status_id' => 0,
