@@ -117,7 +117,7 @@ return [
     | provides a richer body of commands than a typical key-value system
     | such as APC or Memcached. Laravel makes it easy to dig right in.
     |
-    */
+
 
     'redis' => [
 
@@ -147,5 +147,6 @@ return [
         ],
 
     ],
+    */
 
 ];
