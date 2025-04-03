@@ -4,7 +4,10 @@
     "description": "Ish PSO Services",
     "author": "Ishy Dee",
     "private": true,
-    "scripts": {},
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
     "devDependencies": {
         "axios": "1.8.4",
         "dotenv": "^16.0.3"
