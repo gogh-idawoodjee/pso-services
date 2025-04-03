@@ -6,6 +6,7 @@ use App\Helpers\PSOHelper;
 use App\Services\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class PSOResourceShiftController extends Controller
@@ -31,6 +32,7 @@ class PSOResourceShiftController extends Controller
      */
     public function update(Request $request, $resource_id)//: JsonResponse
     {
+        Log::info('making it');
         // this must always be true
         $request->send_to_pso = true;
 
@@ -61,7 +63,7 @@ class PSOResourceShiftController extends Controller
             return response()->json([
                 'status' => 401,
                 'description' => 'did not pass auth'
-            ]);
+            ])->setStatusCode(401);
 
         }
         // do we need this? seems like we do, it initializes $this->pso_resource

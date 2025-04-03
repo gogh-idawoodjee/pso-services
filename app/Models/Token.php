@@ -19,6 +19,6 @@ class Token extends Model
 
     public function getIsValidTokenAttribute()
     {
-        return Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry']), false) > 2;
+        return Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry'])) > 2;
     }
 }
