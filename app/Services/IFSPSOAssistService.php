@@ -405,7 +405,7 @@ class IFSPSOAssistService extends IFSService
 
         $delete_sla_payload = (new PSODeleteObject(
             $request->object_type,
-            $request->object_pk_name, $request->object_pk,
+            $request->object_pk_name1, $request->object_pk1,
             $request->object_pk_name2, $request->object_pk2,
             $request->object_pk_name3, $request->object_pk3,
             $request->object_pk_name4, $request->object_pk4,

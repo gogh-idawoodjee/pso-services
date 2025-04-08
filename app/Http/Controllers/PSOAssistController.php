@@ -142,8 +142,8 @@ class PSOAssistController extends Controller
             'username' => 'string',
             'password' => 'string',
             'object_type' => 'string|required',
-            'object_pk_name' => 'string|required',
-            'object_pk' => 'string|required',
+            'object_pk_name1' => 'string|required',
+            'object_pk1' => 'string|required',
             'send_to_pso' => 'boolean'
 
         ]);

@@ -5,74 +5,117 @@ namespace App\Traits;
 use App\Helpers\PSOHelper;
 use App\Services\IFSPSOAssistService;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response as HttpResponse;
+use Illuminate\Support\Str;
 
 trait PSOAssist
 {
 
-    public function apiResponse($code, $description, $payload, $payload_desc = null, $additional_data = null): JsonResponse
+    public function apiResponse(
+        int     $code,
+        string  $description,
+                $payload,
+        ?string $payload_desc = null,
+        ?array  $additional_data = null
+    ): JsonResponse
     {
-        // all other services will call this method for payloads
-        if ($additional_data) {
-            return response()->json([
-                'status' => $code,
-                'description' => $description,
-                $additional_data['description'] => $additional_data['data'],
-                $payload_desc ?: 'original_payload' => [$payload]
-            ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-        }
-        return response()->json([
+        $response = collect([
             'status' => $code,
             'description' => $description,
-            $payload_desc ?: 'original_payload' => [$payload]
-        ], $code, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-    }
+            $payload_desc ?: 'original_payload' => [$payload],
+        ]);
 
-    public function processPayload($send_to_pso, $payload, $token, $base_url, $desc_200 = null, $requires_rota_update = false, $dataset_id = null, $rota_id = null)
-    {
-        if ($send_to_pso) {
-
-            $response = $this->sendPayloadToPSO($payload, $token, $base_url);
-
-            if ($response->json('InternalId') > -1) {
-                // update the rota
-                if ($requires_rota_update) {
-                    $this->sendRotaToDSE($dataset_id, $token, null);
-                }
-                // send the good response
-                return $this->apiResponse(200, ("Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : $desc_200)), $payload);
-            }
-
-            if ($response->serverError() || $response->json('InternalId') === "-1") {
-                return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
-            }
-
-            if ($response->json('Code') === 401 || $response->status() === 401) {
-                return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
-            }
-
-            if ($response->status() === 500) {
-                return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
-            }
-            return $this->apiResponse(418, "None of the above", $payload, null, ['description' => 'PSO Response', 'data' => $response->object()]);
+        if ($additional_data) {
+            $response->put(
+                Arr::get($additional_data, 'description', 'additional'),
+                Arr::get($additional_data, 'data', [])
+            );
         }
 
-        return $this->apiResponse(202, "Successful but payload not sent to PSO by choice", $payload);
-
+        return response()->json(
+            $response,
+            $code,
+            ['Content-Type' => 'application/json'],
+            JSON_UNESCAPED_SLASHES
+        );
     }
 
-    public function sendPayloadToPSO($payload, $token, $base_url, $requires_pso_response = false)
-    {
-        $endpoint_segment = $requires_pso_response ? 'appointment' : 'data';
+    public function processPayload(
+        bool $send_to_pso,
+             $payload,
+        string $token,
+        string $base_url,
+        ?string $desc_200 = null,
+        bool $requires_rota_update = false,
+        ?int $dataset_id = null,
+        ?int $rota_id = null
+    ): JsonResponse {
+        if (! $send_to_pso) {
+            return $this->apiResponse(202, "Successful but payload not sent to PSO by choice", $payload);
+        }
+
+        /** @var Response $response */
+        $response = $this->sendPayloadToPSO($payload, $token, $base_url);
+
+        $internalId = $response->json('InternalId');
+        $statusCode = $response->status();
+        $responseCode = $response->json('Code');
+
+        if ($internalId > -1) {
+            if ($requires_rota_update) {
+                $this->sendRotaToDSE($dataset_id, $token, null);
+            }
+
+            $message = "Payload successfully sent to PSO." . ($desc_200 ? ' ' . $desc_200 : '');
+            return $this->apiResponse(200, $message, $payload);
+        }
+
+        if ($statusCode === 401 || $responseCode === 401) {
+            return $this->apiResponse(401, "Unable to authenticate with provided token", $payload);
+        }
+
+        if ($statusCode === 500) {
+            return $this->apiResponse(500, "Probably bad data, payload included for your reference", $payload);
+        }
+
+        if ($internalId === -1 || $response->serverError()) {
+            return $this->apiResponse(500, "Bad data, probably an invalid dataset", $payload);
+        }
+
+        return $this->apiResponse(
+            418,
+            "None of the above",
+            $payload,
+            null,
+            [
+                'description' => 'PSO Response',
+                'data' => $response->object(),
+            ]
+        );
+    }
+
+
+    public function sendPayloadToPSO(
+        array $payload,
+        string $token,
+        string $baseUrl,
+        bool $requiresPsoResponse = false
+    ): ?HttpResponse {
+        $endpoint = $requiresPsoResponse ? 'appointment' : 'data';
+        $url = Str::finish($baseUrl, '/') . "IFSSchedulingRESTfulGateway/api/v1/scheduling/{$endpoint}";
 
         try {
             return Http::timeout(PSOHelper::GetTimeOut())
-                ->withHeaders(['apiKey' => $token])
                 ->connectTimeout(PSOHelper::GetTimeOut())
-                ->post($base_url . '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $endpoint_segment, $payload);
-        } catch (ConnectionException) {
-            return response('failed', 500);
+                ->withHeaders(['apiKey' => $token])
+                ->post($url, $payload);
+        } catch (ConnectionException $e) {
+            // Log error if needed: Log::error('Connection to PSO failed: ' . $e->getMessage());
+            return null; // or return a custom fallback response object
         }
     }
 
