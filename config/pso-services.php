@@ -17,6 +17,7 @@ return [
             'incomplete'
         ],
         'all' => [
+            // todo convert this to enum
             'travelling' => 50,
             'allocated' => 0,
             'ignore' => -1,
