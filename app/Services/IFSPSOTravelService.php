@@ -32,7 +32,7 @@ class IFSPSOTravelService extends IFSService
     /**
      * @throws JsonException
      */
-    private function createTravelLog($payload, $id)
+    private function createTravelLog($payload, $id): PSOTravelLog
     {
 
         $travellog = new PSOTravelLog();
@@ -70,7 +70,7 @@ class IFSPSOTravelService extends IFSService
         $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
 
         $formatted_google = $this->formatGoogle($request);
-        Log::info($payload);
+
 
         $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
         // wait a moment?
@@ -219,7 +219,7 @@ class IFSPSOTravelService extends IFSService
     }
 
 
-    private function travelPayload(Request $request, $id)
+    private function travelPayload(Request $request, $id): array
     {
         $input_ref = (new InputReference(
             'Travel Analysis ' . $this->service_name,
@@ -243,7 +243,7 @@ class IFSPSOTravelService extends IFSService
         return ['dsScheduleData' => [$payload]];
     }
 
-    private function travelDetailRequest(Request $request, $id)
+    private function travelDetailRequest(Request $request, $id): array
     {
         return [
             'Travel_Detail_Request' => [

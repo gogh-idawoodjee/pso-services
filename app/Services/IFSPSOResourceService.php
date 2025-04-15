@@ -560,13 +560,18 @@ class IFSPSOResourceService extends IFSService
     public function setEvent(Request $event_data, $resource_id): JsonResponse
     {
 
-        $this->getResource($resource_id, $event_data->dataset_id, $event_data->base_url);
-
         $schedule_event = $this->ScheduleEventPayloadPart($event_data->event_type, $resource_id, $event_data->event_date_time);
         $payload = $this->ScheduleEventPayload($event_data->dataset_id, $schedule_event);
 
-        if (!$this->ResourceExists() && config('pso-services.settings.validate_object_existence')) {
-            return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', $payload);
+
+        if ($event_data->send_to_pso) {
+            $this->getResource($resource_id, $event_data->dataset_id, $event_data->base_url);
+
+
+            if (!$this->ResourceExists() && config('pso-services.settings.validate_object_existence')) {
+                return $this->IFSPSOAssistService->apiResponse(404, 'Specified Resource does not exist', $payload);
+            }
+
         }
 
         return $this->IFSPSOAssistService->processPayload(
@@ -918,7 +923,7 @@ class IFSPSOResourceService extends IFSService
         $ram_update_payload = $this->IFSPSOAssistService->RAMUpdatePayload($request->dataset_id, 'Deleted Unavailability via ' . $this->service_name);
 
         $ram_data_update = (new PSODeleteObject(
-            'RAM_Unavailability', 'id', '$request->unavailability_id',
+            'RAM_Unavailability', 'id', $request->unavailability_id,
             null, null,
             null, null,
             null, null,
