@@ -2,20 +2,10 @@
 
 namespace App\Http\Requests\Api\V2;
 
-use App\Rules\DisallowProdUrl;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class HealthCheckRequest extends FormRequest
+class HealthCheckRequest extends BaseFormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,11 +13,12 @@ class HealthCheckRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'environment.base_url' => ['required', 'url', new DisallowProdUrl],
-            'environment.token' => 'required|string',
-            'environment.dataset_id' => 'required|string',
-            'environment.account_id' => 'required|string',
-        ];
+
+        $commonRules = $this->commonRules();
+        $additionalRules =
+            [
+            ];
+
+        return array_merge($commonRules, $additionalRules);
     }
 }
