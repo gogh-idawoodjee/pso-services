@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PSO\TokenService;
-
+use App\Services\V2\TokenService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

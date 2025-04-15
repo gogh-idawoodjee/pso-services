@@ -31,13 +31,33 @@ enum ActivityStatus: string
             self::DOWNLOADED => 'Downloaded',
             self::ACCEPTED => 'Accepted',
             self::TRAVELLING => 'Travelling',
-            self::WAITING => 'Wiating',
+            self::WAITING => 'Waiting',
             self::ONSITE => 'Onsite',
             self::PENDINGCOMPLETION => 'Pending Completion',
             self::VISITCOMPLETE => 'Visit Complete',
             self::INCOMPLETE => 'Incomplete',
             self::COMPLETED => 'Completed',
         };
+    }
+
+    public static function allStatuses(): array
+    {
+        return collect(self::cases())
+            ->filter(fn(self $status) => (int)$status->value >= 0)
+            ->mapWithKeys(fn(self $status) => [
+                strtolower($status->name) => (int)$status->value,
+            ])
+            ->toArray();
+    }
+
+    public static function statusesGreaterThanAllocated(): array
+    {
+        return collect(self::cases())
+            ->filter(fn(self $status) => (int)$status->value >= 10)
+            ->mapWithKeys(fn(self $status) => [
+                strtolower($status->name) => (int)$status->value,
+            ])
+            ->toArray();
     }
 
 }

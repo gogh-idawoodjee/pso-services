@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\PSO;
+namespace App\Services\V2;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;

@@ -3,37 +3,9 @@
 return [
 
     'statuses' => [
-        'statuses_greater_than_alloc' => [
-            'travelling',
-            'committed',
-            'sent',
-            'downloaded',
-            'accepted',
-            'waiting',
-            'onsite',
-            'pendingcompletion',
-            'visitcomplete',
-            'completed',
-            'incomplete'
-        ],
-        'all' => [
-            // todo convert this to enum
-            'travelling' => 50,
-            'allocated' => 0,
-            'ignore' => -1,
-            'committed' => 30,
-            'sent' => 32,
-            'unallocated' => 0,
-            'downloaded' => 35,
-            'accepted' => 40,
-            'waiting' => 55,
-            'onsite' => 60,
-            'pendingcompletion' => 65,
-            'visitcomplete' => 68,
-            'completed' => 70,
-            'incomplete' => 80
-        ],
-        'commit_status' => \App\Enums\ActivityStatus::COMMITTED
+        'statuses_greater_than_alloc' => \App\Enums\ActivityStatus::statusesGreaterThanAllocated(),
+        'all' => \App\Enums\ActivityStatus::allStatuses(),
+        'commit_status' => \App\Enums\ActivityStatus::COMMITTED->value
     ],
 
     'defaults' => [
