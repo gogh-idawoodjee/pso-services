@@ -13,7 +13,8 @@ class DeleteObject
     public static function fromPkArray(
         string $objectTypeId,
         array  $primaryKeys,
-        bool   $isRotaObject = false
+        bool   $isRotaObject = false,
+        int    $psoApiVersion = 1
     ): array
     {
         $data = ['object_type_id' => $objectTypeId];

@@ -3,12 +3,11 @@
 namespace App\Helpers\Stubs;
 
 
-
 use Illuminate\Support\Str;
 
 class Region
 {
-    public static function make(string $regionId, string|null $entityType = null, string $entityId): array
+    public static function make(string $regionId, string $entityId, string|null $entityType = null, int $psoApiVersion = 1): array
     {
         $entityType ??= 'region';
         return [
@@ -17,13 +16,15 @@ class Region
         ];
     }
 
-    public static function makeRAMDivision(
+    public
+    static function makeRAMDivision(
         string      $regionId,
         string|null $description = null,
         bool|null   $send = null,
         string|null $ramDivisionId = null,
         string|null $ramDivisionTypeId = null
-    ): array {
+    ): array
+    {
         $send ??= true;
         $json = [
             'id' => $regionId,

@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class Activity
 {
-    public static function build(object $activityData, bool $isAbRequest = false): array
+    public static function build(object $activityData, bool $isAbRequest = false, int $psoApiVersion = 1): array
 
         // todo ensure that activityData is always sent as json
     {

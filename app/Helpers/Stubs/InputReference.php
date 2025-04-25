@@ -18,6 +18,7 @@ class InputReference
         string|null $processType = null,
         string|null $appointmentWindow = null,
         string|null $id = null,
+        int         $psoApiVersion = 1
     ): array
     {
         $inputReference = [

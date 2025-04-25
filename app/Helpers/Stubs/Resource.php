@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Resource
 {
-    public static function make(object $resourceData, float $lat, float $long): array
+    public static function make(object $resourceData, float $lat, float $long, int $psoApiVersion = 1): array
     {
         $resourceId = $resourceData->resource_id
             ?? Str::upper($resourceData->first_name . $resourceData->surname);

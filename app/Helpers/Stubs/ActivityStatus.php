@@ -17,7 +17,8 @@ class ActivityStatus
         string|null $reason = null,
         string|null $dateTimeFixed = null,
         string|null $dateTimeEarliest = null,
-        string|null $timestampOverride = null
+        string|null $timestampOverride = null,
+        int         $psoApiVersion = 1
     ): array
     {
         $fixed ??= false;

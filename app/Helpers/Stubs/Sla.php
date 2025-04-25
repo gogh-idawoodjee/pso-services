@@ -3,7 +3,6 @@
 namespace App\Helpers\Stubs;
 
 
-
 class Sla
 {
     public static function make(
@@ -11,9 +10,11 @@ class Sla
         string $slaTypeId,
         string $datetimeStart,
         string $datetimeEnd,
-        int $priority = 2,
-        bool $startBased = true
-    ): array {
+        int    $priority = 2,
+        bool   $startBased = true,
+        int    $psoApiVersion = 1
+    ): array
+    {
         return [
             'activity_id' => $activityId,
             'sla_type_id' => $slaTypeId,
