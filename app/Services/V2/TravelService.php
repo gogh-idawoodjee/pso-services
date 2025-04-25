@@ -7,7 +7,7 @@ use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;
 use App\Helpers\Stubs\InputReference;
 use App\Models\PSOTravelLog;
-use App\Traits\PSOAssistV2;
+use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\Request;
 use JsonException;
 use Ramsey\Uuid\Uuid;

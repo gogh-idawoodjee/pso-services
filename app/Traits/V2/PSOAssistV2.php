@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace App\Traits\V2;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
