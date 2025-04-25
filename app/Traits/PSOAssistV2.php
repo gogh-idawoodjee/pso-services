@@ -16,7 +16,7 @@ trait PSOAssistV2
      * @throws JsonException
      */
     public function getPSOToken(
-        array $environment): JsonResponse|null
+        array $environment): JsonResponse
     {
 
         if (isset($environment['token'])) {
