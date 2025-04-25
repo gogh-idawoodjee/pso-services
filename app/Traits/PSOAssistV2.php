@@ -67,5 +67,23 @@ trait PSOAssistV2
         };
     }
 
+    public function buildPayload(array $payloadItems, int $psoApiVersion = 1): array
+    {
+        if ($psoApiVersion === 1) {
+            $data = [
+                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+            ];
+
+            foreach ($payloadItems as $itemKey => $itemValues) {
+                $data[$itemKey] = $itemValues;
+            }
+
+            return [
+                'dsScheduleData' => $data
+            ];
+        }
+
+    }
+
 
 }
