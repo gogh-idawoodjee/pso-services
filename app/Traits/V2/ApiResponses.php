@@ -7,13 +7,12 @@ use SensitiveParameter;
 
 trait ApiResponses
 {
-
-    protected function ok($message, $data = []): JsonResponse
+    protected function ok($data = [], $message = null): JsonResponse
     {
-        return $this->success($message, $data);
+        return $this->success($data, $message);
     }
 
-    protected function success($message, $data = [], $statusCode = 200): JsonResponse
+    protected function success($data = [], $message = null, $statusCode = 200): JsonResponse
     {
         return response()->json([
             'data' => $data,
@@ -29,5 +28,4 @@ trait ApiResponses
             'status' => $statusCode
         ], $statusCode);
     }
-
 }
