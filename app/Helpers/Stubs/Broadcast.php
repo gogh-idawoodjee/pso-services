@@ -28,8 +28,9 @@ class Broadcast
             $broadcastParameters
         );
 
+        // Return broadcast details and parameters as separate keys
         return [
-            [
+            'broadcast_details' => [
                 'active' => true,
                 'broadcast_id' => $broadcast_id,
                 'broadcast_allocation_type' => $broadcastAllocationType->value,
