@@ -18,15 +18,16 @@ class TravelService
 
     private array $data;
     private string $travelLogId;
-    private string $datasetId;
+    private string|null $datasetId;
     private PSOTravelLog $travelLog;
 
     /**
      */
     public function __construct(Request $request)
     {
+
         $this->data = $request->get('data');
-        $this->datasetId = $request->get('environment.dataset_id');
+        $this->datasetId = $request->input('environment.dataset_id');
         $this->travelLogId = Uuid::uuid4()->toString();
     }
 
@@ -51,6 +52,7 @@ class TravelService
         // TODO: Return processed response
         return [
             'id' => $this->travelLogId,
+            'travelogdetails' => json_decode($this->travelLog->input_payload),
             'status' => 'pending'
             // 'expiry' => $response['expiry_date'] ?? null
         ];
@@ -85,7 +87,8 @@ class TravelService
 
         return $this->buildPayload([
             'Input_Reference' => $input_reference,
-            'Broadcast' => $broadcast,
+            'Broadcast' => $broadcast['broadcast_details'],
+            'Broadcast_Parameter' => $broadcast['Broadcast_Parameter'],
             'Travel_Details' => $travel_details,
         ]);
     }
