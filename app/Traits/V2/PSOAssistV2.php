@@ -5,6 +5,9 @@ namespace App\Traits\V2;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Exception;
 use JsonException;
 
 trait PSOAssistV2
@@ -13,7 +16,6 @@ trait PSOAssistV2
     use ApiResponses;
 
     /**
-     * @throws JsonException
      */
     public function getPSOToken(
         array $environment): JsonResponse
@@ -31,8 +33,8 @@ trait PSOAssistV2
             $response = Http::asForm()
                 ->timeout($timeout)
                 ->connectTimeout($timeout)
-                ->post("{$environment['base_url']}/IFSSchedulingRESTfulGateway/api/v1/scheduling/session", [
-                    'accountId' => $environment['account_id'],
+                ->post("{$environment['baseUrl']}/IFSSchedulingRESTfulGateway/api/v1/scheduling/session", [
+                    'accountId' => $environment['accountId'],
                     'userName' => $environment['username'],
                     'password' => $environment['password'],
                 ]);
@@ -46,28 +48,65 @@ trait PSOAssistV2
         }
     }
 
-    /**
-     * @throws JsonException
-     */
     private function handleResponse($response): JsonResponse
     {
-        // Check for successful response status
         if ($response->successful()) {
-            // Handle success (status 200 or 204)
-            return $this->ok('Auth was successful.', $response->json());
+            $json = $response->json();
+            $message = data_get($json, 'SessionToken')
+                ? ['SessionToken' => $json['SessionToken']]
+                : $json;
+
+            return response()->json([
+                'data' => 'Auth was successful.',
+                'message' => $message,
+                'status' => $response->status(),
+            ]);
         }
 
-        // Handle specific error responses
-        return match ($response->status()) {
-            400 => response()->json(['error' => 'Client Error. See Details.', 'details' => json_decode($response->body(), false, 512, JSON_THROW_ON_ERROR)], 400),
-            401 => response()->json(['error' => 'Unauthorized. Please check your session or login credentials.'], 401),
-            404 => response()->json(['error' => 'URL not found. Check the endpoint.'], 404),
-            500 => response()->json(['error' => 'Internal server error. Try again later.'], 500),
-            default => response()->json(['error' => 'Unexpected error.'], $response->status()),
-        };
+        $statusCode = $this->adjustStatusCode($response);
+        $errorDetails = null;
+
+        if (!empty($response->body())) {
+            try {
+                $errorDetails = json_decode($response->body(), false, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
+                $errorDetails = $response->body();
+            }
+        }
+
+        return response()->json([
+            'error' => match ($statusCode) {
+                401 => 'Unauthorized. Please check your session or login credentials.',
+                400 => 'Client Error. See Details.',
+                404 => 'URL not found. Check the endpoint.',
+                500 => 'Internal server error. Try again later.',
+                default => 'Unexpected error.',
+            },
+            'details' => $errorDetails,
+        ], $statusCode);
     }
 
-    public function buildPayload(array $payloadItems, int $psoApiVersion = 1): array
+
+    private function adjustStatusCode($response): int
+    {
+        $statusCode = $response->status();
+
+        if ($statusCode === 400 && !empty($response->body())) {
+            try {
+                $errorDetails = json_decode($response->body(), false, 512, JSON_THROW_ON_ERROR);
+
+                if (is_object($errorDetails) && ($errorDetails->Message ?? null) === 'AUTHENTICATION_FAILED') {
+                    return 401;
+                }
+            } catch (JsonException) {
+                // Ignore parsing error, keep original status code
+            }
+        }
+
+        return $statusCode;
+    }
+
+    public function buildPayload(array $payloadItems, int $psoApiVersion = 1, bool $useWrapper = false): array
     {
         if ($psoApiVersion === 1) {
             $data = [
@@ -78,11 +117,59 @@ trait PSOAssistV2
                 $data[$itemKey] = $itemValues;
             }
 
+            if ($useWrapper) {
+                return [
+                    'payLoadToPso' => ['dsScheduleData' => $data]
+                ];
+            }
             return [
                 'dsScheduleData' => $data
             ];
+
         }
 
+    }
+
+
+    /**
+     * Executes an action that requires PSO authentication
+     *
+     * @param Request $request The request containing environment data
+     * @param callable $action The action to execute if authentication is successful
+     * @return JsonResponse The response from the action or auth error
+     */
+    protected
+    function executeAuthenticatedAction(Request $request, callable $action): JsonResponse
+    {
+        if ($request->input('environment.sendToPso') === false) {
+            return $action($request);
+        }
+
+        try {
+            $response = $this->getPSOToken($request->environment);
+            Log::info('going the auth route');
+
+            if ($response->status() === 200) {
+                Log::info('response was a 200, continuing with the action');
+                // Merge the token into the request so it's available to the action
+                $token = $response->getData()->message?->SessionToken ?? null;
+                Log::info('token is ' . $token);
+                $request->merge([
+                    'environment' => array_merge(
+                        (array)$request->input('environment', []),
+                        compact('token')
+                    ),
+                ]);
+
+                return $action($request);
+            }
+
+            return $response;
+
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
+            return $this->error('something totally funky went wrong', 500);
+        }
     }
 
 
