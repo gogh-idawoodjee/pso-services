@@ -2,9 +2,10 @@
 
 namespace App\Enums;
 
+use ValueError;
+
 enum ActivityStatus: string
 {
-
     case IGNORE = '-1';
     case UNALLOCATED = '0';
     case ALLOCATED = '10';
@@ -42,22 +43,47 @@ enum ActivityStatus: string
 
     public static function allStatuses(): array
     {
-        return collect(self::cases())
-            ->filter(fn(self $status) => (int)$status->value >= 0)
-            ->mapWithKeys(fn(self $status) => [
-                strtolower($status->name) => (int)$status->value,
-            ])
-            ->toArray();
+        static $cache = null;
+
+        if ($cache === null) {
+            $cache = collect(self::cases())
+                ->filter(static fn(self $status) => (int)$status->value >= 0)
+                ->mapWithKeys(static fn(self $status) => [
+                    strtolower($status->name) => (int)$status->value,
+                ])
+                ->toArray();
+        }
+
+        return $cache;
     }
 
     public static function statusesGreaterThanAllocated(): array
     {
-        return collect(self::cases())
-            ->filter(fn(self $status) => (int)$status->value >= 10)
-            ->mapWithKeys(fn(self $status) => [
-                strtolower($status->name) => (int)$status->value,
-            ])
-            ->toArray();
+        static $cache = null;
+
+        if ($cache === null) {
+            $cache = collect(self::cases())
+                ->filter(static fn(self $status) => (int)$status->value >= 10)
+                ->mapWithKeys(static fn(self $status) => [
+                    strtolower($status->name) => (int)$status->value,
+                ])
+                ->toArray();
+        }
+
+        return $cache;
+    }
+
+    public static function fromNameOrFail(string $name): self
+    {
+        $name = strtolower($name);
+
+        foreach (self::cases() as $case) {
+            if (strtolower($case->name) === $name) {
+                return $case;
+            }
+        }
+
+        throw new ValueError("Invalid ActivityStatus: {$name}");
     }
 
 }
