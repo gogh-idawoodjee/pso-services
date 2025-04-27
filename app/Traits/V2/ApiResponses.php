@@ -12,12 +12,12 @@ trait ApiResponses
         return $this->success($data, $message);
     }
 
-    protected function notSentToPso($data = []): JsonResponse
+    protected function notSentToPso($data = [], $additionalDetails = null): JsonResponse
     {
-        return $this->success($data, 'Successful. Not sent to PSO by Request', 202);
+        return $this->success($data, 'Successful. Not sent to PSO by Request', $additionalDetails, 202);
     }
 
-    protected function success($data = [], $message = null, $statusCode = 200): JsonResponse
+    protected function success($data = [], $message = null, $additionalDetails = null, $statusCode = 200): JsonResponse
     {
         $response = [
             'data' => $data,
@@ -26,6 +26,10 @@ trait ApiResponses
 
         if ($message !== null) {
             $response['message'] = $message;
+        }
+
+        if ($additionalDetails !== null) {
+            $response['additionalDetails'] = $additionalDetails;
         }
 
         return response()->json($response, $statusCode);

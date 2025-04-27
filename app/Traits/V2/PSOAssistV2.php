@@ -119,7 +119,7 @@ trait PSOAssistV2
 
             if ($useWrapper) {
                 return [
-                    'payLoadToPso' => ['dsScheduleData' => $data]
+                    'payloadToPso' => ['dsScheduleData' => $data]
                 ];
             }
             return [
