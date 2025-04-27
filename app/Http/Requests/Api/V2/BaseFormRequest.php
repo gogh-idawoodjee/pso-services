@@ -32,9 +32,7 @@ class BaseFormRequest extends FormRequest
             'environment.token' => [
                 'nullable',
                 'string',
-                'required_without_all:environment.username,environment.password',
             ],
-
             'environment.datasetId' => [
                 'required_if:environment.sendToPso,true',
                 'string',
@@ -46,21 +44,18 @@ class BaseFormRequest extends FormRequest
             'environment.username' => [
                 'nullable',
                 'string',
-                'required_without:environment.token',
-                'required_if:environment.sendToPso,true',
             ],
-
             'environment.password' => [
                 'nullable',
                 'string',
-                'required_without:environment.token',
-                'required_if:environment.sendToPso,true',
             ],
             'environment.sendToPso' => [
                 'boolean',
             ],
         ];
     }
+
+
 
 
 }
