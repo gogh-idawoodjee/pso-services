@@ -2,6 +2,7 @@
 
 namespace App\Services\V2;
 
+use App\Classes\BaseService;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;
@@ -11,21 +12,22 @@ use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\Request;
 use JsonException;
 use Ramsey\Uuid\Uuid;
+use SensitiveParameter;
 
-class TravelService
+class TravelService extends BaseService
 {
     use PSOAssistV2;
 
     private array $data;
     private string $travelLogId;
     private string|null $datasetId;
-    private PSOTravelLog $travelLog;
 
     /**
      */
-    public function __construct(Request $request)
+    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, Request $request)
     {
 
+        parent::__construct($sessionToken);
         $this->data = $request->get('data');
         $this->datasetId = $request->input('environment.dataset_id');
         $this->travelLogId = Uuid::uuid4()->toString();
@@ -41,18 +43,19 @@ class TravelService
     {
         // Create travel log
         $payload = $this->travelPayload();
-        $this->travelLog = $this->createTravelLog($payload, $this->travelLogId);
+        $travelLog = $this->createTravelLog($payload, $this->travelLogId);
 
         // TODO: Send the payload to the API
         // $response = $this->sendTravelRequest($payload);
 
         // TODO: Update travel log with response
+        // this would happen in the receiving service
         // $this->updateTravelLog($response);
 
         // TODO: Return processed response
         return [
             'id' => $this->travelLogId,
-            'travelogdetails' => json_decode($this->travelLog->input_payload),
+            'input_to_pso' => json_decode($travelLog->input_payload, false, 512, JSON_THROW_ON_ERROR),
             'status' => 'pending'
             // 'expiry' => $response['expiry_date'] ?? null
         ];
@@ -100,7 +103,8 @@ class TravelService
     {
         return PSOTravelLog::create([
             'id' => $id,
-            'input_payload' => json_encode($payload, JSON_THROW_ON_ERROR)
+            'input_payload' => json_encode($payload, JSON_THROW_ON_ERROR),
+            'status' => 'pending' //TODO consider changing this to enum
         ]);
     }
 
@@ -120,4 +124,5 @@ class TravelService
 
     // TODO: Add method to update travel log with response
     // private function updateTravelLog($response)
+
 }
