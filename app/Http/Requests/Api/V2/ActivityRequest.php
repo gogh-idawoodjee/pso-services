@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Http\Requests\Api\V2;
+
+use App\Enums\ActivityStatus;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use UnexpectedValueException;
+
+class ActivityRequest extends BaseFormRequest
+{
+    private ActivityStatus|null $parsedStatus = null;
+
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->route('activityId')) {
+            $this->merge([
+                'data' => Arr::add($this->input('data', []), 'activityId', $this->route('activityId')),
+            ]);
+        }
+    }
+
+    public function rules(): array
+    {
+        $allStatusValues = collect(array_keys(ActivityStatus::allStatuses()))
+            ->map(static fn($status) => Str::lower($status));
+
+        $commonRules = $this->commonRules();
+
+        $additionalRules = [
+            'data.dateTimeFixed' => 'date_format:Y-m-d\TH:i',
+            'data.status' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($allStatusValues) {
+                    if (!$allStatusValues->contains(Str::lower($value))) {
+                        $fail('The selected status is invalid.');
+                    }
+                },
+            ],
+            'data.resourceId' => ['nullable', 'string'], // handled conditionally in withValidator()
+        ];
+
+        return array_merge($commonRules, $additionalRules);
+    }
+
+    public function withValidator($validator): void
+    {
+        $statusesRequiringResource = collect(array_keys(ActivityStatus::statusesGreaterThanAllocated()))
+            ->map(static fn($status) => Str::lower($status));
+
+        $validator->sometimes('data.resourceId', ['required', 'string'], function ($input) use ($statusesRequiringResource) {
+            $status = Str::lower(data_get($input, 'data.status', ''));
+
+            return $statusesRequiringResource->contains($status);
+        });
+    }
+
+    public function messages(): array
+    {
+        $allocatedLabel = ActivityStatus::ALLOCATED->label();
+
+        return [
+            'data.resourceId.required' => "The resource ID field is required when status is set to a value greater than or equal to {$allocatedLabel}.",
+        ];
+    }
+
+    /**
+     * After validation passes, convert the string status into the ActivityStatus enum.
+     */
+    protected function passedValidation(): void
+    {
+        $statusString = data_get($this->validated(), 'data.status', '');
+        $statusString = strtolower($statusString);
+
+        foreach (ActivityStatus::cases() as $case) {
+            if (strtolower($case->name) === $statusString) {
+                $this->parsedStatus = $case;
+                return;
+            }
+        }
+
+        throw new UnexpectedValueException("Unexpected status value '{$statusString}'");
+    }
+
+    /**
+     * Get the parsed ActivityStatus enum after validation.
+     */
+    public function activityStatus(): ActivityStatus|null
+    {
+        return $this->parsedStatus;
+    }
+}

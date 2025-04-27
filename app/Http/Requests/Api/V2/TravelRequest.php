@@ -15,15 +15,13 @@ class TravelRequest extends BaseFormRequest
     {
 
         $commonRules = $this->commonRules();
-        $additionalRules =
-            [
-                'data.lat_from' => 'numeric|between:-90,90|required',
-                'data.long_from' => 'numeric|between:-180,180|required',
-                'data.lat_to' => 'numeric|between:-90,90|required',
-                'data.long_to' => 'numeric|between:-180,180|required',
-                'data.google_api_key' => 'string|required'
-            ];
-
+        $additionalRules = [
+            'data.activityId' => 'string|required',
+            'data.longFrom' => 'numeric|between:-180,180|required',
+            'data.latTo' => 'numeric|between:-90,90|required',
+            'data.longTo' => 'numeric|between:-180,180|required',
+            'data.googleApiKey' => 'string|required'
+        ];
         return array_merge($commonRules, $additionalRules);
     }
 }

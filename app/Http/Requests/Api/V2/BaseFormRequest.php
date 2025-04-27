@@ -24,16 +24,43 @@ class BaseFormRequest extends FormRequest
     public function commonRules(): array
     {
         return [
-            'environment.base_url' => [
-                'required',
+            'environment.baseUrl' => [
+                'required_if:environment.sendToPso,true',
                 'url',
-                new DisallowProdUrl
+                new DisallowProdUrl,
             ],
-            'environment.token' => 'nullable|string', // Make token nullable, but if present, it's required
-            'environment.dataset_id' => 'required|string',
-            'environment.account_id' => 'required|string',
-            'environment.username' => ['required_without_all:environment.token', 'nullable'], // username is required if token is not provided
-            'environment.password' => ['required_without_all:environment.token', 'nullable'], // password is required if token is not provided
+            'environment.token' => [
+                'nullable',
+                'string',
+                'required_without_all:environment.username,environment.password',
+            ],
+
+            'environment.datasetId' => [
+                'required_if:environment.sendToPso,true',
+                'string',
+            ],
+            'environment.accountId' => [
+                'required_if:environment.sendToPso,true',
+                'string',
+            ],
+            'environment.username' => [
+                'nullable',
+                'string',
+                'required_without:environment.token',
+                'required_if:environment.sendToPso,true',
+            ],
+
+            'environment.password' => [
+                'nullable',
+                'string',
+                'required_without:environment.token',
+                'required_if:environment.sendToPso,true',
+            ],
+            'environment.sendToPso' => [
+                'boolean',
+            ],
         ];
     }
+
+
 }
