@@ -2,23 +2,24 @@
 
 namespace App\Helpers\Stubs;
 
+
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 
 class ActivityStatus
 {
     public static function make(
-        string      $activityId,
-        int         $statusId,
-        int|null    $visitId = null,
-        string|null $duration = null,
-        bool|null   $fixed = null,
-        string|null $resourceId = null,
-        string|null $reason = null,
-        string|null $dateTimeFixed = null,
-        string|null $dateTimeEarliest = null,
-        string|null $timestampOverride = null,
-        int         $psoApiVersion = 1
+        string                    $activityId,
+        \App\Enums\ActivityStatus $statusId,
+        string|null               $resourceId = null,
+        bool|null                 $fixed = null,
+        int|null                  $visitId = null,
+        string|null               $duration = null,
+        string|null               $dateTimeFixed = null,
+        string|null               $dateTimeEarliest = null,
+        string|null               $reason = null,
+        string|null               $timestampOverride = null,
+        int                       $psoApiVersion = 1
     ): array
     {
         $fixed ??= false;
@@ -31,7 +32,7 @@ class ActivityStatus
         $dateTimeStatus = $overrideEnabled ? $overrideValue : $now;
         $dateTimeStamp = $overrideEnabled ? $overrideValue : $now;
 
-        $isFixed = $fixed ?: ($statusId !== -1 && $statusId !== 0);
+        $isFixed = $fixed ?: (!self::isUnscheduledStatuses($statusId));
         $durationFormatted = PSOHelper::setPSODuration($duration);
 
         $status = [
@@ -46,7 +47,7 @@ class ActivityStatus
             // 'duration' => $durationFormatted,
         ];
 
-        if ($statusId !== -1 && $statusId !== 0) {
+        if (!self::isUnscheduledStatuses($statusId)) {
             $status['resource_id'] = (string)$resourceId;
 
             if ($dateTimeFixed) {
@@ -59,5 +60,12 @@ class ActivityStatus
         }
 
         return $status;
+    }
+
+    private static function isUnscheduledStatuses($statusId): bool
+    {
+
+        return !($statusId !== \App\Enums\ActivityStatus::IGNORE && $statusId !== \App\Enums\ActivityStatus::UNALLOCATED && $statusId !== \App\Enums\ActivityStatus::ALLOCATED);
+
     }
 }
