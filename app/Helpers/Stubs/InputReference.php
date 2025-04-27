@@ -3,6 +3,8 @@
 namespace App\Helpers\Stubs;
 
 
+use App\Enums\InputMode;
+use App\Enums\ProcessType;
 use Carbon\Carbon;
 
 use Illuminate\Support\Str;
@@ -10,22 +12,22 @@ use Illuminate\Support\Str;
 class InputReference
 {
     public static function make(
-        string      $description,
-        string      $inputType,
-        string      $datasetId,
-        string|null $datetime = null,
-        string|null $dseDuration = null,
-        string|null $processType = null,
-        string|null $appointmentWindow = null,
-        string|null $id = null,
-        int         $psoApiVersion = 1
+
+        string           $datasetId,
+        InputMode        $inputType = InputMode::LOAD,
+        string|null      $datetime = null,
+        string|null      $dseDuration = null,
+        ProcessType|null $processType = null,
+        string|null      $appointmentWindow = null,
+        string|null      $id = null,
+        string|null      $description = null,
+        int              $psoApiVersion = 1,
     ): array
     {
         $inputReference = [
             'datetime' => $datetime ?? Carbon::now()->toAtomString(),
             'id' => $id ?? Str::orderedUuid()->getHex()->toString(),
-            'description' => $description,
-            'input_type' => strtoupper($inputType),
+            'input_type' => $inputType->value,
             'organisation_id' => '2',
             'dataset_id' => $datasetId,
             'user_id' => config('pso-services.settings.service_name'),
@@ -34,9 +36,12 @@ class InputReference
         if ($dseDuration) {
             $inputReference['duration'] = $dseDuration;
         }
+        if ($description) {
+            $inputReference['description'] = $description;
+        }
 
         if ($processType) {
-            $inputReference['process_type'] = strtoupper($processType);
+            $inputReference['process_type'] = $processType->value;
         }
 
         if ($appointmentWindow !== null) {

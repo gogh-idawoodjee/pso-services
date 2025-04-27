@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('input_reference')->nullable();
             $table->json('input_payload');
             $table->json('output_payload')->nullable();
+            $table->string('status')->nullable();
             $table->json('pso_response')->nullable();
             $table->text('response_time')->nullable();
             $table->json('transfer_stats')->nullable();
