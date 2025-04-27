@@ -41,12 +41,12 @@ class Activity
         ];
 
         $activitySkills = collect(data_get($activityData, 'data.skills') ?? [])
-            ->map(static fn($skill) => Skill::make($skill, 'activity', $activityId))
+            ->map(static fn($skill) => Skill::make($skill, $activityId))
             ->values()
             ->toArray();
 
         $activityRegions = collect(data_get($activityData, 'data.regions') ?? [])
-            ->map(static fn($regionId) => Region::make($regionId, 'activity', $activityId))
+            ->map(static fn($regionId) => Region::make($regionId, $activityId))
             ->values()
             ->toArray();
 

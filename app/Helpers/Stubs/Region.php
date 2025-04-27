@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Region
 {
-    public static function make(string $regionId, string $entityId, string|null $entityType = null, int $psoApiVersion = 1): array
+    public static function make(string $regionId, string $entityId, string|null $entityType = 'activity', int $psoApiVersion = 1): array
     {
         $entityType ??= 'region';
         return [
