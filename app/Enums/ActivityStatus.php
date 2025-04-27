@@ -63,7 +63,7 @@ enum ActivityStatus: string
 
         if ($cache === null) {
             $cache = collect(self::cases())
-                ->filter(static fn(self $status) => (int)$status->value >= 10)
+                ->filter(static fn(self $status) => (int)$status->value >= 10) // todo make this 10 value a parameter
                 ->mapWithKeys(static fn(self $status) => [
                     strtolower($status->name) => (int)$status->value,
                 ])

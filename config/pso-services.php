@@ -14,7 +14,7 @@ return [
             'priority' => env('DEFAULT_PRIORITY', 1),
             'appointment_template_duration' => env('APPOINTMENT_TEMPLATE_DURATION', 21),
             'class_id' => 'CALL',
-            'split_allowed' => true,
+            'split_allowed' => false,
             'appointment_booking_suffix' => ''
         ],
         'resource' => [

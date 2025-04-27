@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V2\ActivityStatusController;
+use App\Http\Controllers\Api\V2\AppointmentController;
 use App\Http\Controllers\Api\V2\AssistController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\TravelController;
@@ -21,3 +22,7 @@ Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 
 Route::delete('/delete', [AssistController::class, 'destroy']);
 Route::post('/load', [AssistController::class, 'store']);
 Route::patch('/rota', [AssistController::class, 'update']);
+
+
+// appointemnt routes
+Route::post('/appointment', [AppointmentController::class, 'store']);
