@@ -2,8 +2,7 @@
 
 namespace App\Services\V2;
 
-use App\Classes\BaseService;
-
+use App\Classes\V2\BaseService;
 use App\Helpers\Stubs\DeleteObject;
 use Illuminate\Http\JsonResponse;
 use SensitiveParameter;

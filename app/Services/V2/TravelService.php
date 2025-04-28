@@ -2,7 +2,7 @@
 
 namespace App\Services\V2;
 
-use App\Classes\BaseService;
+use App\Classes\V2\BaseService;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;

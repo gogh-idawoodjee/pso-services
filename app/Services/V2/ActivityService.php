@@ -2,7 +2,7 @@
 
 namespace App\Services\V2;
 
-use App\Classes\BaseService;
+use App\Classes\V2\BaseService;
 use App\Enums\ActivityStatus;
 use App\Helpers\Stubs\ActivityStatus as StubActivityStatus;
 use Illuminate\Http\JsonResponse;
