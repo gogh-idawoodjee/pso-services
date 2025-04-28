@@ -9,25 +9,24 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-pdo": "*",
         "alexpechkarev/google-maps": "^12.1",
+        "dedoc/scramble": "^0.12.19",
         "fakerphp/faker": "^1.23",
         "guzzlehttp/guzzle": "^7.2",
-        "illuminate/support": "^v12.2.0",
-        "laravel/framework": "^v12",
-        "laravel/tinker": "^2.7",
+        "laravel/framework": "12.8.*",
+        "laravel/tinker": "^2.10",
         "logtail/monolog-logtail": "^3.0",
         "monolog/monolog": "^3.0",
         "nesbot/carbon": "^3.8",
         "ohseesoftware/laravel-vite-manifest": "^v1.2.0",
-        "spatie/geocoder": "^3.15",
-        "ext-pdo": "*"
+        "spatie/geocoder": "^3.15"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.0",
         "mockery/mockery": "^1.5",
         "phpunit/phpunit": "^10.0",
-        "roave/security-advisories": "dev-latest",
-        "spatie/laravel-ignition": "^2.0"
+        "roave/security-advisories": "dev-latest"
     },
     "autoload": {
         "psr-4": {
