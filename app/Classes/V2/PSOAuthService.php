@@ -2,6 +2,7 @@
 
 namespace App\Classes\V2;
 
+use App\Enums\PsoEndpointSegment;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -28,7 +29,7 @@ class PSOAuthService
 
         try {
             $timeout = config('psott.defaults.timeout', 10);
-            $url = data_get($environment, 'baseUrl') . "/IFSSchedulingRESTfulGateway/api/v1/scheduling/session";
+            $url = data_get($environment, 'baseUrl') . "/IFSSchedulingRESTfulGateway/api/v1/scheduling/" . PsoEndpointSegment::SESSION->value;
 
             $response = Http::asForm()
                 ->timeout($timeout)

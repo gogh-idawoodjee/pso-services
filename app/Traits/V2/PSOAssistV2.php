@@ -3,6 +3,7 @@
 namespace App\Traits\V2;
 
 use App\Classes\V2\PSOAuthService;
+use App\Enums\PsoEndpointSegment;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use JsonException;
+use SensitiveParameter;
 
 trait PSOAssistV2
 {
@@ -21,20 +23,20 @@ trait PSOAssistV2
      *
      * @param array $payload Data to send
      * @param array $environmentData Environment configuration
-     * @param string $endpoint PSO API endpoint
+     * @param PsoEndpointSegment $segment PSO API endpoint
      * @return JsonResponse Response from PSO
      * @throws JsonException
      */
-    public function sendToPso($payload, $environmentData, string $endpoint): JsonResponse
+    public function sendToPso($payload, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
     {
         try {
             $timeout = config('psott.defaults.timeout', 10);
             $baseUrl = data_get($environmentData, 'baseUrl');
-            $url = "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/{$endpoint}";
+            $url = "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/{$segment->value}";
 
             $response = Http::timeout($timeout)
                 ->connectTimeout($timeout)
-                ->withHeaders(['apiKey' => data_get($environmentData, 'token')])
+                ->withHeaders(['apiKey' => $sessionToken])
                 ->post($url, $payload);
 
             return $this->handleDataResponse($response);
