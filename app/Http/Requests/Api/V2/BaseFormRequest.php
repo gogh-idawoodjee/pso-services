@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\V2;
 use App\Rules\DisallowProdUrl;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class BaseFormRequest extends FormRequest
 {
@@ -24,6 +25,15 @@ class BaseFormRequest extends FormRequest
     public function commonRules(): array
     {
         return [
+            /**
+             * Whether to send the request to PSO (true/false).
+             * @var boolean
+             * @example true
+             */
+            'environment.sendToPso' => [
+                'boolean',
+            ],
+
             /**
              * The base URL for the PSO environment.
              * Required if sendToPso is true.
@@ -47,6 +57,28 @@ class BaseFormRequest extends FormRequest
             ],
 
             /**
+             * The username for PSO authentication (optional if using token).
+             * @var string|null
+             * @example "john.doe"
+             */
+            'environment.username' => [
+                'nullable',
+                'string',
+                'required_with:environment.password',
+            ],
+
+            /**
+             * The password for PSO authentication (optional if using token).
+             * @var string|null
+             * @example "P@ssw0rd!"
+             */
+            'environment.password' => [
+                'nullable',
+                'string',
+                'required_with:environment.username',
+            ],
+
+            /**
              * The dataset ID to use in PSO.
              * Required if sendToPso is true.
              * @var string
@@ -67,35 +99,25 @@ class BaseFormRequest extends FormRequest
                 'required_if:environment.sendToPso,true',
                 'string',
             ],
-
-            /**
-             * The username for PSO authentication (optional if using token).
-             * @var string|null
-             * @example "john.doe"
-             */
-            'environment.username' => [
-                'nullable',
-                'string',
-            ],
-
-            /**
-             * The password for PSO authentication (optional if using token).
-             * @var string|null
-             * @example "P@ssw0rd!"
-             */
-            'environment.password' => [
-                'nullable',
-                'string',
-            ],
-
-            /**
-             * Whether to send the request to PSO (true/false).
-             * @var boolean
-             * @example true
-             */
-            'environment.sendToPso' => [
-                'boolean',
-            ],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     *
+     * @param Validator $validator
+     * @return void
+     */
+    public function withValidator($validator): void
+    {
+        $validator->sometimes('environment.token', 'required', static function ($input) {
+            return data_get($input, 'environment.sendToPso') === true &&
+                (empty(data_get($input, 'environment.username')) || empty(data_get($input, 'environment.password')));
+        });
+
+        $validator->sometimes(['environment.username', 'environment.password'], 'required', static function ($input) {
+            return data_get($input, 'environment.sendToPso') === true &&
+                empty(data_get($input, 'environment.token'));
+        });
     }
 }
