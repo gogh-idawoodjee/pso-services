@@ -29,7 +29,23 @@ class ActivityRequest extends BaseFormRequest
         $commonRules = $this->commonRules();
 
         $additionalRules = [
-            'data.dateTimeFixed' => 'date_format:Y-m-d\TH:i',
+            /**
+             * The fixed date and time for the activity in ISO 8601 format (Y-m-d\TH:i:s).
+             * Example: "2025-04-30T14:30:00"
+             * @var string
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.dateTimeFixed' => 'date_format:Y-m-d\TH:i:s',
+
+            /**
+             * The status of the activity.
+             * Must be one of:
+             * "ignore", "unallocated", "allocated", "committed", "sent", "downloaded",
+             * "accepted", "travelling", "waiting", "onsite", "pendingcompletion",
+             * "visitcomplete", "completed", "incomplete".
+             * @var string
+             * @example "allocated"
+             */
             'data.status' => [
                 'required',
                 'string',
@@ -39,7 +55,14 @@ class ActivityRequest extends BaseFormRequest
                     }
                 },
             ],
-            'data.resourceId' => ['nullable', 'string'], // handled conditionally in withValidator()
+
+            /**
+             * The ID of the resource assigned to the activity.
+             * Required if the activity status is greater than or equal to "allocated".
+             * @var string|null
+             * @example "resource-123"
+             */
+            'data.resourceId' => ['nullable', 'string'],
         ];
 
         return array_merge($commonRules, $additionalRules);

@@ -24,38 +24,78 @@ class BaseFormRequest extends FormRequest
     public function commonRules(): array
     {
         return [
+            /**
+             * The base URL for the PSO environment.
+             * Required if sendToPso is true.
+             * @var string
+             * @example "https://enercare-pso-tst.ifs.cloud"
+             */
             'environment.baseUrl' => [
                 'required_if:environment.sendToPso,true',
                 'url',
                 new DisallowProdUrl,
             ],
+
+            /**
+             * The authentication token (if already retrieved).
+             * @var string|null
+             * @example "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+             */
             'environment.token' => [
                 'nullable',
                 'string',
             ],
+
+            /**
+             * The dataset ID to use in PSO.
+             * Required if sendToPso is true.
+             * @var string
+             * @example "dataset_12345"
+             */
             'environment.datasetId' => [
                 'required_if:environment.sendToPso,true',
                 'string',
             ],
+
+            /**
+             * The account ID for PSO.
+             * Required if sendToPso is true.
+             * @var string
+             * @example "account_001"
+             */
             'environment.accountId' => [
                 'required_if:environment.sendToPso,true',
                 'string',
             ],
+
+            /**
+             * The username for PSO authentication (optional if using token).
+             * @var string|null
+             * @example "john.doe"
+             */
             'environment.username' => [
                 'nullable',
                 'string',
             ],
+
+            /**
+             * The password for PSO authentication (optional if using token).
+             * @var string|null
+             * @example "P@ssw0rd!"
+             */
             'environment.password' => [
                 'nullable',
                 'string',
             ],
+
+            /**
+             * Whether to send the request to PSO (true/false).
+             * @var boolean
+             * @example true
+             */
             'environment.sendToPso' => [
                 'boolean',
             ],
         ];
     }
-
-
-
-
 }

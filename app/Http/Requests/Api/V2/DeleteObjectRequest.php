@@ -14,16 +14,26 @@ class DeleteObjectRequest extends BaseFormRequest
         $commonRules = $this->commonRules();
 
         $additionalRules = [
+            /**
+             * The type of object to delete.
+             * Must be one of:
+             * "activity_sla", "activity_skill", "shift", "activity", "resource",
+             * "location", "unavailability", "location_region", "schedule_event",
+             * "resource_region", "resource_region_availability".
+             * @var string
+             * @example "activity"
+             */
             'data.object_type' => [
                 'required',
                 'string',
-                Rule::in(array_keys(PSOObjectRegistry::all())), // 👈 validate against valid object types
+                Rule::in(array_keys(PSOObjectRegistry::all())),
             ],
             // No pk fields yet — added dynamically in withValidator()
         ];
 
         return array_merge($commonRules, $additionalRules);
     }
+
 
     public function setGroupErrors(bool $shouldGroupErrors): static
     {

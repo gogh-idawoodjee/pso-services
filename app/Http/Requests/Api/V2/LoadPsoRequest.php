@@ -15,30 +15,100 @@ class LoadPsoRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-
         $commonRules = $this->commonRules();
 
         // override datasetId because it's required for load
-        $commonRules['environment.datasetId'] = ['required','string'];
-        $additionalRules =
-            [
-                'data.rotaId' => 'string', // if not included, assume same as dataset ID
-                'data.dseDuration' => 'integer|required',
-                'data.appointmentWindow' => 'integer',
-                'data.processType' => [
-                    'required',
-                    new Enum(ProcessType::class),
-                ],
-                'data.description' => 'string',
-                'data.datetime' => 'date',
-                'data.includeBroadcast' => 'boolean',
-                'data.keepPsoData' => 'boolean',
-                'data.broadcastType' => 'integer|required_if:include_broadcast,true',
-                'data.broadcastTrl' => 'url|required_if:include_broadcast,true',
-                'data.id' => 'string'
+        $commonRules['environment.datasetId'] = ['required', 'string'];
 
-            ];
+        $additionalRules = [
+            /**
+             * The rota ID associated with the load.
+             * Defaults to dataset ID if not provided.
+             * @var string
+             * @example "rota-001"
+             */
+            'data.rotaId' => 'string',
+
+            /**
+             * Duration of the Dynamic Scheduling Engine run, in minutes.
+             * @var int
+             * @example 120
+             */
+            'data.dseDuration' => 'integer|required',
+
+            /**
+             * Appointment window duration, in minutes.
+             * @var int
+             * @example 30
+             */
+            'data.appointmentWindow' => 'integer',
+
+            /**
+             * The type of processing to perform.
+             * Must be one of:
+             * "DYNAMIC", "APPOINTMENT", "REACTIVE", "STATIC".
+             * @var string
+             * @example "DYNAMIC"
+             */
+            'data.processType' => [
+                'required',
+                new Enum(ProcessType::class),
+            ],
+
+
+            /**
+             * Description of the PSO load.
+             * @var string
+             * @example "PSO load for daily operations"
+             */
+            'data.description' => 'string',
+
+            /**
+             * Datetime associated with the load.
+             * @var string
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.datetime' => 'date',
+
+            /**
+             * Whether to include broadcast in the PSO load.
+             * @var boolean
+             * @example true
+             */
+            'data.includeBroadcast' => 'boolean',
+
+            /**
+             * Whether to keep existing PSO data during the load.
+             * @var boolean
+             * @example false
+             */
+            'data.keepPsoData' => 'boolean',
+
+            /**
+             * Broadcast type.
+             * Required if includeBroadcast is true.
+             * @var int
+             * @example 1
+             */
+            'data.broadcastType' => 'integer|required_if:include_broadcast,true',
+
+            /**
+             * Broadcast TRL (Target Resource List) URL.
+             * Required if includeBroadcast is true.
+             * @var string
+             * @example "https://example.com/broadcast.trl"
+             */
+            'data.broadcastTrl' => 'url|required_if:include_broadcast,true',
+
+            /**
+             * The ID associated with the PSO load.
+             * @var string
+             * @example "load-123"
+             */
+            'data.id' => 'string',
+        ];
 
         return array_merge($commonRules, $additionalRules);
     }
+
 }

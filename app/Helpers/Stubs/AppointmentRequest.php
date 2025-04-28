@@ -3,7 +3,7 @@
 namespace App\Helpers\Stubs;
 
 
-use App\Enums\ActivityStatus;
+use App\Enums\InputMode;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -17,6 +17,7 @@ class AppointmentRequest
     public static function make(array $appointmentData, int $psoApiVersion = 1): array
     {
 
+        $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toAtomString();
         $appointmentRequest = [
             'id' => Str::orderedUuid()->getHex()->toString(),
             'slot_usage_rule_set_id' => data_get($appointmentData, 'data.slotUsageRuleId'),
@@ -26,12 +27,22 @@ class AppointmentRequest
             'appointment_template_duration' => PSOHelper::setPSODurationDays(data_get($appointmentData, 'data.appointmentTemplateDuration') ?? 21),
             'activity_id' => data_get($appointmentData, 'data.activityId') . config('pso-services.defaults.activity.appointment_booking_suffix'),
             'appointment_template_datetime' => data_get($appointmentData, 'data.appointmentTemplateDateTime'),
-            'request_datetime' => data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->toAtomString(),
+            'request_datetime' => $requestDateTime,
         ];
 
-        $activity = Activity::make($appointmentData, true, 1);
+        $activity = Activity::make($appointmentData, true);
+        $input_reference = InputReference::make(
+            data_get($appointmentData, 'environment.datasetId'),
+            InputMode::CHANGE,
+            $requestDateTime,
+            null,
+            null,
+            null,
+            null,
+            'Appointment Request for: ' . data_get($appointmentData, 'data.activityId')
+        );
 
-        return collect(['Appointment_Request' => $appointmentRequest])->merge($activity)->toArray();
+        return collect(['Appointment_Request' => $appointmentRequest])->merge($activity)->merge(['Input_Reference' => $input_reference])->toArray();
 
     }
 }
