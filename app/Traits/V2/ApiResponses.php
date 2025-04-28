@@ -17,6 +17,12 @@ trait ApiResponses
         return $this->success($data, 'Successful. Not sent to PSO by Request', $additionalDetails, 202);
     }
 
+    protected function sentToPso($data = [], $additionalDetails = null): JsonResponse
+    {
+        return $this->success($data, 'Successful. Sent to PSO', $additionalDetails, 200);
+    }
+
+
     protected function success($data = [], $message = null, $additionalDetails = null, $statusCode = 200): JsonResponse
     {
         $response = [

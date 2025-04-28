@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Classes;
+namespace App\Classes\V2;
 
 
 use App\Traits\V2\PSOAssistV2;
