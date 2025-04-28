@@ -7,11 +7,11 @@ use App\Http\Requests\Api\V2\AppointmentRequest;
 
 use App\Services\V2\AppointmentService;
 use App\Traits\V2\PSOAssistV2;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
-
 
     use PSOAssistV2;
 
@@ -27,13 +27,15 @@ class AppointmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(AppointmentRequest $request): \Illuminate\Http\JsonResponse
+    public function store(AppointmentRequest $request): JsonResponse
     {
 
         return $this->executeAuthenticatedAction($request, function (AppointmentRequest $req) {
-            // so we have the token now in $req->input('environment.token')
+            // so we have the token now in data_get($req, 'environment.token')
+
             // we should send that the activity service? // all our services should accept a token
             $appointmentService = new AppointmentService(
+
                 $req->filled('environment.token') ? $req->input('environment.token') : null,
                 $req->validated(),
             );

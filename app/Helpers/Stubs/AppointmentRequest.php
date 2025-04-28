@@ -6,6 +6,7 @@ namespace App\Helpers\Stubs;
 use App\Enums\InputMode;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 
@@ -20,15 +21,18 @@ class AppointmentRequest
         $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toAtomString();
         $appointmentRequest = [
             'id' => Str::orderedUuid()->getHex()->toString(),
-            'slot_usage_rule_set_id' => data_get($appointmentData, 'data.slotUsageRuleId'),
+//            'slot_usage_rule_set_id' => data_get($appointmentData, 'data.slotUsageRuleId'),
             'appointment_template_id' => data_get($appointmentData, 'data.appointmentTemplateId'),
             // todo deal with customer timezones
             'appointment_base_datetime' => data_get($appointmentData, 'data.appointmentBaseDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toIso8601String(),
             'appointment_template_duration' => PSOHelper::setPSODurationDays(data_get($appointmentData, 'data.appointmentTemplateDuration') ?? 21),
             'activity_id' => data_get($appointmentData, 'data.activityId') . config('pso-services.defaults.activity.appointment_booking_suffix'),
-            'appointment_template_datetime' => data_get($appointmentData, 'data.appointmentTemplateDateTime'),
+            'appointment_template_datetime' => data_get($appointmentData, 'data.appointmentTemplateDateTime') ?? $requestDateTime,
             'request_datetime' => $requestDateTime,
         ];
+        if (data_get($appointmentData, 'data.slotUsageRuleId')) {
+            Arr::add($appointmentRequest, 'slot_usage_rule_id', data_get($appointmentData, 'data.slotUsageRuleId'));
+        }
 
         $activity = Activity::make($appointmentData, true);
         $input_reference = InputReference::make(
@@ -41,6 +45,7 @@ class AppointmentRequest
             null,
             'Appointment Request for: ' . data_get($appointmentData, 'data.activityId')
         );
+
 
         return collect(['Appointment_Request' => $appointmentRequest])->merge($activity)->merge(['Input_Reference' => $input_reference])->toArray();
 
