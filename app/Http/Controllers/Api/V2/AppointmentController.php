@@ -21,7 +21,18 @@ class AppointmentController extends Controller
      */
     public function check(AppointmentSummaryRequest $request): JsonResponse
     {
-        //
+        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
+            // so we have the token now in data_get($req, 'environment.token')
+
+            // we should send that the activity service? // all our services should accept a token
+            $appointmentService = new AppointmentService(
+
+                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
+            );
+
+            return $appointmentService->checkAppointed();
+        });
     }
 
 
@@ -62,6 +73,19 @@ class AppointmentController extends Controller
     public function update(AppointmentSummaryRequest $request): JsonResponse
     {
 
+        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
+            // so we have the token now in data_get($req, 'environment.token')
+
+            // we should send that the activity service? // all our services should accept a token
+            $appointmentService = new AppointmentService(
+
+                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
+            );
+
+            return $appointmentService->acceptAppointment();
+        });
+
     }
 
     /**
@@ -69,6 +93,17 @@ class AppointmentController extends Controller
      */
     public function destroy(AppointmentSummaryRequest $request): JsonResponse
     {
-        //
+        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
+            // so we have the token now in data_get($req, 'environment.token')
+
+            // we should send that the activity service? // all our services should accept a token
+            $appointmentService = new AppointmentService(
+
+                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
+            );
+
+            return $appointmentService->declineAppointment();
+        });
     }
 }

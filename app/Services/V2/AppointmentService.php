@@ -2,6 +2,7 @@
 
 namespace App\Services\V2;
 
+
 use App\Classes\V2\BaseService;
 use App\Enums\AppointmentRequestStatus;
 use App\Enums\PsoEndpointSegment;
@@ -87,13 +88,19 @@ class AppointmentService extends BaseService
             $environmentData = data_get($this->data, 'environment');
 
             $payload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
+            $inputReferenceId = data_get($payload, 'Input_Reference.id');
 
-            // todo see if it exists in the DB and
-            // is not already checked
-            // appointment request is not complete
-            // is not accepted or declined
-            // is not expired
-            // offer is in list of available offers (if not then status 406)
+
+            try {
+                $acceptOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, $appointmentOfferId, $inputReferenceId);
+                if (data_get($acceptOffer, 'status') !== 200) {
+                    $this->error(data_get($acceptOffer, 'message'), data_get($acceptOffer, 'status'));
+                }
+
+            } catch (ModelNotFoundException) {
+                return $this->error('Appointment Request ID was not found', 404);
+            }
+
 
             // need to get sla_start and sla_end from the offer sent in
             // get the prospective resource ID
@@ -136,8 +143,27 @@ class AppointmentService extends BaseService
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
             Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
             return $this->error('An unexpected error occurred', 500);
         }
+    }
+
+    private function deleteActivity(string $activityId, array $environmentData, #[SensitiveParameter] string $sessionToken): void
+    {
+
+        // expected that environment.sendToPso is always true
+        $deleteServicePayload = [
+            'environment' => $environmentData,
+            'data' => [
+                'object_type' => 'activity',
+                'object_pk1' => $activityId,
+            ]
+        ];
+
+        $deleteService = new DeleteService($sessionToken, $deleteServicePayload);
+        $deleteService->deleteObject();
+
+
     }
 
     public function declineAppointment(): JsonResponse
@@ -148,19 +174,26 @@ class AppointmentService extends BaseService
             $environmentData = data_get($this->data, 'environment');
 
             $payload = AppointmentOfferResponse::make($appointmentRequestId);
+            $inputReferenceId = data_get($payload, 'Input_Reference.id');
 
-            // todo see if it exists in the DB and
-            // is not already checked
-            // appointment request is not complete
-            // is not accepted or declined
-            // is not expired
 
-            // delete the  activity
+            try {
+                $declineOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, -1, $inputReferenceId, false);
+                if (data_get($declineOffer, 'status') !== 200) {
+                    $this->error(data_get($declineOffer, 'message'), data_get($declineOffer, 'status'));
+                }
 
+            } catch (ModelNotFoundException) {
+                return $this->error('Appointment Request ID was not found', 404);
+            }
+
+            $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->first();
+            $activityId = data_get($appointmentRequest, 'activity_id');
 
             if ($this->sessionToken) {
                 $psoPayload = $this->buildPayload($payload);
 
+                // send the decline appointment
                 $psoResponse = $this->sendToPso(
                     $psoPayload,
                     $environmentData,
@@ -170,8 +203,12 @@ class AppointmentService extends BaseService
 
                 // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
+
+                    // delete the activity
+                    $this->deleteActivity($activityId, $environmentData, $this->sessionToken);
+
                     $summary = [ // todo setup this summary
-                        'declined X number of appointments'
+                        'declined X number of appointments. Removed temporary activity'
                     ];
                     return $this->sentToPso($summary, $this->buildPayload($payload, 1, true));
                 }
@@ -198,8 +235,9 @@ class AppointmentService extends BaseService
             $environmentData = data_get($this->data, 'environment');
 
             $payload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId);
+            $inputReferenceId = data_get($payload, 'Input_Reference.id');
 
-            // todo see if it exists in the DB and
+            //  see if it exists in the DB and ✅
             // is not already checked ✅
             // appointment request is not complete ✅
             // is not accepted or declined ✅
@@ -209,12 +247,12 @@ class AppointmentService extends BaseService
             // I think this whole block neds to be instead of the if statement
 
             try {
-                $checkAppointed = $this->updateAppointmentRequestCheckAppointed($appointmentRequestId, $appointmentOfferId);
+                $checkAppointed = $this->updateAppointmentRequestCheckAppointed($appointmentRequestId, $appointmentOfferId, $inputReferenceId);
                 if (data_get($checkAppointed, 'status') !== 200) {
                     $this->error(data_get($checkAppointed, 'message'), data_get($checkAppointed, 'status'));
                 }
 
-            } catch (ModelNotFoundException $e) {
+            } catch (ModelNotFoundException) {
                 return $this->error('Appointment Request ID was not found', 404);
             }
 
@@ -412,7 +450,7 @@ class AppointmentService extends BaseService
         $summary = data_get($appointmentOffers, 'summary', '');
 
         // Find the appointment and update it
-        $appointmentRequest = PSOAppointment::where('run_id', $runId)->first();
+        $appointmentRequest = PSOAppointment::where('run_id', $runId)->firstOrCreate();
         $appointmentRequest->update([
             'appointment_response' => $responseData,
             'valid_offers' => $validOffersJson,
@@ -426,22 +464,40 @@ class AppointmentService extends BaseService
     }
 
 
-    private function updateAppointmentRequestAcceptOffer(string $appointmentRequestId, string $appointmentOfferId)
+    /**
+     * @throws JsonException
+     */
+    private function updateAppointmentRequestAcceptOrDeclineOffer(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, $accept = true): array|null
     {
+        $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId);
+
+        // If there's an error, return the response with message and status
+        if ($checkResult) {
+            return $checkResult; // Return early if validation failed
+        }
+
+        $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->firstOrFail();
+        $offers = collect($appointmentRequest->valid_offers);
+        $appointmentRequest->update([
+            'accepted_offer' => json_encode($offers->firstWhere('id', $appointmentOfferId), JSON_THROW_ON_ERROR),
+            'accepted_offer_id' => $appointmentOfferId,
+            'accepted_offer_datetime' => Carbon::now()->toAtomString(),
+            'accept_decline_input_reference_id' => $inputReferenceId,
+            'status' => $accept ? AppointmentRequestStatus::ACCEPTED->value : AppointmentRequestStatus::DECLINED->value,
+        ]);
+
+        return $checkResult; // Return early if validation failed
+
 
     }
 
-    private function updateAppointmentRequestDeclineOffer(string $appointmentRequestId, string $appointmentOfferId)
-    {
-
-    }
 
     /*
      * this method is called when the user checks the offer
      * the next method will update the record to see if the offer was actually available
      *
      */
-    private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, string $appointmentOfferId)
+    private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId): array|null
     {
 
         // Call the reusable method to check for validity
@@ -457,8 +513,12 @@ class AppointmentService extends BaseService
         $appointmentRequest->update([
             'status' => AppointmentRequestStatus::CHECKED->value,
             'appointed_check_offer_id' => $appointmentOfferId,
-            'check_appointed_datetime' => Carbon::now()->toAtomString(),
+            'appointed_check_datetime' => Carbon::now()->toAtomString(),
+            'appointed_check_input_reference_id' => $inputReferenceId,
         ]);
+
+        return $checkResult; // Return early if validation failed
+
     }
 
     /*
@@ -481,7 +541,7 @@ class AppointmentService extends BaseService
         try {
             // Attempt to find the appointment request
             $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->firstOrFail();
-        } catch (ModelNotFoundException $e) {
+        } catch (ModelNotFoundException) {
             return [
                 'message' => 'Appointment Request ID was not found',
                 'status' => 404

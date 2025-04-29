@@ -42,20 +42,18 @@ return new class extends Migration {
             $table->smallInteger('total_valid_offers_returned')->nullable();
             $table->smallInteger('total_invalid_offers_returned')->nullable();
 
+            // fields up on check
+            $table->smallInteger('appointed_check_offer_id')->nullable();
+            $table->smallInteger('appointed_check_complete')->nullable();
+            $table->smallInteger('appointed_check_result')->nullable();
+            $table->string('appointed_check_input_reference_id')->nullable();
+            $table->dateTime('appointed_check_datetime')->nullable();
+
 
             // fields upon accept/decline/check
             $table->smallInteger('accepted_offer_id')->nullable();
-            $table->smallInteger('appointed_check_offer_id')->nullable();
             $table->json('accepted_offer')->nullable();
-            $table->smallInteger('appointed_check_complete')->nullable();
-            $table->smallInteger('appointed_check_result')->nullable();
             $table->string('accept_decline_input_reference_id')->nullable();
-            $table->string('appointed_check_input_reference_id')->nullable();
-
-
-
-
-            $table->dateTime('appointed_check_datetime')->nullable();
             $table->dateTime('accept_decline_datetime')->nullable();
 
             $table->string('user_id')->nullable();
