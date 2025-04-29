@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
 use App\Http\Requests\Api\V2\AppointmentRequest;
 
 use App\Services\V2\AppointmentService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+
 
 class AppointmentController extends Controller
 {
@@ -16,16 +17,16 @@ class AppointmentController extends Controller
     use PSOAssistV2;
 
     /**
-     * Display a listing of the resource.
+     * Check Appointed.
      */
-    public function index()
+    public function check(AppointmentSummaryRequest $request): JsonResponse
     {
         //
     }
 
 
     /**
-     * Store a newly created resource in storage.
+     * Get Appointments
      */
     public function store(AppointmentRequest $request): JsonResponse
     {
@@ -47,26 +48,26 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Get Appointment Details
      */
-    public function show(string $id)
+    public function show(string $AppointmentRequestId): JsonResponse
     {
         //
     }
 
 
     /**
-     * Update the specified resource in storage.
+     * Accept Appointment
      */
-    public function update(Request $request, string $id)
+    public function update(AppointmentSummaryRequest $request): JsonResponse
     {
-        //
+
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Decline Appointment
      */
-    public function destroy(string $id)
+    public function destroy(AppointmentSummaryRequest $request): JsonResponse
     {
         //
     }

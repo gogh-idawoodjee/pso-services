@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\V2;
 
-class AppointedRequest extends BaseFormRequest
+class AppointmentSummaryRequest extends BaseFormRequest
 {
     public function rules(): array
     {

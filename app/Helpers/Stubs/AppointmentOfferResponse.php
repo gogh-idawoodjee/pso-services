@@ -10,15 +10,15 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 
-class AppoinmentOfferResponse
+class AppointmentOfferResponse
 {
 
-    public static function make(string|null $appointmentRequestId, int|null $appointmentOfferId, bool $accepted = false, int $psoApiVersion = 1): array
+    public static function make(string|null $appointmentRequestId, int|null $appointmentOfferId = -1, bool $accepted = false, int $psoApiVersion = 1): array
     {
 
         $appointmentOfferResponse = [
             'appointment_request_id' => $appointmentRequestId,
-            'appointment_offer_id' => $appointmentOfferId ?? -1,
+            'appointment_offer_id' => $appointmentOfferId ,
             'input_updated' => $accepted
         ];
 

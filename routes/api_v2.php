@@ -26,3 +26,7 @@ Route::patch('/rota', [AssistController::class, 'update']);
 
 // appointemnt routes
 Route::post('/appointment', [AppointmentController::class, 'store']);
+Route::post('/appointment/{appointmentRequestId}', [AppointmentController::class, 'check']);
+Route::patch('/appointment/{appointmentRequestId}', [AppointmentController::class, 'update']);
+Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::class, 'destroy']);
+Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show']);
