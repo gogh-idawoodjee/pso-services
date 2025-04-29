@@ -64,7 +64,6 @@ class BaseFormRequest extends FormRequest
             'environment.username' => [
                 'nullable',
                 'string',
-                'required_with:environment.password',
             ],
 
             /**
@@ -75,7 +74,6 @@ class BaseFormRequest extends FormRequest
             'environment.password' => [
                 'nullable',
                 'string',
-                'required_with:environment.username',
             ],
 
             /**
@@ -110,14 +108,18 @@ class BaseFormRequest extends FormRequest
      */
     public function withValidator($validator): void
     {
-        $validator->sometimes('environment.token', 'required', static function ($input) {
-            return data_get($input, 'environment.sendToPso') === true &&
-                (empty(data_get($input, 'environment.username')) || empty(data_get($input, 'environment.password')));
-        });
-
-        $validator->sometimes(['environment.username', 'environment.password'], 'required', static function ($input) {
+        // Simplified logic: When sendToPso is true, either token OR (username AND password) must be provided
+        $validator->sometimes(['environment.username', 'environment.password'], 'required', function ($input) {
+            // Only apply when sendToPso is true AND token is missing
             return data_get($input, 'environment.sendToPso') === true &&
                 empty(data_get($input, 'environment.token'));
+        });
+
+        $validator->sometimes('environment.token', 'required', function ($input) {
+            // Only apply when sendToPso is true AND either username or password is missing
+            return data_get($input, 'environment.sendToPso') === true &&
+                (empty(data_get($input, 'environment.username')) ||
+                    empty(data_get($input, 'environment.password')));
         });
     }
 }
