@@ -196,6 +196,11 @@ trait PSOAssistV2
      */
     protected function executeAuthenticatedAction(Request $request, callable $action): JsonResponse
     {
+        if (!data_get($request, 'environment.sendToPso')) {
+            // continue if no auth is required
+            return $action($request);
+        }
+
         $authService = app(PSOAuthService::class);
 
         // Check if we already have a token
@@ -204,6 +209,7 @@ trait PSOAssistV2
             // $isValid = $authService->validateToken(data_get($request, 'environment.token'), data_get($request, 'environment', []));
             return $action($request);
         }
+
 
         try {
             $response = $authService->getToken(data_get($request, 'environment', []));
