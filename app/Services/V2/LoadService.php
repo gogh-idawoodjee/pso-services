@@ -15,7 +15,7 @@ class LoadService extends BaseService
 {
 
 
-    private array $data;
+    protected array $data;
 
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data)
     {

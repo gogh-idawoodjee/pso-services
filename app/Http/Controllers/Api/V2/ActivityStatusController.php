@@ -27,6 +27,7 @@ class ActivityStatusController extends Controller
             // we should send that the activity service? // all our services should accept a token
             $activityService = new ActivityService(
                 $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
                 $req->input('data.activityId'),
                 $req->activityStatus(),
                 $req->input('data.resourceId')

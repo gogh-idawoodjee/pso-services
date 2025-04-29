@@ -18,7 +18,7 @@ class TravelService extends BaseService
 {
     use PSOAssistV2;
 
-    private array $data;
+    protected array $data;
     private string $travelLogId;
     private string|null $datasetId;
 
