@@ -15,6 +15,9 @@ class AssistController extends Controller
     //
     use PSOAssistV2;
 
+    /**
+     * Generic Delete Service
+     */
     public function destroy(DeleteObjectRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (DeleteObjectRequest $req) {
@@ -29,6 +32,9 @@ class AssistController extends Controller
         });
     }
 
+    /**
+     * Initialize PSO
+     */
     public function store(LoadPsoRequest $request): JsonResponse// initialize PSO
     {
 
@@ -44,7 +50,9 @@ class AssistController extends Controller
         });
 
     }
-
+    /**
+     * Send Rota to DSE
+     */
     public function update(UpdateRotaRequest $request): JsonResponse// update rota
     {
         return $this->executeAuthenticatedAction($request, function (UpdateRotaRequest $req) {

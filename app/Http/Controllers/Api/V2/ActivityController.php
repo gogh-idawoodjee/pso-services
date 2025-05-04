@@ -9,7 +9,7 @@ class ActivityController extends Controller
 {
 
     /**
-     * Store a newly created resource in storage.
+     * Generate One or More Activities.
      */
     public function store(Request $request)
     {
@@ -26,7 +26,7 @@ class ActivityController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete Activity or Activities
      */
     public function destroy(string $id)
     {

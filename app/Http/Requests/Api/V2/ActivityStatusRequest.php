@@ -7,7 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use UnexpectedValueException;
 
-class ActivityRequest extends BaseFormRequest
+class ActivityStatusRequest extends BaseFormRequest
 {
     private ActivityStatus|null $parsedStatus = null;
 
