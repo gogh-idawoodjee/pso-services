@@ -27,7 +27,7 @@ class TravelService extends BaseService
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, Request $request)
     {
 
-        parent::__construct($sessionToken);
+        parent::__construct($sessionToken, $request->all() ?? []);
         $this->data = $request->get('data');
         $this->datasetId = $request->input('environment.dataset_id');
         $this->travelLogId = Uuid::uuid4()->toString();
@@ -77,7 +77,7 @@ class TravelService extends BaseService
 
         $input_reference = InputReference::make(
             'Travel Analysis from SERVICE_NAME_HERE',
-            InputMode::CHANGE->value,
+            InputMode::CHANGE,
             $this->datasetId
         );
 

@@ -8,7 +8,6 @@ use App\Helpers\Stubs\ActivityStatus as StubActivityStatus;
 use App\Helpers\Stubs\DeleteObject;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use SensitiveParameter;
 
 // careful your two ActivityStatus classes don't clash
@@ -49,7 +48,7 @@ class ActivityService extends BaseService
                 $this->sessionToken
             );
         } catch (Exception $e) {
-            Log::error('Unexpected error in updateStatus: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -72,7 +71,7 @@ class ActivityService extends BaseService
                 $this->sessionToken
             );
         } catch (Exception $e) {
-            Log::error('Unexpected error in deleteActivities: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }

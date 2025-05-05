@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use JsonException;
 use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
@@ -73,7 +72,7 @@ class AppointmentService extends BaseService
 
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -142,8 +141,8 @@ class AppointmentService extends BaseService
 
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -220,7 +219,7 @@ class AppointmentService extends BaseService
 
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -288,7 +287,7 @@ class AppointmentService extends BaseService
 
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }

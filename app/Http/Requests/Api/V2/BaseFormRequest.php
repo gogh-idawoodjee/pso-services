@@ -106,7 +106,7 @@ class BaseFormRequest extends FormRequest
      * @param Validator $validator
      * @return void
      */
-    public function withValidator($validator): void
+    public function withValidator(Validator $validator): void
     {
         // Simplified logic: When sendToPso is true, either token OR (username AND password) must be provided
         $validator->sometimes(['environment.username', 'environment.password'], 'required', function ($input) {

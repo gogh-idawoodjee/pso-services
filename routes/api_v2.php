@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V2\ActivityStatusController;
 use App\Http\Controllers\Api\V2\AppointmentController;
 use App\Http\Controllers\Api\V2\AssistController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
+use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\TravelController;
 
 Route::post('/health-check', [HealthCheckController::class, 'check']);
@@ -31,3 +32,7 @@ Route::post('/appointment/{appointmentRequestId}', [AppointmentController::class
 Route::patch('/appointment/{appointmentRequestId}', [AppointmentController::class, 'update']);
 Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::class, 'destroy']);
 Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show']);
+
+
+// resource routes
+Route::post('/resource/{resourceId}', [ResourceEventController::class, 'store']);
