@@ -4,8 +4,8 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Enums\ActivityStatus;
-use App\Enums\PsoEndpointSegment;
 use App\Helpers\Stubs\ActivityStatus as StubActivityStatus;
+use App\Helpers\Stubs\DeleteObject;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -15,56 +15,66 @@ use SensitiveParameter;
 
 class ActivityService extends BaseService
 {
-    private string $activityId;
+    private string|null $activityId;
     private string|null $resourceId;
-    private ActivityStatus $activityStatus;
+    private ActivityStatus|null $activityStatus;
 
-
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, $data, string $activityId, ActivityStatus $activityStatus, string|null $resourceId = null)
+    public function __construct(
+        #[SensitiveParameter] string|null $sessionToken = null,
+                                          $data,
+        string|null                       $activityId = null,
+        ActivityStatus|null               $activityStatus = null,
+        string|null                       $resourceId = null
+    )
     {
-
         parent::__construct($sessionToken, $data);
-
         $this->activityId = $activityId;
         $this->activityStatus = $activityStatus;
         $this->resourceId = $resourceId;
-
     }
 
     public function updateStatus(): JsonResponse
     {
-
         try {
-            $payload = StubActivityStatus::make($this->activityId, $this->activityStatus, $this->resourceId, (bool)$this->resourceId);
-            $environmentData = data_get($this->data, 'environment');
+            $payload = StubActivityStatus::make(
+                $this->activityId,
+                $this->activityStatus,
+                $this->resourceId,
+                (bool)$this->resourceId
+            );
 
-
-            if ($this->sessionToken) {
-                $psoPayload = $this->buildPayload($payload);
-
-                $psoResponse = $this->sendToPso(
-                    $psoPayload,
-                    $environmentData,
-                    $this->sessionToken,
-                    PsoEndpointSegment::DATA
-                );
-
-                // Check if response is successful (status code < 400)
-                if ($psoResponse->status() < 400) {
-
-                    return $this->ok($psoResponse->getData());
-                }
-
-                // If there was an error, just return the error response
-                return $psoResponse;
-            }
-
-            return $this->notSentToPso($this->buildPayload($payload, 1, true));
+            return $this->sendOrSimulate(
+                ['Activity_Status' => $payload],
+                data_get($this->data, 'environment'),
+                $this->sessionToken
+            );
         } catch (Exception $e) {
-            Log::error('Unexpected error in getAppointment: ' . $e->getMessage());
+            Log::error('Unexpected error in updateStatus: ' . $e->getMessage());
             return $this->error('An unexpected error occurred', 500);
         }
-
-
     }
+
+    public function deleteActivities(): JsonResponse
+    {
+        try {
+            $activitiesList = data_get($this->data, 'data.activities');
+
+            $payload = [
+                'Object_Deletion' => collect($activitiesList)->map(static fn($id) => DeleteObject::make([
+                    'objectType' => 'activity',
+                    'objectPk1' => $id,
+                ]))->all(),
+            ];
+
+            return $this->sendOrSimulate(
+                $payload,
+                data_get($this->data, 'environment'),
+                $this->sessionToken
+            );
+        } catch (Exception $e) {
+            Log::error('Unexpected error in deleteActivities: ' . $e->getMessage());
+            return $this->error('An unexpected error occurred', 500);
+        }
+    }
+
 }

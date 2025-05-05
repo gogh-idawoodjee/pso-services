@@ -98,7 +98,7 @@ trait PSOAssistV2
      * @param string|null $body Response body
      * @return mixed Parsed JSON or original string
      */
-    private function parseResponseBody(string|null $body)
+    private function parseResponseBody(string|null $body): mixed
     {
         if (empty($body)) {
             return null;
@@ -239,4 +239,28 @@ trait PSOAssistV2
             return $this->error('something totally funky went wrong', 500);
         }
     }
+
+    /**
+     * @throws JsonException
+     */
+    public function sendOrSimulate(array $payload, array $environmentData, string|null $sessionToken): JsonResponse
+    {
+        if ($sessionToken) {
+            $psoPayload = $this->buildPayload($payload);
+
+            $psoResponse = $this->sendToPso(
+                $psoPayload,
+                $environmentData,
+                $sessionToken,
+                PsoEndpointSegment::DATA
+            );
+
+            return $psoResponse->status() < 400
+                ? $this->ok($psoResponse->getData())
+                : $psoResponse;
+        }
+
+        return $this->notSentToPso($this->buildPayload($payload, 1, true));
+    }
+
 }

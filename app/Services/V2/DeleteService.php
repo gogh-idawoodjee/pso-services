@@ -15,7 +15,7 @@ class DeleteService extends BaseService
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data, bool $isRotaObject = false)
     {
 
-        parent::__construct($sessionToken);
+        parent::__construct($sessionToken, $data);
         $this->data = $data;
         $this->isRotaObject = $isRotaObject;
 

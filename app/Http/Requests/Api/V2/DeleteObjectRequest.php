@@ -23,7 +23,7 @@ class DeleteObjectRequest extends BaseFormRequest
              * @var string
              * @example "activity"
              */
-            'data.object_type' => [
+            'data.objectType' => [
                 'required',
                 'string',
                 Rule::in(array_keys(PSOObjectRegistry::all())),
@@ -44,15 +44,15 @@ class DeleteObjectRequest extends BaseFormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $data = $this->input('data', []);
+            $data = $this->get('data', []);
 
-            $objectType = $data['object_type'] ?? null;
+            $objectType = $data['objectType'] ?? null;
 
             if ($objectType) {
                 $registry = PSOObjectRegistry::get($objectType);
 
                 if (!$registry) {
-                    $validator->errors()->add('data.object_type', 'Invalid object type provided.');
+                    $validator->errors()->add('data.objectType', 'Invalid object type provided.');
                     return;
                 }
 
@@ -63,7 +63,7 @@ class DeleteObjectRequest extends BaseFormRequest
 
                 foreach ($attributes as $index => $attribute) {
                     $pkIndex = $index + 1;
-                    $pkField = "object_pk{$pkIndex}";
+                    $pkField = "objectPk{$pkIndex}";
                     $attributeName = $attribute['name'] ?? "Attribute {$pkIndex}";
 
                     if (!array_key_exists($pkField, $data)) {

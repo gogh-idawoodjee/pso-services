@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V2\ActivityController;
 use App\Http\Controllers\Api\V2\ActivityStatusController;
 use App\Http\Controllers\Api\V2\AppointmentController;
 use App\Http\Controllers\Api\V2\AssistController;
@@ -16,7 +17,7 @@ Route::get('/travelanalyzer/{id}', [TravelController::class, 'show']); // this i
 
 //Activity routes
 Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 'update']); // added /status in case someday there is an update to the actual activity object itself
-
+Route::delete('/activity/', [ActivityController::class, 'destroy']);
 
 // Assist routes
 Route::delete('/delete', [AssistController::class, 'destroy']);

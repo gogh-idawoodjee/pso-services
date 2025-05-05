@@ -3,7 +3,6 @@
 namespace App\Helpers\Stubs;
 
 use App\Classes\PSOObjectRegistry;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DeleteObject
@@ -31,13 +30,14 @@ class DeleteObject
 //        return $data;
 //    }
 
+
     public static function make(
         array $data,
         bool  $isRotaObject = false,
         int   $psoApiVersion = 1
     ): array
     {
-        $objectType = $data['object_type'] ?? null;
+        $objectType = data_get($data, 'objectType');
 
         if (!$objectType) {
             throw new RuntimeException('Object type is missing from request.');
@@ -50,31 +50,39 @@ class DeleteObject
         }
 
         $payload = [];
-        $attributes = $registry['attributes'] ?? [];
-
-        $attributes = collect($attributes)->sortBy('name')->values()->all();
-
+        $attributes = collect($registry['attributes'] ?? [])
+            ->sortBy('name')
+            ->values()
+            ->all();
 
         foreach ($attributes as $index => $attribute) {
             $pkIndex = $index + 1;
 
-            $pkField = "object_pk{$pkIndex}";
-            $attributeName = $attribute['name'];
+            $camelPkField = "objectPk{$pkIndex}";
+            $snakePkField = "object_pk{$pkIndex}";
+            $snakePkNameField = "object_pk_name{$pkIndex}";
+            $attributeName = data_get($attribute, 'name', "attribute{$pkIndex}");
 
-            if (!array_key_exists($pkField, $data)) {
-                throw new RuntimeException("Missing required field {$pkField} ({$attributeName}).");
+            $value = data_get($data, $camelPkField);
+
+            if (is_null($value)) {
+                throw new RuntimeException("Missing required field {$camelPkField} ({$attributeName}).");
             }
 
-            $payload["object_pk{$pkIndex}"] = $data[$pkField];
-            $payload["object_pk_name{$pkIndex}"] = $attributeName;
+            $payload[$snakePkField] = $value;
+            $payload[$snakePkNameField] = $attributeName;
         }
 
-        // Add the object_type using the Entity name
-        $payload['object_type'] = $registry['entity'];
+        $payload['objectType'] = data_get($registry, 'entity');
+
+        if ($isRotaObject) {
+            $payload['delete_row'] = true;
+        }
 
         return $payload;
     }
 }
+
 
 
 
