@@ -7,33 +7,23 @@ use Illuminate\Validation\Rule;
 
 class DeleteObjectRequest extends BaseFormRequest
 {
-    protected bool $groupErrors = false; // 👈 set to true for grouped under data.attributes, false for field-by-field
+    protected bool $groupErrors = false;
 
     public function rules(): array
     {
         $commonRules = $this->commonRules();
 
         $additionalRules = [
-            /**
-             * The type of object to delete.
-             * Must be one of:
-             * "activity_sla", "activity_skill", "shift", "activity", "resource",
-             * "location", "unavailability", "location_region", "schedule_event",
-             * "resource_region", "resource_region_availability".
-             * @var string
-             * @example "activity"
-             */
+            // Validate against the *labels*, not keys
             'data.objectType' => [
                 'required',
                 'string',
-                Rule::in(array_keys(PSOObjectRegistry::all())),
+                Rule::in(array_values(PSOObjectRegistry::forSelect())),
             ],
-            // No pk fields yet — added dynamically in withValidator()
         ];
 
         return array_merge($commonRules, $additionalRules);
     }
-
 
     public function setGroupErrors(bool $shouldGroupErrors): static
     {
@@ -45,68 +35,88 @@ class DeleteObjectRequest extends BaseFormRequest
     {
         $validator->after(function ($validator) {
             $data = $this->get('data', []);
+            $label = $data['objectType'] ?? null;
 
-            $objectType = $data['objectType'] ?? null;
+            if (!$label) {
+                return;
+            }
 
-            if ($objectType) {
-                $registry = PSOObjectRegistry::get($objectType);
+            // 🔁 Map label back to registry key
+            $key = collect(PSOObjectRegistry::all())
+                ->filter(fn($entry) => strtolower($entry['label']) === strtolower($label))
+                ->keys()
+                ->first();
 
-                if (!$registry) {
-                    $validator->errors()->add('data.objectType', 'Invalid object type provided.');
-                    return;
-                }
+            if (!$key) {
+                $validator->errors()->add('data.objectType', "Unknown object type label '{$label}'");
+                return;
+            }
 
-                $attributes = $registry['attributes'] ?? [];
-                $friendlyLabel = $registry['label'] ?? $objectType;
+            $registry = PSOObjectRegistry::get($key);
 
-                $attributeErrors = []; // Collect errors if needed
+            if (!$registry) {
+                $validator->errors()->add('data.objectType', 'Invalid object type provided.');
+                return;
+            }
 
-                foreach ($attributes as $index => $attribute) {
-                    $pkIndex = $index + 1;
-                    $pkField = "objectPk{$pkIndex}";
-                    $attributeName = $attribute['name'] ?? "Attribute {$pkIndex}";
+            $expectedLabel = $registry['label'] ?? null;
+            $providedLabel = $data['label'] ?? null;
 
-                    if (!array_key_exists($pkField, $data)) {
-                        $message = "The field {$pkField} ({$attributeName}) is required for {$friendlyLabel}.";
+            if (
+                $providedLabel !== null &&
+                $expectedLabel !== null &&
+                strtolower($providedLabel) !== strtolower($expectedLabel)
+            ) {
+                $validator->errors()->add(
+                    'data.label',
+                    "The label '{$providedLabel}' does not match the expected label '{$expectedLabel}' for object type '{$label}'."
+                );
+            }
 
-                        if ($this->groupErrors) {
-                            $attributeErrors[] = $message;
-                        } else {
-                            $validator->errors()->add("data.{$pkField}", $message);
-                        }
+            $attributes = $registry['attributes'] ?? [];
+            $friendlyLabel = $expectedLabel ?? $label;
+            $attributeErrors = [];
 
-                        continue;
+            foreach ($attributes as $index => $attribute) {
+                $pkIndex = $index + 1;
+                $pkField = "objectPk{$pkIndex}";
+                $attributeName = $attribute['name'] ?? "Attribute {$pkIndex}";
+
+                if (!array_key_exists($pkField, $data)) {
+                    $message = "The field {$pkField} ({$attributeName}) is required for {$friendlyLabel}.";
+
+                    if ($this->groupErrors) {
+                        $attributeErrors[] = $message;
+                    } else {
+                        $validator->errors()->add("data.{$pkField}", $message);
                     }
 
-                    $value = $data[$pkField];
+                    continue;
+                }
 
-                    if (!$this->matchesExpectedType($value, $attribute['type'] ?? null)) {
-                        $message = "The field {$pkField} ({$attributeName}) must be of type {$attribute['type']} for {$friendlyLabel}.";
+                $value = $data[$pkField];
 
-                        if ($this->groupErrors) {
-                            $attributeErrors[] = $message;
-                        } else {
-                            $validator->errors()->add("data.{$pkField}", $message);
-                        }
+                if (!$this->matchesExpectedType($value, $attribute['type'] ?? null)) {
+                    $message = "The field {$pkField} ({$attributeName}) must be of type {$attribute['type']} for {$friendlyLabel}.";
+
+                    if ($this->groupErrors) {
+                        $attributeErrors[] = $message;
+                    } else {
+                        $validator->errors()->add("data.{$pkField}", $message);
                     }
                 }
+            }
 
-                if ($this->groupErrors && !empty($attributeErrors)) {
-                    $validator->errors()->add('data.attributes', $attributeErrors);
-                }
+            if ($this->groupErrors && !empty($attributeErrors)) {
+                $validator->errors()->add('data.attributes', $attributeErrors);
             }
         });
     }
 
-
-
-    /**
-     * Match value against expected type.
-     */
     protected function matchesExpectedType(mixed $value, string|null $expectedType): bool
     {
         if ($expectedType === null) {
-            return true; // No type specified, assume OK
+            return true;
         }
 
         return match ($expectedType) {
@@ -116,6 +126,4 @@ class DeleteObjectRequest extends BaseFormRequest
             default => true,
         };
     }
-
-
 }

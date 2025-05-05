@@ -35,18 +35,27 @@ class DeleteObject
         array $data,
         bool  $isRotaObject = false,
         int   $psoApiVersion = 1
-    ): array
-    {
-        $objectType = data_get($data, 'objectType');
+    ): array {
+        $label = data_get($data, 'objectType');
 
-        if (!$objectType) {
+        if (!$label) {
             throw new RuntimeException('Object type is missing from request.');
         }
 
-        $registry = PSOObjectRegistry::get($objectType);
+        // 🔁 Resolve label to registry key
+        $key = collect(PSOObjectRegistry::all())
+            ->filter(fn($entry) => strtolower($entry['label']) === strtolower($label))
+            ->keys()
+            ->first();
+
+        if (!$key) {
+            throw new RuntimeException("Object type '{$label}' not found in registry.");
+        }
+
+        $registry = PSOObjectRegistry::get($key);
 
         if (!$registry) {
-            throw new RuntimeException("Object type '{$objectType}' not found in registry.");
+            throw new RuntimeException("Registry entry for '{$key}' not found.");
         }
 
         $payload = [];
@@ -65,7 +74,7 @@ class DeleteObject
 
             $value = data_get($data, $camelPkField);
 
-            if (is_null($value)) {
+            if ($value === null) {
                 throw new RuntimeException("Missing required field {$camelPkField} ({$attributeName}).");
             }
 
@@ -73,6 +82,7 @@ class DeleteObject
             $payload[$snakePkNameField] = $attributeName;
         }
 
+        // 👇 Use entity name as required by PSO
         $payload['objectType'] = data_get($registry, 'entity');
 
         if ($isRotaObject) {
@@ -81,6 +91,7 @@ class DeleteObject
 
         return $payload;
     }
+
 }
 
 
