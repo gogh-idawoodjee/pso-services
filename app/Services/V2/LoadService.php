@@ -19,7 +19,7 @@ class LoadService extends BaseService
 
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data)
     {
-        parent::__construct($sessionToken);
+        parent::__construct($sessionToken, $data);
         $this->data = $data;
     }
 

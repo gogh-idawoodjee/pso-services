@@ -93,12 +93,12 @@ class LoadPsoRequest extends BaseFormRequest
             'data.broadcastType' => 'integer|required_if:include_broadcast,true',
 
             /**
-             * Broadcast TRL (Target Resource List) URL.
+             * Broadcast URL.
              * Required if includeBroadcast is true.
              * @var string
              * @example "https://example.com/broadcast.trl"
              */
-            'data.broadcastTrl' => 'url|required_if:include_broadcast,true',
+            'data.broadcastUrl' => 'url|required_if:include_broadcast,true',
 
             /**
              * The ID associated with the PSO load.
