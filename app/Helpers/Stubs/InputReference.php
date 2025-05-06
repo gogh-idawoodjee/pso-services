@@ -5,7 +5,6 @@ namespace App\Helpers\Stubs;
 
 use App\Enums\InputMode;
 use App\Enums\ProcessType;
-use Carbon\Carbon;
 
 use Illuminate\Support\Str;
 
@@ -26,30 +25,17 @@ class InputReference
         int              $psoApiVersion = 1,
     ): array
     {
-        $inputReference = [
-            'datetime' => $datetime ?? Carbon::now()->toAtomString(),
+        return array_filter([
+            'datetime' => $datetime ?? now()->toAtomString(),
             'id' => $id ?? Str::orderedUuid()->getHex()->toString(),
             'input_type' => $inputType->value,
             'organisation_id' => '2',
             'dataset_id' => $datasetId,
             'user_id' => config('pso-services.settings.service_name'),
-        ];
-
-        if ($dseDuration) {
-            $inputReference['duration'] = $dseDuration;
-        }
-        if ($description) {
-            $inputReference['description'] = $description;
-        }
-
-        if ($processType) {
-            $inputReference['process_type'] = $processType->value;
-        }
-
-        if ($appointmentWindow !== null) {
-            $inputReference['appointment_window_duration'] = $appointmentWindow;
-        }
-
-        return $inputReference;
+            'duration' => $dseDuration,
+            'description' => $description,
+            'process_type' => $processType?->value,
+            'appointment_window_duration' => $appointmentWindow,
+        ], static fn ($value) => $value !== null);
     }
 }

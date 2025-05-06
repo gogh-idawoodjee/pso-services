@@ -23,12 +23,12 @@ class Resource
         ];
 
         $resourceSkills = collect($resourceData->skill ?? [])
-            ->map(fn($skill) => Skill::make($skill, 'resource', $resourceId))
+            ->map(static fn($skill) => Skill::make($skill, 'resource', $resourceId))
             ->values()
             ->toArray();
 
         $resourceRegions = collect($resourceData->region ?? [])
-            ->map(fn($region) => Region::make($region, 'resource', $resourceId))
+            ->map(static fn($region) => Region::make($region, 'resource', $resourceId))
             ->values()
             ->toArray();
 
