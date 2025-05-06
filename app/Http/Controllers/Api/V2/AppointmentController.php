@@ -19,8 +19,12 @@ class AppointmentController extends Controller
     /**
      * Check Appointed.
      */
-    public function check(AppointmentSummaryRequest $request): JsonResponse
+    public function check(AppointmentSummaryRequest $request, string $appointmentRequestId): JsonResponse
     {
+        $request->merge([
+            'data' => array_merge($request->input('data', []), compact('appointmentRequestId'))
+        ]);
+
         return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
             // so we have the token now in data_get($req, 'environment.token')
 
