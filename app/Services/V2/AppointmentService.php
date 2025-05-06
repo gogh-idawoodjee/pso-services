@@ -26,12 +26,6 @@ class AppointmentService extends BaseService
 {
 
 
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, $data)
-    {
-        parent::__construct($sessionToken, $data);
-    }
-
-
     /**
      * Get appointment offers from PSO
      *
@@ -89,18 +83,20 @@ class AppointmentService extends BaseService
             $appointmentOfferId = data_get($this->data, 'data.appointmentOfferId');
             $environmentData = data_get($this->data, 'environment');
 
-            $payload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
-            $inputReferenceId = data_get($payload, 'Input_Reference.id');
+            $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
+            $inputReference = InputReference::make(
+                data_get($this->data, 'environment.datasetId'),
+                InputMode::CHANGE
+            );
+            // input ref doesn't exist yet, lolzers
+            $inputReferenceId = data_get($inputReference, 'id');
+
+            $payload = ['Appointment_Offer_Response' => $offerResponsePayload, 'Input_Reference' => $inputReference];
 
 
-            try {
-                $acceptOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, $appointmentOfferId, $inputReferenceId);
-                if (data_get($acceptOffer, 'status') !== 200) {
-                    $this->error(data_get($acceptOffer, 'message'), data_get($acceptOffer, 'status'));
-                }
-
-            } catch (ModelNotFoundException) {
-                return $this->error('Appointment Request ID was not found', 404);
+            $acceptOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, $appointmentOfferId, $inputReferenceId);
+            if (data_get($acceptOffer, 'status') !== 200 && data_get($acceptOffer, 'status')) {
+                return $this->error(data_get($acceptOffer, 'message'), data_get($acceptOffer, 'status'));
             }
 
 
@@ -325,13 +321,13 @@ class AppointmentService extends BaseService
 
         $bestOffer = $offers
             ->where('offer_value', $bestOfferValue)
-            ->map(fn($offer) => $this->getPut($offer, null, $timezone))
+            ->map(fn($offer) => $this->formatAppointmentOffer($offer, null, $timezone))
             ->first();
 
         // Collect valid offers (offer_value not equal to "0")
         $validOffers = $offers
             ->filter(static fn($offer) => data_get($offer, 'offer_value') !== "0")
-            ->map(fn($offer) => $this->getPut($offer, data_get($bestOffer, 'id'), $timezone))
+            ->map(fn($offer) => $this->formatAppointmentOffer($offer, data_get($bestOffer, 'id'), $timezone))
             ->values();
 
         // Collect invalid offers (offer_value equal to "0")
@@ -381,7 +377,7 @@ class AppointmentService extends BaseService
      * @param string|null $timezone Timezone for date formatting
      * @return Collection Formatted offer
      */
-    private function getPut(mixed $offer, string|null $bestOfferId = null, string|null $timezone = null): Collection
+    private function formatAppointmentOffer(mixed $offer, string|null $bestOfferId = null, string|null $timezone = null): Collection
     {
         $timezone = $timezone ?? (string)(config('pso-services.defaults.timezone', 'America/Toronto'));
 
@@ -497,7 +493,7 @@ class AppointmentService extends BaseService
         $appointmentRequest->update([
             'accepted_offer' => json_encode($offers->firstWhere('id', $appointmentOfferId), JSON_THROW_ON_ERROR),
             'accepted_offer_id' => $appointmentOfferId,
-            'accepted_offer_datetime' => Carbon::now()->toAtomString(),
+            'accept_decline_datetime' => Carbon::now()->toAtomString(),
             'accept_decline_input_reference_id' => $inputReferenceId,
             'status' => $accept ? AppointmentRequestStatus::ACCEPTED->value : AppointmentRequestStatus::DECLINED->value,
         ]);
