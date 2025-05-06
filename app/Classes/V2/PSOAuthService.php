@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use JsonException;
 use App\Traits\V2\ApiResponses;
+use SensitiveParameter;
 
 class PSOAuthService
 {
@@ -53,7 +54,7 @@ class PSOAuthService
      * @param array $environment Environment configuration
      * @return bool Whether the token is valid
      */
-    public function validateToken(#[\SensitiveParameter] string $token, array $environment): bool
+    public function validateToken(#[SensitiveParameter] string $token, array $environment): bool
     {
         // Implement token validation logic here
         // This is a placeholder - you would need to implement actual validation
@@ -139,7 +140,7 @@ class PSOAuthService
      * @param string|null $body Response body
      * @return mixed Parsed JSON or original string
      */
-    private function parseResponseBody(string|null $body)
+    private function parseResponseBody(string|null $body): mixed
     {
         if (empty($body)) {
             return null;

@@ -15,7 +15,7 @@ enum EventType: string
     case LOGON = 'RO';
     case LOGOFF = 'RF';
 
-    public function getLabel(): ?string
+    public function getLabel(): string|null
     {
         return match ($this) {
             self::ATTENTIONON => 'Attention On',

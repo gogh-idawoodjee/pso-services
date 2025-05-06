@@ -23,11 +23,6 @@ abstract class BaseService
         $this->data = $data;
     }
 
-    public function sendPayloadToPso(array $payload): void
-    {
-
-    }
-
     public function LogError(Exception $e, $method, $class): void
     {
         Log::error('Unexpected error in ' . $method . 'inside ' . $class . ': ' . $e->getMessage());
