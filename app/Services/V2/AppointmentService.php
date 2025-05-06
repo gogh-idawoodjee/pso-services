@@ -175,18 +175,21 @@ class AppointmentService extends BaseService
             $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
             $environmentData = data_get($this->data, 'environment');
 
-            $payload = AppointmentOfferResponse::make($appointmentRequestId);
-            $inputReferenceId = data_get($payload, 'Input_Reference.id');
+            $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId);
+            $inputReference = InputReference::make(
+                data_get($this->data, 'environment.datasetId'),
+                InputMode::CHANGE
+            );
+            // input ref doesn't exist yet, lolzers
+            $inputReferenceId = data_get($inputReference, 'id');
 
+            $payload = ['Appointment_Offer_Response' => $offerResponsePayload, 'Input_Reference' => $inputReference];
 
-            try {
-                $declineOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, -1, $inputReferenceId, false);
-                if (data_get($declineOffer, 'status') !== 200) {
-                    $this->error(data_get($declineOffer, 'message'), data_get($declineOffer, 'status'));
-                }
+            $declineOffer = $this->updateAppointmentRequestAcceptOrDeclineOffer($appointmentRequestId, -1, $inputReferenceId, false);
 
-            } catch (ModelNotFoundException) {
-                return $this->error('Appointment Request ID was not found', 404);
+            if (data_get($declineOffer, 'status') !== 200 && data_get($declineOffer, 'status')) {
+
+                return $this->error(data_get($declineOffer, 'message'), data_get($declineOffer, 'status'));
             }
 
             $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->first();
@@ -218,7 +221,6 @@ class AppointmentService extends BaseService
                 // If there was an error, just return the error response
                 return $psoResponse;
             }
-
 
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
@@ -480,12 +482,14 @@ class AppointmentService extends BaseService
      */
     private function updateAppointmentRequestAcceptOrDeclineOffer(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, $accept = true): array|null
     {
-        $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId);
+        $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId, $accept);
+
 
         // If there's an error, return the response with message and status
         if ($checkResult) {
             return $checkResult; // Return early if validation failed
         }
+
 
         $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->firstOrFail();
 
@@ -512,10 +516,8 @@ class AppointmentService extends BaseService
     private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, bool|null $sendToPso = null): array|null
     {
 
-
         // Call the reusable method to check for validity
         $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId);
-
 
         // If there's an error, return the response with message and status
         if ($checkResult) {
@@ -554,7 +556,7 @@ class AppointmentService extends BaseService
 
     }
 
-    private function validateAppointmentSummary(string $appointmentRequestId, string $appointmentOfferId): array|null
+    private function validateAppointmentSummary(string $appointmentRequestId, string $appointmentOfferId, bool|null $isAcceptRequest = true): array|null
     {
 
         try {
@@ -584,8 +586,13 @@ class AppointmentService extends BaseService
             // Check if the specific offer ID exists
 
 
-            if (!$offersCollection->contains('id', $appointmentOfferId)) {
+            // check only if not a decline request
+            if ($isAcceptRequest && !$offersCollection->contains('id', $appointmentOfferId)) {
                 Log::error('This is not a valid appointment offer ID');
+                \Log::info('Checking appointmentOfferId', [
+                    'searching_for' => $appointmentOfferId,
+                    'ids_in_collection' => $offersCollection->pluck('id')->all(),
+                ]);
                 return [
                     'message' => 'This is not a valid appointment offer ID',
                     'status' => 406
