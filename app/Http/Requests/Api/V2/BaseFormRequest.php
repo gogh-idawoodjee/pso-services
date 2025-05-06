@@ -83,7 +83,7 @@ class BaseFormRequest extends FormRequest
              * @example "dataset_12345"
              */
             'environment.datasetId' => [
-                'required_if:environment.sendToPso,true',
+                'required',
                 'string',
             ],
 
