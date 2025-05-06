@@ -4,6 +4,18 @@ namespace App\Http\Requests\Api\V2;
 
 class AppointmentSummaryRequest extends BaseFormRequest
 {
+
+    public function prepareForValidation(): void
+    {
+        if ($id = $this->route('appointmentRequestId')) {
+            $this->merge([
+                'data' => array_merge($this->input('data', []), [
+                    'appointmentRequestId' => $id,
+                ]),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $commonRules = $this->commonRules();

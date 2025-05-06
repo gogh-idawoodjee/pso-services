@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->uuid('run_id')->nullable();
             $table->json('appointment_request');
+            $table->uuid('appointment_request_id');
             $table->smallInteger('status'); // 0 unacknowledged (new), 1 accepted, 2 declined, 3, checked, -1 failed
             $table->json('activity');
             $table->string('activity_id');
