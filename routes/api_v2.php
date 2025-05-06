@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V2\AppointmentController;
 use App\Http\Controllers\Api\V2\AssistController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
+use App\Http\Controllers\Api\V2\ResourceShiftController;
 use App\Http\Controllers\Api\V2\TravelController;
 
 Route::post('/health-check', [HealthCheckController::class, 'check']);
@@ -35,4 +36,5 @@ Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class,
 
 
 // resource routes
-Route::post('/resource/{resourceId}', [ResourceEventController::class, 'store']);
+Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
+Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);

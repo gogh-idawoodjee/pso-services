@@ -55,11 +55,15 @@ class LoadService extends BaseService
             $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';
         }
 
-        if ($this->sessionToken) {
-            // call sendToPso method
-        }
-
-        return $this->notSentToPso(($this->buildPayload(['Input_Reference' => $payload], 1, true)), $keepPsoDataMessage);
+        return $this->sendOrSimulate(
+            $payload,
+            data_get($this->data, 'environment'),
+            $this->sessionToken,
+            null,
+            null,
+            'Input_Reference',
+            $keepPsoDataMessage
+        );
     }
 
     public function updateRota(): JsonResponse
@@ -71,11 +75,24 @@ class LoadService extends BaseService
         $description = data_get($this->data, 'data.description');
         $payload = InputReference::make($datasetId, InputMode::CHANGE, $datetime, null, null, null, $id, $description);
 
-        if ($this->sessionToken) {
-            // call sendToPso method
-        }
+        return $this->sendOrSimulate(
+            $payload,
+            data_get($this->data, 'environment'),
+            $this->sessionToken,
+            null,
+            null,
+            'Input_Reference'
+        );
 
-        return $this->notSentToPso(($this->buildPayload(['Input_Reference' => $payload], 1, true)));
+//        if ($this->sessionToken) {
+//            $psoResponse = $this->sendToPso($payload, data_get($this->data, 'environment'), $this->sessionToken, PsoEndpointSegment::DATA);
+//            if ($psoResponse->status() < 400) {
+//                return $this->sentToPso($psoResponse);
+//            }
+//            return $psoResponse;
+//        }
+//
+//        return $this->notSentToPso(($this->buildPayload(['Input_Reference' => $payload], 1, true)));
     }
 
 

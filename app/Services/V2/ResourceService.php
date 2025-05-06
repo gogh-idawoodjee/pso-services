@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V2;
+namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Enums\ShiftEntity;
@@ -8,7 +8,6 @@ use App\Helpers\Stubs\ResourceEvent;
 use App\Helpers\Stubs\Shift;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use SensitiveParameter;
 
 class ResourceService extends BaseService
@@ -45,24 +44,28 @@ class ResourceService extends BaseService
     {
         try {
             $payload = Shift::make(
-                data_get($this->data, 'shiftId'),
-                data_get($this->data, 'resourceId'),
-                data_get($this->data, 'rotaId'),
-                data_get($this->data, 'startDateTime'),
-                data_get($this->data, 'endDateTime'),
-                data_get($this->data, 'isManualSchedulingOnly'),
-                data_get($this->data, 'shiftType'),
-                data_get($this->data, 'description'),
-                data_get($this->data, 'isArpShift'),
+                data_get($this->data, 'data.shiftId'),
+                data_get($this->data, 'data.resourceId'),
+                data_get($this->data, 'data.rotaId'),
+                data_get($this->data, 'data.startDateTime'),
+                data_get($this->data, 'data.endDateTime'),
+                data_get($this->data, 'data.isManualSchedulingOnly'),
+                data_get($this->data, 'data.shiftType'),
+                data_get($this->data, 'data.description'),
+                data_get($this->data, 'data.isArpShift'),
             );
 
-            $entity = data_get($this->data, 'isArpShift') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
+            $entity = data_get($this->data, 'data.isArpShift') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
             return $this->sendOrSimulate(
                 [$entity => $payload],
                 data_get($this->data, 'environment'),
-                $this->sessionToken
+                $this->sessionToken,
+                true, // sends rota update
+                'Updated Rota After Shift Update'
             );
+
+
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);

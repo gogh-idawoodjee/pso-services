@@ -4,6 +4,7 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Helpers\Stubs\DeleteObject;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use SensitiveParameter;
 
@@ -24,12 +25,20 @@ class DeleteService extends BaseService
     public function deleteObject(): JsonResponse
     {
 
-        $payload = DeleteObject::make($this->data, $this->isRotaObject);
+        try {
+            $payload = DeleteObject::make($this->data, $this->isRotaObject);
 
-        if ($this->sessionToken) {
-            // call sendToPso method
+            return $this->sendOrSimulate(
+                ['Object_Deletion' => $payload],
+                data_get($this->data, 'environment'),
+                $this->sessionToken
+            );
+
+        } catch (Exception $e) {
+            $this->LogError($e, __METHOD__, __CLASS__);
+            return $this->error('An unexpected error occurred', 500);
         }
-        return $this->notSentToPso(($this->buildPayload(['Object_Deletion' => $payload], 1, true)));
+
 
     }
 }

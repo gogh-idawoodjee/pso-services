@@ -3,7 +3,9 @@
 namespace App\Traits\V2;
 
 use App\Classes\V2\PSOAuthService;
+use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
+use App\Helpers\Stubs\InputReference;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -44,6 +46,7 @@ trait PSOAssistV2
             return $this->connectionFailureResponse();
         }
     }
+
 
     /**
      * Creates standard connection failure response
@@ -243,7 +246,15 @@ trait PSOAssistV2
     /**
      * @throws JsonException
      */
-    public function sendOrSimulate(array $payload, array $environmentData, string|null $sessionToken): JsonResponse
+    public function sendOrSimulate(
+        array       $payload,
+        array       $environmentData,
+        string|null $sessionToken,
+        bool|null   $requiresRotaUpdate = null,
+        string|null $rotaUpdateDescription = null,
+        string|null $notSentArraykey = null,
+        string|null $additionalDetails = null
+    ): JsonResponse
     {
         if ($sessionToken) {
             $psoPayload = $this->buildPayload($payload);
@@ -254,13 +265,21 @@ trait PSOAssistV2
                 $sessionToken,
                 PsoEndpointSegment::DATA
             );
+            // send rota update
+            if ($requiresRotaUpdate) {
+                $datasetId = data_get($environmentData, 'datasetId');
+                $rotaUpdatePayload = InputReference::make($datasetId, InputMode::CHANGE, null, null, null, null, null, $rotaUpdateDescription);
+                $this->sendToPso($rotaUpdatePayload, $environmentData, $sessionToken, PsoEndpointSegment::DATA);
+            }
+
 
             return $psoResponse->status() < 400
                 ? $this->ok($psoResponse->getData())
                 : $psoResponse;
         }
 
-        return $this->notSentToPso($this->buildPayload($payload, 1, true));
+        $payloadArray = $notSentArraykey ? [$notSentArraykey => $payload] : $payload;
+        return $this->notSentToPso($this->buildPayload($payloadArray, 1, true), $additionalDetails);
     }
 
 }
