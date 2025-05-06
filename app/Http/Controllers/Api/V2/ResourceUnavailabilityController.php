@@ -3,48 +3,31 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
+use App\Services\V2\ResourceService;
+use App\Traits\V2\PSOAssistV2;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ResourceUnavailabilityController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+
+    use PSOAssistV2;
 
     /**
-     * Show the form for creating a new resource.
+     * Create a new resource unavailability.
      */
-    public function create()
+    public function store(UnavailabilityRequest $request): JsonResponse
     {
-        //
-    }
+        return $this->executeAuthenticatedAction($request, function (UnavailabilityRequest $req) {
+            // so we have the token now in $req->input('environment.token')
+            // we should send that the activity service? // all our services should accept a token
+            $resourceUnavail = new ResourceService(
+                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
+            );
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+            return $resourceUnavail->createUnavailability();
+        });
     }
 
     /**
@@ -55,11 +38,4 @@ class ResourceUnavailabilityController extends Controller
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }

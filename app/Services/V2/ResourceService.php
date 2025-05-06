@@ -52,10 +52,10 @@ class ResourceService extends BaseService
                 data_get($this->data, 'data.isManualSchedulingOnly'),
                 data_get($this->data, 'data.shiftType'),
                 data_get($this->data, 'data.description'),
-                data_get($this->data, 'data.isArpShift'),
+                data_get($this->data, 'data.isArpObject'),
             );
 
-            $entity = data_get($this->data, 'data.isArpShift') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
+            $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
             return $this->sendOrSimulate(
                 [$entity => $payload],
@@ -71,5 +71,35 @@ class ResourceService extends BaseService
             return $this->error('An unexpected error occurred', 500);
         }
 
+    }
+
+    public function createUnavailability()
+    {
+        try {
+            $payload = Shift::make(
+
+                data_get($this->data, 'data.resourceId'),
+                data_get($this->data, 'data.description'),
+                data_get($this->data, 'data.categoryId'),
+                data_get($this->data, 'data.duration'),
+                data_get($this->data, 'data.timeZone'),
+                data_get($this->data, 'data.baseDateTime'),
+            );
+
+            $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
+
+            return $this->sendOrSimulate(
+                [$entity => $payload],
+                data_get($this->data, 'environment'),
+                $this->sessionToken,
+                true, // sends rota update
+                'Updated Rota After Shift Update'
+            );
+
+
+        } catch (Exception $e) {
+            $this->LogError($e, __METHOD__, __CLASS__);
+            return $this->error('An unexpected error occurred', 500);
+        }
     }
 }

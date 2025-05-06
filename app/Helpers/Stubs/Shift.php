@@ -13,7 +13,7 @@ class Shift
         bool|null   $isManualSchedulingOnly = null,
         string|null $shiftType = null,
         string|null $description = null,
-        bool|null   $isArpShift = null,
+        bool|null   $isArpObject = null,
         int         $psoApiVersion = 1
     ): array
     {
@@ -26,10 +26,10 @@ class Shift
             'end_datetime' => $endDateTime,
             'description' => $description,
             ...$shiftType
-                ? [$isArpShift ? 'ram_shift_category_id' : 'shift_type_id' => $shiftType]
+                ? [$isArpObject ? 'ram_shift_category_id' : 'shift_type_id' => $shiftType]
                 : [],
-            $isArpShift ? 'ram_rota_id' : 'rota_id' => $rotaId,
-            $isArpShift ? 'ram_resource_id' : 'resource_id' => $resourceId,
+            $isArpObject ? 'ram_rota_id' : 'rota_id' => $rotaId,
+            $isArpObject ? 'ram_resource_id' : 'resource_id' => $resourceId,
         ];
 
     }

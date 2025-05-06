@@ -19,7 +19,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required true
              * @scramble example "SHIFT-123"
              */
-            'shiftId' => 'required|alpha_dash',
+            'data.shiftId' => 'required|alpha_dash',
 
             /**
              * The dataset ID this shift belongs to.
@@ -28,16 +28,16 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required true
              * @scramble example "DEMO"
              */
-            'datasetId' => 'required|string',
+            'data.datasetId' => 'required|string',
 
             /**
              * The rota ID (required only for ARP shifts).
              *
              * @scramble type string
-             * @scramble required_if isArpShift=true
+             * @scramble required_if isArpObject=true
              * @scramble example "ROTA-001"
              */
-            'rotaId' => 'string|required_if:isArpShift,true',
+            'data.rotaId' => 'string|required_if:isArpObject,true',
 
             /**
              * Indicates if this shift is using ARP format.
@@ -46,7 +46,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example true
              */
-            'isArpShift' => 'bool',
+            'data.isArpObject' => 'bool',
 
             /**
              * The shift type ID.
@@ -56,7 +56,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required_with turnManualSchedulingOn
              * @scramble example "SHT-TYPE-A"
              */
-            'shiftType' => 'required_with:turnManualSchedulingOn|string',
+            'data.shiftType' => 'required_with:turnManualSchedulingOn|string',
 
             /**
              * Start datetime of the shift (ISO 8601).
@@ -67,7 +67,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example "2025-05-05T08:00:00Z"
              */
-            'startDateTime' => 'date',
+            'data.startDateTime' => 'date',
 
             /**
              * End datetime of the shift (ISO 8601).
@@ -79,7 +79,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example "2025-05-05T16:00:00Z"
              */
-            'endDateTime' => 'date|after:startDateTime',
+            'data.endDateTime' => 'date|after:startDateTime',
 
             /**
              * Whether this shift should be forced into manual scheduling mode.
@@ -88,7 +88,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example true
              */
-            'turnManualSchedulingOn' => 'boolean',
+            'data.turnManualSchedulingOn' => 'boolean',
         ];
 
         return array_merge($commonRules, $additionalRules);
