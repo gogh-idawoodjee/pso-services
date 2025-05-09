@@ -13,7 +13,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('psorun', function (Blueprint $table) {
-            $table->uuid('id');
+            $table->uuid('id')->primary();
             $table->string('sla_type_id');
             $table->string('dataset_id');
             $table->string('username');
