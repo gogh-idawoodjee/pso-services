@@ -17,7 +17,11 @@ class LoadPsoRequest extends BaseFormRequest
     {
         $commonRules = $this->commonRules();
 
-        // override datasetId because it's required for load
+        /**
+         * The dataset ID to use in PSO.
+         * @var string
+         * @example "dataset_123"
+         */
         $commonRules['environment.datasetId'] = ['required', 'string'];
 
         $additionalRules = [
@@ -27,7 +31,7 @@ class LoadPsoRequest extends BaseFormRequest
              * @var string
              * @example "rota-001"
              */
-            'data.rotaId' => 'string',
+            'data.rotaId' => ['string'],
 
             /**
              * Duration of the Dynamic Scheduling Engine run, in minutes.
@@ -45,8 +49,7 @@ class LoadPsoRequest extends BaseFormRequest
 
             /**
              * The type of processing to perform.
-             * Must be one of:
-             * "DYNAMIC", "APPOINTMENT", "REACTIVE", "STATIC".
+             * Must be one of: "DYNAMIC", "APPOINTMENT", "REACTIVE", "STATIC".
              * @var string
              * @example "DYNAMIC"
              */
@@ -54,7 +57,6 @@ class LoadPsoRequest extends BaseFormRequest
                 'required',
                 new Enum(ProcessType::class),
             ],
-
 
             /**
              * Description of the PSO load.
@@ -106,9 +108,25 @@ class LoadPsoRequest extends BaseFormRequest
              * @example "load-123"
              */
             'data.id' => 'string',
+
+            /**
+             * Whether to include ARP data in the PSO load.
+             * If true, rotaId is required.
+             * @var boolean
+             * @example true
+             */
+            'data.includeArpData' => 'boolean',
         ];
 
         return array_merge($commonRules, $additionalRules);
     }
 
+    public function withValidator($validator): void
+    {
+        parent::withValidator($validator);
+
+        $validator->sometimes('data.rotaId', 'required|string', static function ($input) {
+            return (bool)data_get($input, 'data.includeArpData') === true;
+        });
+    }
 }

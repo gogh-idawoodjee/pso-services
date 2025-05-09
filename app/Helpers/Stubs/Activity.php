@@ -13,7 +13,7 @@ class Activity
 {
     public static function make(array $activityData, bool $isAbRequest = false, int $psoApiVersion = 1): array
 
-        // todo ensure that activityData is always sent as json
+
     {
         $activityId = $isAbRequest
 

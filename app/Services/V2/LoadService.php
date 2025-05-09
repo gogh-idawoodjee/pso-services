@@ -7,8 +7,11 @@ use App\Enums\InputMode;
 use App\Enums\ProcessType;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\InputReference;
+use App\Helpers\Stubs\SourceData;
+use App\Helpers\Stubs\SourceDataParameter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use JsonException;
 use SensitiveParameter;
 
 class LoadService extends BaseService
@@ -24,7 +27,7 @@ class LoadService extends BaseService
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|JsonException
      */
     public function loadPSO(): JsonResponse
     {
@@ -40,6 +43,11 @@ class LoadService extends BaseService
         $keepPsoData = data_get($this->data, 'data.keepPsoData');
         $sendToPso = data_get($this->data, 'data.sendToPso');
         $keepPsoDataMessage = null;
+
+        if (data_get($this->data, 'data.includeArpData')) {
+            $sourceData = SourceData::make();
+            $sourceDataParam = SourceDataParameter::make('rota_id', 'master');
+        }
 
         $baseUrl = data_get($this->data, 'environment.baseUrl');
 
@@ -66,6 +74,9 @@ class LoadService extends BaseService
         );
     }
 
+    /**
+     * @throws JsonException
+     */
     public function updateRota(): JsonResponse
     {
 
