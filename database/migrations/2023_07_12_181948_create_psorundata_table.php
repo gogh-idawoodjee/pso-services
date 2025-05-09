@@ -13,7 +13,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('psorundata', function (Blueprint $table) {
-            $table->uuid('id');
+            $table->uuid('id')->primary();
             $table->uuid('run_id');
             $table->string('activity_id');
             $table->string('activity_type_id');
