@@ -13,8 +13,7 @@ class DeleteObjectRequest extends BaseFormRequest
     {
         $commonRules = $this->commonRules();
 
-        $additionalRules = [
-            // Validate against the *labels*, not keys
+        $rules = [
             'data.objectType' => [
                 'required',
                 'string',
@@ -22,7 +21,28 @@ class DeleteObjectRequest extends BaseFormRequest
             ],
         ];
 
-        return array_merge($commonRules, $additionalRules);
+        // Dynamically add objectPkX rules based on objectType, if provided
+        $objectTypeLabel = data_get($this->input('data'), 'objectType');
+
+        if ($objectTypeLabel) {
+            $key = collect(PSOObjectRegistry::all())
+                ->filter(fn($entry) => strtolower($entry['label']) === strtolower($objectTypeLabel))
+                ->keys()
+                ->first();
+
+            if ($key) {
+                $registry = PSOObjectRegistry::get($key);
+                $attributes = $registry['attributes'] ?? [];
+
+                foreach ($attributes as $index => $attribute) {
+                    $pkIndex = $index + 1;
+                    $pkField = "data.objectPk{$pkIndex}";
+                    $rules[$pkField] = ['required']; // Add type rules if needed
+                }
+            }
+        }
+
+        return array_merge($commonRules, $rules);
     }
 
     public function setGroupErrors(bool $shouldGroupErrors): static

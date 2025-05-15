@@ -3,7 +3,9 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Enums\InputMode;
 use App\Helpers\Stubs\DeleteObject;
+use App\Helpers\Stubs\InputReference;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use SensitiveParameter;
@@ -25,8 +27,13 @@ class DeleteService extends BaseService
     public function deleteObject(): JsonResponse
     {
 
+
         try {
-            $payload = DeleteObject::make($this->data, $this->isRotaObject);
+            $delete_input = DeleteObject::make(data_get($this->data, 'data'), $this->isRotaObject);
+
+            $input_ref = InputReference::make(data_get($this->data, 'environment.datasetId'), InputMode::CHANGE);
+
+            $payload = ['Object_Deletion' => $delete_input, 'Input_Reference' => $input_ref];
 
             return $this->sendOrSimulate(
                 ['Object_Deletion' => $payload],

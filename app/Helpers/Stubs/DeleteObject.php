@@ -3,6 +3,7 @@
 namespace App\Helpers\Stubs;
 
 use App\Classes\PSOObjectRegistry;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DeleteObject
@@ -18,20 +19,32 @@ class DeleteObject
         $label = data_get($data, 'objectType');
 
         if (!$label) {
+            Log::error('Object type is missing from request.');
             throw new RuntimeException('Object type is missing from request.');
         }
 
+//        $key = collect(PSOObjectRegistry::all())
+//            ->first(static fn($entry) => strcasecmp($entry['label'], $label) === 0);
+
         $key = collect(PSOObjectRegistry::all())
-            ->first(static fn($entry) => strcasecmp($entry['label'], $label) === 0);
+            ->filter(static fn($entry) => strcasecmp($entry['label'], $label) === 0)
+            ->keys()
+            ->first();
 
         if (!$key) {
+            Log::error("Object type '{$label}' not found in registry.");
             throw new RuntimeException("Object type '{$label}' not found in registry.");
+
         }
 
-        $registry = PSOObjectRegistry::get(array_search($key, PSOObjectRegistry::all(), true));
+        $registry = PSOObjectRegistry::get($key);
+
+//        $registry = PSOObjectRegistry::get(array_search($key, PSOObjectRegistry::all(), true));
 
         if (!$registry) {
+            Log::error("Registry entry for '{$label}' not found.");
             throw new RuntimeException("Registry entry for '{$label}' not found.");
+
         }
 
         $payload = collect($registry['attributes'] ?? [])
@@ -43,6 +56,7 @@ class DeleteObject
                 $value = data_get($data, "objectPk{$index}");
 
                 if ($value === null) {
+                    Log::error("Missing required field objectPk{$index} ({$attributeName}).");
                     throw new RuntimeException("Missing required field objectPk{$index} ({$attributeName}).");
                 }
 

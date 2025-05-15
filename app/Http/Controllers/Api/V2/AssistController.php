@@ -20,12 +20,15 @@ class AssistController extends Controller
      */
     public function destroy(DeleteObjectRequest $request): JsonResponse
     {
+
+
+
         return $this->executeAuthenticatedAction($request, function (DeleteObjectRequest $req) {
             // so we have the token now in $req->input('environment.token')
             // we should send that the activity service? // all our services should accept a token
             $deleteService = new DeleteService(
                 $req->filled('environment.token') ? $req->input('environment.token') : null,
-                $req->input('data')
+                $req->validated()
             );
 
             return $deleteService->deleteObject();
