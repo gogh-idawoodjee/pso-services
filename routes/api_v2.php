@@ -23,7 +23,7 @@ Route::delete('/activity/', [ActivityController::class, 'destroy']);
 
 // Assist routes
 Route::delete('/delete', [AssistController::class, 'destroy']);
-Route::middleware(['auth:sanctum'])->post('/load', [AssistController::class, 'store']);
+Route::post('/load', [AssistController::class, 'store']);
 Route::patch('/rota', [AssistController::class, 'update']);
 
 
