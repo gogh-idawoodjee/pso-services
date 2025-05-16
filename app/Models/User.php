@@ -20,7 +20,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasApiTokens;
 
 
-    protected $connection = 'users_db';
+    protected $connection = 'krang_db';
     /**
      * The attributes that are mass assignable.
      *

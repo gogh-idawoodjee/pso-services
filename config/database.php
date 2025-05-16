@@ -43,13 +43,13 @@ return [
         ],
 
 
-        'users_db' => [
-            'driver' => env('USERS_DB_DRIVER', 'mysql'), // 👈 use env here
-            'host' => env('USERS_DB_HOST', '127.0.0.1'),
-            'port' => env('USERS_DB_PORT', '3306'),
-            'database' => env('USERS_DB_DATABASE', 'your_api_db'),
-            'username' => env('USERS_DB_USERNAME', 'your_api_user'),
-            'password' => env('USERS_DB_PASSWORD', ''),
+        'krang_db' => [
+            'driver' => env('KRANG_DB_DRIVER', 'mysql'), // 👈 use env here
+            'host' => env('KRANG_DB_HOST', '127.0.0.1'),
+            'port' => env('KRANG_DB_PORT', '3306'),
+            'database' => env('KRANG_DB_DATABASE', 'your_api_db'),
+            'username' => env('KRANG_DB_USERNAME', 'your_api_user'),
+            'password' => env('KRANG_DB_PASSWORD', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',

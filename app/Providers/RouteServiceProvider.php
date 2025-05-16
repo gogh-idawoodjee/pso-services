@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\LogTokenUsage;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -22,6 +23,9 @@ class RouteServiceProvider extends ServiceProvider
     {
         // Configure rate limiting
         $this->configureRateLimiting();
+
+
+        Route::aliasMiddleware('log.token', LogTokenUsage::class);
 
         // Add versioned API routes
         Route::middleware('api')

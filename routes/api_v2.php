@@ -40,10 +40,10 @@ Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'st
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
 
 Route::get('/debug-token', function (Request $request) {
-    $user = $request->user();
+//    $user = $request->user();
 
     return response()->json([
-        'authenticated_user' => $user ? $user->toArray() : null,
-        'token' => $request->bearerToken(),
+//        'authenticated_user' => $user ? $user->toArray() : null,
+        'token' =>'test',
     ]);
-})->middleware('auth:sanctum');
+})->middleware('auth:sanctum', 'log.token');
