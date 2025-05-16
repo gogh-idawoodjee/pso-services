@@ -23,7 +23,7 @@ Route::delete('/activity/', [ActivityController::class, 'destroy']);
 
 // Assist routes
 Route::delete('/delete', [AssistController::class, 'destroy']);
-Route::post('/load', [AssistController::class, 'store']);
+Route::middleware(['auth:sanctum'])->post('/load', [AssistController::class, 'store']);
 Route::patch('/rota', [AssistController::class, 'update']);
 
 
@@ -38,3 +38,12 @@ Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class,
 // resource routes
 Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
+
+Route::get('/debug-token', function (Request $request) {
+    $user = $request->user();
+
+    return response()->json([
+        'authenticated_user' => $user ? $user->toArray() : null,
+        'token' => $request->bearerToken(),
+    ]);
+})->middleware('auth:sanctum');

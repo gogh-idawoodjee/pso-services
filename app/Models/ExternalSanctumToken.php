@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\PersonalAccessToken as SanctumPersonalAccessToken;
+use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
 
-class ExternalSanctumToken extends SanctumPersonalAccessToken
+class ExternalSanctumToken extends SanctumToken
 {
-    protected $connection = 'shared_tokens'; // Use the shared Sanctum DBs
+
     protected $table = 'personal_access_tokens';
+
+
 }

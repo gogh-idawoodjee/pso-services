@@ -9,6 +9,8 @@ use App\Services\V2\DeleteService;
 use App\Services\V2\LoadService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+
 
 class AssistController extends Controller
 {
