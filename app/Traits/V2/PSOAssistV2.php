@@ -3,6 +3,7 @@
 namespace App\Traits\V2;
 
 use App\Classes\V2\PSOAuthService;
+use App\Classes\V2\SendOrSimulateBuilder;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Helpers\Stubs\InputReference;
@@ -252,10 +253,18 @@ trait PSOAssistV2
         string|null $sessionToken,
         bool|null   $requiresRotaUpdate = null,
         string|null $rotaUpdateDescription = null,
-        string|null $notSentArraykey = null,
-        string|null $additionalDetails = null
+        string|null $notSentArrayKey = null,
+        string|null $additionalDetails = null,
+        bool|null   $addInputReference = null
     ): JsonResponse
     {
+        if ($addInputReference) {
+            $payload['Input_Reference'] = InputReference::make(
+                data_get($environmentData, 'datasetId'),
+                InputMode::CHANGE
+            );
+        }
+
         if ($sessionToken) {
             $psoPayload = $this->buildPayload($payload);
 
@@ -278,8 +287,14 @@ trait PSOAssistV2
                 : $psoResponse;
         }
 
-        $payloadArray = $notSentArraykey ? [$notSentArraykey => $payload] : $payload;
+        $payloadArray = $notSentArrayKey ? [$notSentArrayKey => $payload] : $payload;
         return $this->notSentToPso($this->buildPayload($payloadArray, 1, true), $additionalDetails);
+    }
+
+
+    public function sendOrSimulateBuilder(): SendOrSimulateBuilder
+    {
+        return new SendOrSimulateBuilder($this);
     }
 
 }
