@@ -2,7 +2,6 @@
 
 namespace App\Helpers\Stubs;
 
-
 class Sla
 {
     public static function make(

@@ -2,7 +2,6 @@
 
 namespace App\Helpers\Stubs;
 
-
 use App\Constants\PSOConstants;
 
 class SourceDataParameter

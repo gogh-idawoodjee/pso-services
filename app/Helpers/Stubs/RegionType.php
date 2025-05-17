@@ -2,9 +2,7 @@
 
 namespace App\Helpers\Stubs;
 
-
 use Illuminate\Support\Str;
-
 class RegionType
 {
     public static function make(string $regionTypeId, string|null $description = null, int $psoApiVersion = 1): array

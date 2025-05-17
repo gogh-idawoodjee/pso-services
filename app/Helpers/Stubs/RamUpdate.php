@@ -2,7 +2,6 @@
 
 namespace App\Helpers\Stubs;
 
-
 use App\Enums\InputMode;
 
 class RamUpdate
@@ -12,8 +11,6 @@ class RamUpdate
         int    $psoApiVersion = 1
     ): array
     {
-
-
         return [
             'organisation_id' => '2',
             'dataset_id' => $datasetId,

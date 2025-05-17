@@ -2,8 +2,6 @@
 
 namespace App\Helpers\Stubs;
 
-
-
 class Location
 {
     public static function make(

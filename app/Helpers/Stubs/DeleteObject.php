@@ -8,8 +8,6 @@ use RuntimeException;
 
 class DeleteObject
 {
-
-
     public static function make(
         array $data,
         bool  $isRotaObject = false,
@@ -23,9 +21,6 @@ class DeleteObject
             throw new RuntimeException('Object type is missing from request.');
         }
 
-//        $key = collect(PSOObjectRegistry::all())
-//            ->first(static fn($entry) => strcasecmp($entry['label'], $label) === 0);
-
         $key = collect(PSOObjectRegistry::all())
             ->filter(static fn($entry) => strcasecmp($entry['label'], $label) === 0)
             ->keys()
@@ -38,8 +33,6 @@ class DeleteObject
         }
 
         $registry = PSOObjectRegistry::get($key);
-
-//        $registry = PSOObjectRegistry::get(array_search($key, PSOObjectRegistry::all(), true));
 
         if (!$registry) {
             Log::error("Registry entry for '{$label}' not found.");
@@ -74,7 +67,6 @@ class DeleteObject
 
         return $payload;
     }
-
 
 }
 

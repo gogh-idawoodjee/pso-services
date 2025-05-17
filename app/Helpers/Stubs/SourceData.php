@@ -7,8 +7,6 @@ use App\Constants\PSOConstants;
 
 class SourceData
 {
-
-
     public static function make(
         int $psoApiVersion = 1
     ): array

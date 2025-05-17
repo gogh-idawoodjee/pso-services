@@ -16,8 +16,7 @@ class Region
         ];
     }
 
-    public
-    static function makeRAMDivision(
+    public static function makeRAMDivision(
         string      $regionId,
         string|null $description = null,
         bool|null   $send = null,

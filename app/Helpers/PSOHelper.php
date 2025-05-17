@@ -49,6 +49,7 @@ class PSOHelper
      */
     public static function ValidateSendToPSO(Request $request)
         // replaced with inline validation see BaseFormRequest
+    : void
     {
         Validator::make($request->all(), [
             'token' => Rule::requiredIf($request->send_to_pso === true && !$request->username && !$request->password)
@@ -66,7 +67,7 @@ class PSOHelper
     /**
      * @throws ValidationException
      */
-    public static function ValidateCredentials(Request $request)
+    public static function ValidateCredentials(Request $request): void
     {
         Validator::make($request->all(), [
             'token' => Rule::requiredIf(!$request->username && !$request->password)
