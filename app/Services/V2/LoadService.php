@@ -103,14 +103,16 @@ class LoadService extends BaseService
                 ->description($description)
                 ->build();
 
-        return $this->sendOrSimulate(
-            $payload,
-            data_get($this->data, 'environment'),
-            $this->sessionToken,
-            null,
-            null,
-            'Input_Reference'
-        );
+        // todo this still needs source data
+
+
+        return $this->sendOrSimulateBuilder()
+            ->payload($payload)
+            ->environment(data_get($this->data, 'environment'))
+            ->token($this->sessionToken)
+            ->notSentKey('Input Reference')
+            ->send();
+
 
 //        if ($this->sessionToken) {
 //            $psoResponse = $this->sendToPso($payload, data_get($this->data, 'environment'), $this->sessionToken, PsoEndpointSegment::DATA);

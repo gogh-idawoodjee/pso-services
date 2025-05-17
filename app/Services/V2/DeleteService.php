@@ -38,11 +38,12 @@ class DeleteService extends BaseService
 
             $payload = ['Object_Deletion' => $delete_input, 'Input_Reference' => $input_ref];
 
-            return $this->sendOrSimulate(
-                ['Object_Deletion' => $payload],
-                data_get($this->data, 'environment'),
-                $this->sessionToken
-            );
+            return $this->sendOrSimulateBuilder()
+                ->payload(['Object_Deletion' => $payload])
+                ->environment(data_get($this->data, 'environment'))
+                ->includeInputReference()
+                ->token($this->sessionToken)
+                ->send();
 
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
