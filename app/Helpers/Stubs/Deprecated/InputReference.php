@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Helpers\Stubs;
+namespace App\Helpers\Stubs\Deprecated;
 
 
 use App\Enums\InputMode;
 use App\Enums\ProcessType;
-
 use Illuminate\Support\Str;
 
+/**
+ * @deprecated Use App\Builders\ActivityBuilder instead.
+ * This class will be removed in an upcoming release.
+ */
 class InputReference
 {
 

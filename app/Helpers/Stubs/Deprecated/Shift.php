@@ -1,7 +1,11 @@
 <?php
 
-namespace App\Helpers\Stubs;
+namespace App\Helpers\Stubs\Deprecated;
 
+/**
+ * @deprecated Use App\Builders\ShiftBuilder instead.
+ * This class will be removed in an upcoming release.
+ */
 class Shift
 {
     public static function make(

@@ -1,14 +1,21 @@
 <?php
 
-namespace App\Helpers\Stubs;
+namespace App\Helpers\Stubs\Deprecated;
 
 
 use App\Enums\ActivityStatus;
 use App\Helpers\PSOHelper;
+use App\Helpers\Stubs\Deprecated\ActivityStatus as ActivityStatusStub;
+use App\Helpers\Stubs\Location;
+use App\Helpers\Stubs\Region;
+use App\Helpers\Stubs\Skill;
+use App\Helpers\Stubs\Sla;
 use Carbon\Carbon;
-use App\Helpers\Stubs\ActivityStatus as ActivityStatusStub;
 
-
+/**
+ * @deprecated Use App\Builders\ActivityBuilder instead.
+ * This class will be removed in an upcoming release.
+ */
 class Activity
 {
     public static function make(array $activityData, bool $isAbRequest = false, int $psoApiVersion = 1): array

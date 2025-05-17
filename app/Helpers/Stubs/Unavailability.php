@@ -9,7 +9,6 @@ class Unavailability
 {
     public static function make(
         string      $resourceId,
-
         string|null $description = null,
         bool|null   $isArpObject = null,
         int         $psoApiVersion = 1

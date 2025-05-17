@@ -3,9 +3,9 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
+use App\Classes\V2\EntityBuilders\ShiftBuilder;
 use App\Enums\ShiftEntity;
-use App\Helpers\Stubs\ResourceEvent;
-use App\Helpers\Stubs\Shift;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use SensitiveParameter;
@@ -21,13 +21,14 @@ class ResourceService extends BaseService
     public function createEvent(): JsonResponse|null
     {
         try {
-            $payload = ResourceEvent::make(
-                data_get($this->data, 'resourceId'),
-                data_get($this->data, 'eventType'),
-                data_get($this->data, 'eventDateTime'),
-                data_get($this->data, 'lat'),
-                data_get($this->data, 'long'),
-            );
+
+
+            $payload =
+                ResourceEventBuilder::make(data_get($this->data, 'resourceId'), data_get($this->data, 'eventType'))
+                    ->eventDateTime(data_get($this->data, 'eventDateTime'))
+                    ->latitude(data_get($this->data, 'lat'))
+                    ->longitude(data_get($this->data, 'long'))
+                    ->build();
 
             return $this->sendOrSimulate(
                 ['Schedule_Event' => $payload],
@@ -43,17 +44,18 @@ class ResourceService extends BaseService
     public function updateShift(): JsonResponse|null
     {
         try {
-            $payload = Shift::make(
-                data_get($this->data, 'data.shiftId'),
-                data_get($this->data, 'data.resourceId'),
-                data_get($this->data, 'data.rotaId'),
-                data_get($this->data, 'data.startDateTime'),
-                data_get($this->data, 'data.endDateTime'),
-                data_get($this->data, 'data.isManualSchedulingOnly'),
-                data_get($this->data, 'data.shiftType'),
-                data_get($this->data, 'data.description'),
-                data_get($this->data, 'data.isArpObject'),
-            );
+
+            $payload = ShiftBuilder::make()
+                ->shiftId(data_get($this->data, 'data.shiftId'))
+                ->shiftType(data_get($this->data, 'data.shiftType'))
+                ->startDateTime(data_get($this->data, 'data.startDateTime'))
+                ->endDateTime(data_get($this->data, 'data.endDateTime'))
+                ->arpObject(data_get($this->data, 'data.isArpObject'))
+                ->description(data_get($this->data, 'data.description'))
+                ->manualSchedulingOnly(data_get($this->data, 'data.isManualSchedulingOnly'))
+                ->rotaId(data_get($this->data, 'data.rotaId'))
+                ->resourceId(data_get($this->data, 'data.resourceId'))
+                ->build();
 
             $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
@@ -73,18 +75,16 @@ class ResourceService extends BaseService
 
     }
 
-    public function createUnavailability()
+    public function createUnavailability(): JsonResponse|null
     {
         try {
-            $payload = Shift::make(
 
-                data_get($this->data, 'data.resourceId'),
-                data_get($this->data, 'data.description'),
-                data_get($this->data, 'data.categoryId'),
-                data_get($this->data, 'data.duration'),
-                data_get($this->data, 'data.timeZone'),
-                data_get($this->data, 'data.baseDateTime'),
-            );
+
+            // todo looks like this unavailabilyt stuff still needs to be done
+            $payload = ShiftBuilder::make()
+                ->resourceId(data_get($this->data, 'data.resourceId'))
+                ->description(data_get($this->data, 'data.description'))
+                ->build();
 
             $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 

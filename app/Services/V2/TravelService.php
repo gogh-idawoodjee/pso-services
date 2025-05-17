@@ -3,10 +3,10 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;
-use App\Helpers\Stubs\InputReference;
 use App\Models\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\Request;
@@ -75,11 +75,7 @@ class TravelService extends BaseService
             ]
         ];
 
-        $input_reference = InputReference::make(
-            'Travel Analysis from SERVICE_NAME_HERE',
-            InputMode::CHANGE,
-            $this->datasetId
-        );
+        $input_reference = InputReferenceBuilder::make($this->datasetId)->inputType(InputMode::CHANGE)->build();
 
         $broadcast = Broadcast::make(
             BroadcastAllocationType::SCHEDULING_TRAVEL_ANALYSER,

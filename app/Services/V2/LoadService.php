@@ -3,10 +3,10 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\InputMode;
 use App\Enums\ProcessType;
 use App\Helpers\PSOHelper;
-use App\Helpers\Stubs\InputReference;
 use App\Helpers\Stubs\SourceData;
 use App\Helpers\Stubs\SourceDataParameter;
 use Illuminate\Http\Client\ConnectionException;
@@ -27,7 +27,7 @@ class LoadService extends BaseService
     }
 
     /**
-     * @throws ConnectionException|JsonException
+     * @throws ConnectionException
      */
     public function loadPSO(): JsonResponse
     {
@@ -39,12 +39,23 @@ class LoadService extends BaseService
         $appointmentWindow = data_get($this->data, 'data.appointmentWindow') ? PSOHelper::setPSODurationDays(data_get($this->data, 'data.appointmentWindow')) : null;
         $id = data_get($this->data, 'data.Id');
         $description = data_get($this->data, 'data.description');
-        $payload = InputReference::make($datasetId, InputMode::LOAD, $datetime, $dseDuration, $processType, $appointmentWindow, $id, $description);
+
+        $payload =
+            InputReferenceBuilder::make($datasetId)
+                ->inputType(InputMode::LOAD)
+                ->dateTime($datetime)
+                ->dseDuration($dseDuration)
+                ->processType($processType)
+                ->appointmentWindow($appointmentWindow)
+                ->id($id)
+                ->description($description)
+                ->build();
         $keepPsoData = data_get($this->data, 'data.keepPsoData');
         $sendToPso = data_get($this->data, 'data.sendToPso');
         $keepPsoDataMessage = null;
 
         if (data_get($this->data, 'data.includeArpData')) {
+            // todo finish this part
             $sourceData = SourceData::make();
             $sourceDataParam = SourceDataParameter::make('rota_id', 'master');
         }
@@ -63,15 +74,14 @@ class LoadService extends BaseService
             $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';
         }
 
-        return $this->sendOrSimulate(
-            $payload,
-            data_get($this->data, 'environment'),
-            $this->sessionToken,
-            null,
-            null,
-            'Input_Reference',
-            $keepPsoDataMessage
-        );
+        return $this->sendOrSimulateBuilder()
+            ->payload($payload)
+            ->environment(data_get($this->data, 'environment'))
+            ->token($this->sessionToken)
+            ->notSentKey('Input Reference')
+            ->additionalDetails($keepPsoDataMessage)
+            ->send();
+
     }
 
     /**
@@ -84,7 +94,14 @@ class LoadService extends BaseService
         $datetime = data_get($this->data, 'data.datetime');
         $id = data_get($this->data, 'data.Id');
         $description = data_get($this->data, 'data.description');
-        $payload = InputReference::make($datasetId, InputMode::CHANGE, $datetime, null, null, null, $id, $description);
+
+        $payload =
+            InputReferenceBuilder::make($datasetId)
+                ->inputType(InputMode::CHANGE)
+                ->dateTime($datetime)
+                ->id($id)
+                ->description($description)
+                ->build();
 
         return $this->sendOrSimulate(
             $payload,

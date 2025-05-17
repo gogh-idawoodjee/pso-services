@@ -4,12 +4,12 @@ namespace App\Services\V2;
 
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\AppointmentRequestStatus;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
-use App\Helpers\Stubs\InputReference;
 use App\Models\PSOAppointment;
 use Carbon\Carbon;
 use Exception;
@@ -84,10 +84,8 @@ class AppointmentService extends BaseService
             $environmentData = data_get($this->data, 'environment');
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
-            $inputReference = InputReference::make(
-                data_get($this->data, 'environment.datasetId'),
-                InputMode::CHANGE
-            );
+
+            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
             // input ref doesn't exist yet, lolzers
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -172,10 +170,8 @@ class AppointmentService extends BaseService
             $environmentData = data_get($this->data, 'environment');
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId);
-            $inputReference = InputReference::make(
-                data_get($this->data, 'environment.datasetId'),
-                InputMode::CHANGE
-            );
+
+            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
             // input ref doesn't exist yet, lolzers
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -236,10 +232,8 @@ class AppointmentService extends BaseService
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId);
 
-            $inputReference = InputReference::make(
-                data_get($this->data, 'environment.datasetId'),
-                InputMode::CHANGE
-            );
+            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
+
             // input ref doesn't exist yet, lolzers
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -625,6 +619,5 @@ class AppointmentService extends BaseService
         // All checks passed, return null (meaning no error)
         return null;
     }
-
 
 }

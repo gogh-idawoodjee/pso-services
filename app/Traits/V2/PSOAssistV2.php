@@ -6,7 +6,7 @@ use App\Classes\V2\PSOAuthService;
 use App\Classes\V2\SendOrSimulateBuilder;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
-use App\Helpers\Stubs\InputReference;
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -259,10 +259,15 @@ trait PSOAssistV2
     ): JsonResponse
     {
         if ($addInputReference) {
-            $payload['Input_Reference'] = InputReference::make(
-                data_get($environmentData, 'datasetId'),
-                InputMode::CHANGE
-            );
+//            $payload['Input_Reference'] = InputReferenceBuilder::make(
+//                data_get($environmentData, 'datasetId'),
+//                InputMode::CHANGE
+//            );
+
+            $payload['inputReference'] =
+                InputReferenceNew::make(data_get($environmentData, 'datasetId'))
+                    ->inputType(InputMode::CHANGE)
+                    ->build();
         }
 
         if ($sessionToken) {
@@ -276,15 +281,19 @@ trait PSOAssistV2
             );
             // send rota update
             if ($requiresRotaUpdate) {
-                $datasetId = data_get($environmentData, 'datasetId');
-                $rotaUpdatePayload = InputReference::make($datasetId, InputMode::CHANGE, null, null, null, null, null, $rotaUpdateDescription);
+                $rotaUpdatePayload =
+                    InputReferenceNew::make(data_get($environmentData, 'datasetId'))
+                        ->inputType(InputMode::CHANGE)
+                        ->description($rotaUpdateDescription) // todo test where this description comes from and if its required if requiresrotaupdate is provided
+                        ->build();
                 $this->sendToPso($rotaUpdatePayload, $environmentData, $sessionToken, PsoEndpointSegment::DATA);
             }
 
 
-            return $psoResponse->status() < 400
-                ? $this->ok($psoResponse->getData())
-                : $psoResponse;
+            if ($psoResponse->status() < 400) {
+                return $this->ok($psoResponse->getData());
+            }
+            return $psoResponse;
         }
 
         $payloadArray = $notSentArrayKey ? [$notSentArrayKey => $payload] : $payload;

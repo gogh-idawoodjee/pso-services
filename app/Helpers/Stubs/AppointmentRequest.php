@@ -3,6 +3,8 @@
 namespace App\Helpers\Stubs;
 
 
+use App\Classes\V2\EntityBuilders\ActivityBuilder;
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\InputMode;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
@@ -34,20 +36,20 @@ class AppointmentRequest
             Arr::add($appointmentRequest, 'slot_usage_rule_id', data_get($appointmentData, 'data.slotUsageRuleId'));
         }
 
-        $activity = Activity::make($appointmentData, true);
-        $input_reference = InputReference::make(
-            data_get($appointmentData, 'environment.datasetId'),
-            InputMode::CHANGE,
-            $requestDateTime,
-            null,
-            null,
-            null,
-            null,
-            'Appointment Request for: ' . data_get($appointmentData, 'data.activityId')
-        );
+        $activity =
+            ActivityBuilder::make($appointmentData)
+                ->asAbRequest()
+                ->build();
+
+        $inputReference =
+            InputReferenceBuilder::make(data_get($appointmentData, 'environment.datasetId'))
+                ->inputType(InputMode::CHANGE)
+                ->datetime($requestDateTime)
+                ->description('Appointment Request for: ' . data_get($appointmentData, 'data.activityId'))
+                ->build();
 
 
-        return collect(['Appointment_Request' => $appointmentRequest])->merge($activity)->merge(['Input_Reference' => $input_reference])->toArray();
+        return collect(['Appointment_Request' => $appointmentRequest])->merge($activity)->merge(['Input_Reference' => $inputReference])->toArray();
 
     }
 }

@@ -452,7 +452,7 @@ class IFSPSOAppointmentService extends IFSService
         // generate the new SLA
         // $new_sla = (new PSOActivitySLA($request->sla_type_id, $sla_start, $sla_end, $request->sla_priority, $request->sla_start_based))->toJson($new_activity_id);
         // send the SLA -- no don't send it yet, it needs to be in one payload because we have a new activity ID
-//        $input_ref = (new InputReference($request->description ?: 'Updated Activity SLA', 'CHANGE', $request->dataset_id))->toJson();
+//        $input_ref = (new InputReferenceBuilder($request->description ?: 'Updated Activity SLA', 'CHANGE', $request->dataset_id))->toJson();
 //        $this->IFSPSOAssistService->processPayload(true, $this->ActivitySLAPayload($input_ref, $new_sla), $this->token, $request->base_url, 'updated_sla');
 
         // accept the slot

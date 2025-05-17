@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Helpers\Stubs;
+namespace App\Helpers\Stubs\Deprecated;
 
 
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 
+/**
+ * @deprecated Use App\Builders\ActivityBuilder instead.
+ * This class will be removed in an upcoming release.
+ */
 class ActivityStatus
 {
     public static function make(

@@ -3,8 +3,8 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Enums\ActivityStatus;
-use App\Helpers\Stubs\ActivityStatus as StubActivityStatus;
 use App\Helpers\Stubs\DeleteObject;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -35,12 +35,12 @@ class ActivityService extends BaseService
     public function updateStatus(): JsonResponse
     {
         try {
-            $payload = StubActivityStatus::make(
-                $this->activityId,
-                $this->activityStatus,
-                $this->resourceId,
-                (bool)$this->resourceId
-            );
+
+
+            $payload = ActivityStatusBuilder::make($this->activityId, $this->activityStatus)
+                ->resourceId($this->resourceId)
+                ->fixed((bool)$this->resourceId)
+                ->build();
 
             return $this->sendOrSimulate(
                 ['Activity_Status' => $payload],
