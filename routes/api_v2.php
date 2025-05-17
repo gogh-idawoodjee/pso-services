@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V2\AssistController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\ResourceShiftController;
+use App\Http\Controllers\Api\V2\ScheduleExceptionController;
 use App\Http\Controllers\Api\V2\TravelController;
 
 Route::post('/health-check', [HealthCheckController::class, 'check']);
@@ -15,7 +16,6 @@ Route::post('/health-check', [HealthCheckController::class, 'check']);
 Route::post('/travelanalyzer', [TravelController::class, 'store']); // this is the main service -> send data, returns an ID of some sort
 Route::post('/travelanalyzerservice', [TravelController::class, 'update']); // this is the broadcast listener
 Route::get('/travelanalyzer/{id}', [TravelController::class, 'show']); // this is the return service that returns your details once ready
-
 
 //Activity routes
 Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 'update']); // added /status in case someday there is an update to the actual activity object itself
@@ -26,7 +26,6 @@ Route::delete('/delete', [AssistController::class, 'destroy']);
 Route::post('/load', [AssistController::class, 'store']);
 Route::patch('/rota', [AssistController::class, 'update']);
 
-
 // appointemnt routes
 Route::post('/appointment', [AppointmentController::class, 'store']);
 Route::post('/appointment/{appointmentRequestId}', [AppointmentController::class, 'check']);
@@ -34,16 +33,8 @@ Route::patch('/appointment/{appointmentRequestId}', [AppointmentController::clas
 Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::class, 'destroy']);
 Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show']);
 
-
 // resource routes
 Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
 
-Route::get('/debug-token', function (Request $request) {
-//    $user = $request->user();
-
-    return response()->json([
-//        'authenticated_user' => $user ? $user->toArray() : null,
-        'token' =>'test',
-    ]);
-})->middleware('auth:sanctum', 'log.token');
+Route::post('/customexception', [ScheduleExceptionController::class, 'store']);
