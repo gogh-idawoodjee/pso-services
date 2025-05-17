@@ -2,6 +2,7 @@
 
 namespace App\Enums;
 
+use App\Constants\PSOConstants;
 use ValueError;
 
 enum ActivityStatus: string
@@ -63,7 +64,7 @@ enum ActivityStatus: string
 
         if ($cache === null) {
             $cache = collect(self::cases())
-                ->filter(static fn(self $status) => (int)$status->value >= 10) // todo make this 10 value a parameter
+                ->filter(static fn(self $status) => (int)$status->value >= PSOConstants::ALLOCATED_STATUS) 
                 ->mapWithKeys(static fn(self $status) => [
                     strtolower($status->name) => (int)$status->value,
                 ])

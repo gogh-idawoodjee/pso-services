@@ -7,4 +7,6 @@ class PSOConstants
     public const ORG_ID = '2';
     public const SERVICE_NAME = 'pso-service';
     public const ARP_SOURCE_DATATYPE = 'RAM';
+
+    public const ALLOCATED_STATUS = 10;
 }
