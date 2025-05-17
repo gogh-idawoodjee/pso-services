@@ -259,10 +259,6 @@ trait PSOAssistV2
     ): JsonResponse
     {
         if ($addInputReference) {
-//            $payload['Input_Reference'] = InputReferenceBuilder::make(
-//                data_get($environmentData, 'datasetId'),
-//                InputMode::CHANGE
-//            );
 
             $payload['inputReference'] =
                 InputReferenceNew::make(data_get($environmentData, 'datasetId'))
