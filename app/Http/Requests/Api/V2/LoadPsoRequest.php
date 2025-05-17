@@ -22,7 +22,7 @@ class LoadPsoRequest extends BaseFormRequest
          * @var string
          * @example "dataset_123"
          */
-        $commonRules['environment.datasetId'] = ['required', 'string'];
+        $commonRules['environment.datasetId'] = ['required', 'string']; // note that datasetID is always required for Load
 
         $additionalRules = [
             /**
@@ -111,7 +111,7 @@ class LoadPsoRequest extends BaseFormRequest
 
             /**
              * Whether to include ARP data in the PSO load.
-             * If true, rotaId is required.
+             * If true, rotaId is required. Source Data and Source Data Params will be included.
              * @var boolean
              * @example true
              */
