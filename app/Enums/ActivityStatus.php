@@ -64,7 +64,7 @@ enum ActivityStatus: string
 
         if ($cache === null) {
             $cache = collect(self::cases())
-                ->filter(static fn(self $status) => (int)$status->value >= PSOConstants::ALLOCATED_STATUS) 
+                ->filter(static fn(self $status) => (int)$status->value >= PSOConstants::ALLOCATED_STATUS)
                 ->mapWithKeys(static fn(self $status) => [
                     strtolower($status->name) => (int)$status->value,
                 ])
