@@ -143,8 +143,8 @@ class TravelService extends BaseService
 
                 BroadcastParameterBuilder::make()
                     ->name(BroadcastParameterType::URL)
-//                    ->value(route('travelanalyzer.update')),
-                    ->value('https://webhook.site/fa0e00f3-91df-486d-b20e-fa8cd4309fe0'),
+                    ->value(route('travelanalyzer.update')),
+//                    ->value('https://webhook.site/fa0e00f3-91df-486d-b20e-fa8cd4309fe0'),
             ])
             ->type('REST')
             ->onceOnly()
