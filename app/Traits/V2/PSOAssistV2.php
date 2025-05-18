@@ -271,7 +271,7 @@ trait PSOAssistV2
         }
 
         $psoPayload = $this->buildPayload($payload);
-        $wrappedPayload = $this->buildPayload($psoPayload, 1, true);
+        $wrappedPayload = $this->buildPayload($payload, 1, true);
         if ($sessionToken) {
 
 

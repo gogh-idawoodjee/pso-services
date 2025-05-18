@@ -6,12 +6,18 @@ use App\Enums\BroadcastParameterType;
 
 class BroadcastParameter
 {
-    public static function make(string $broadcastId, BroadcastParameterType $parameterName, string $parameterValue): array
+    public function __construct(
+        public string $broadcastId,
+        public BroadcastParameterType $parameterName,
+        public string $parameterValue
+    ) {}
+
+    public function toArray(): array
     {
         return [
-            'broadcast_id' => $broadcastId,
-            'parameter_name' => $parameterName,
-            'parameter_value' => $parameterValue,
+            'broadcast_id' => $this->broadcastId,
+            'parameter_name' => $this->parameterName->value,
+            'parameter_value' => $this->parameterValue,
         ];
     }
 }

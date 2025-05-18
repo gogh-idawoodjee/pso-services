@@ -3,8 +3,12 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\BroadcastBuilder;
+use App\Classes\V2\EntityBuilders\BroadcastParameterBuilder;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\BroadcastAllocationType;
+use App\Enums\BroadcastParameterType;
+use App\Enums\BroadcastPlanType;
 use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;
 use App\Helpers\Stubs\TravelDetailRequest;
@@ -37,7 +41,7 @@ class TravelService extends BaseService
      * @return JsonResponse Response data
      * @throws JsonException
      */
-    public function process()
+    public function process(): JsonResponse
     {
 
         // 1) receive PSO creds + coords - done
@@ -64,16 +68,45 @@ class TravelService extends BaseService
         ]);
 
 
+        $broadcast = BroadcastBuilder::make()
+            ->allocationType(BroadcastAllocationType::SCHEDULING_TRAVEL_ANALYSER)
+            ->parameters([
+                BroadcastParameterBuilder::make()
+                    ->name(BroadcastParameterType::MEDIATYPE)
+                    ->value('application/json'),
+
+                BroadcastParameterBuilder::make()
+                    ->name(BroadcastParameterType::URL)
+                    ->value('https://webhook.site/fa0e00f3-91df-486d-b20e-fa8cd4309fe0'),
+            ])
+            ->type('REST')
+            ->onceOnly()
+            ->planType(BroadcastPlanType::COMPLETE)
+            ->build();
+
+        if ($this->sessionToken) {
+            $additionalDetails = "Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
+        } else {
+            $additionalDetails = "Please ensure environment.sendToPso is set to true to get use the analyzer correctly";
+        }
+
+
         // Send the payload to the API
         $apiResponse = $this->sendOrSimulateBuilder()
-            ->payload(['Travel_Detail_Request' => $payload])
+            ->payload(array_merge(
+                ['Travel_Detail_Request' => $payload],
+                $broadcast
+            ))
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
             ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
-            ->additionalDetails("Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]))
+            ->additionalDetails($additionalDetails)
             ->send();
 
         $responseArray = $apiResponse->getData(true);
+
+
+//        return $this->ok($broadcast);
 
         $travelLog->update(
             [
@@ -93,12 +126,7 @@ class TravelService extends BaseService
         // $this->updateTravelLog($response);
 
         // TODO: Return processed response
-        return [
-            'id' => $this->travelLogId,
-            'input_to_pso' => json_decode($travelLog->input_payload, false, 512, JSON_THROW_ON_ERROR),
-            'status' => 'pending'
-            // 'expiry' => $response['expiry_date'] ?? null
-        ];
+
     }
 
     private function travelPayload(): array
