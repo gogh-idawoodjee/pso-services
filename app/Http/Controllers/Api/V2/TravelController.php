@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\TravelRequest;
+use App\Models\PSOTravelLog;
 use App\Services\V2\TravelService;
 use App\Traits\V2\ApiResponses;
 use App\Traits\V2\PSOAssistV2;
-
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use JsonException;
 
@@ -20,15 +22,16 @@ class TravelController extends Controller
     use ApiResponses, PSOAssistV2;
 
     /**
+     * Initiate the travel analysis.
+     *
+     * @param TravelRequest $request
+     * @return JsonResponse
      * @throws JsonException
+     * @throws ConnectionException
      */
-    public function store(TravelRequest $request)
+    public function store(TravelRequest $request): JsonResponse
     {
-
-
         return $this->executeAuthenticatedAction($request, function (TravelRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $travelService = new TravelService(
                 $req->filled('environment.token') ? $req->input('environment.token') : null,
                 $req->validated(),
@@ -38,15 +41,40 @@ class TravelController extends Controller
         });
     }
 
-    public function update(): JsonResponse
+    /**
+     * Receives the Travel Broadcast from PSO.
+     *
+     * @param TravelRequest $request
+     * @return JsonResponse
+     * @throws JsonException
+     */
+    public function update(Request $request): JsonResponse
     {
+        // this is the receiving method
+        $travel = new TravelService(null, $request->toArray());
+        $travel->receivePSOBroadcast();
+
+        return $this->ok();
 
     }
 
-    public function show(TravelRequest $request): JsonResponse|null
+    /**
+     * Get the Details from the Analysis by ID
+     *
+     * @param string $id
+     * @return JsonResponse
+     * @throws JsonException
+     */
+    public function show(string $id): JsonResponse
     {
+        $travelLog = PSOTravelLog::find($id);
 
-        // returns an eloquent model of a travel object because we're storing this in the DB??
 
+        if ($travelLog) {
+            $result = new TravelService(null, [$id]);
+
+            return $this->ok($result->getTravelResults($travelLog), $travelLog->status->message());
+        }
+        return $this->error('Travel Log not found', 404);
     }
 }

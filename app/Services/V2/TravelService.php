@@ -5,19 +5,21 @@ namespace App\Services\V2;
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\BroadcastBuilder;
 use App\Classes\V2\EntityBuilders\BroadcastParameterBuilder;
-use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
-use App\Enums\InputMode;
-use App\Helpers\Stubs\Broadcast;
+use App\Enums\TravelLogStatus;
 use App\Helpers\Stubs\TravelDetailRequest;
 use App\Models\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
+use GuzzleHttp\Client;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use JsonException;
 use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
+use Spatie\Geocoder\Geocoder;
 
 class TravelService extends BaseService
 {
@@ -39,18 +41,11 @@ class TravelService extends BaseService
      * Process the travel request and return the response
      *
      * @return JsonResponse Response data
-     * @throws JsonException
+     * @throws JsonException|ConnectionException
      */
     public function process(): JsonResponse
     {
-
-        // 1) receive PSO creds + coords - done
-        // 2) send to PSO - done
-        // 3) broadcast back to second endpoint
-        // 4) stuff gets stored
-        // 5) stuff gets returned
-
-        // Create travel log
+        // Step 1: Build payload
         $payload = TravelDetailRequest::make(
             $this->travelLogId,
             data_get($this->data, 'data.latFrom'),
@@ -61,14 +56,85 @@ class TravelService extends BaseService
             data_get($this->data, 'data.startDateTime'),
         );
 
+        // Step 2: Resolve addresses and distance
+        [$startAddress, $endAddress] = $this->getAddresses();
+        $googleResults = $this->getDistanceMatrix(
+            data_get($this->data, 'data.latFrom'),
+            data_get($this->data, 'data.longFrom'),
+            data_get($this->data, 'data.latTo'),
+            data_get($this->data, 'data.longTo')
+        );
 
+//        dd($googleResults);
+
+        // Step 3: Create travel log
         $travelLog = PSOTravelLog::create([
             'id' => $this->travelLogId,
-            'status' => 'created' //TODO consider changing this to enum
+            'status' => TravelLogStatus::CREATED,
+            'address_from' => $this->encodeJson($startAddress),
+            'address_to' => $this->encodeJson($endAddress),
+            'google_response' => $this->encodeJson($googleResults),
         ]);
 
+        // Step 4: Build broadcast structure
+        $broadcast = $this->buildBroadcast();
 
-        $broadcast = BroadcastBuilder::make()
+        // Step 5: Send payload or simulate
+        $additionalDetails = $this->getAdditionalDetails();
+        $apiResponse = $this->sendOrSimulateBuilder()
+            ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
+            ->environment(data_get($this->data, 'environment'))
+            ->token($this->sessionToken)
+            ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
+            ->additionalDetails($additionalDetails)
+            ->send();
+
+        // Step 6: Update travel log with PSO response
+        $responseArray = $apiResponse->getData(true);
+
+        $travelLog->update([
+            'input_reference' => $this->travelLogId,
+            'input_payload' => $this->encodeJson(data_get($responseArray, 'data.payloadToPso')),
+            'output_payload' => $this->encodeJson(data_get($responseArray, 'data.responseFromPso')),
+            'status' => TravelLogStatus::SENT,
+        ]);
+
+        return $apiResponse;
+    }
+
+
+    protected function getAddresses(): array
+    {
+        $latFrom = data_get($this->data, 'data.latFrom');
+        $longFrom = data_get($this->data, 'data.longFrom');
+        $latTo = data_get($this->data, 'data.latTo');
+        $longTo = data_get($this->data, 'data.longTo');
+
+        $start = $this->reverseGeocode($latFrom, $longFrom);
+        $end = $this->reverseGeocode($latTo, $longTo);
+
+        return [$start, $end];
+    }
+
+    /**
+     * @throws JsonException
+     */
+    protected function encodeJson(mixed $data): string
+    {
+        return json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+    }
+
+    protected function getAdditionalDetails(): string
+    {
+        if ($this->sessionToken) {
+            return "Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
+        }
+        return "Please ensure environment.sendToPso is set to true to use the analyzer correctly";
+    }
+
+    protected function buildBroadcast(): array
+    {
+        return BroadcastBuilder::make()
             ->allocationType(BroadcastAllocationType::SCHEDULING_TRAVEL_ANALYSER)
             ->parameters([
                 BroadcastParameterBuilder::make()
@@ -77,105 +143,107 @@ class TravelService extends BaseService
 
                 BroadcastParameterBuilder::make()
                     ->name(BroadcastParameterType::URL)
+//                    ->value(route('travelanalyzer.update')),
                     ->value('https://webhook.site/fa0e00f3-91df-486d-b20e-fa8cd4309fe0'),
             ])
             ->type('REST')
             ->onceOnly()
             ->planType(BroadcastPlanType::COMPLETE)
             ->build();
+    }
 
-        if ($this->sessionToken) {
-            $additionalDetails = "Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
-        } else {
-            $additionalDetails = "Please ensure environment.sendToPso is set to true to get use the analyzer correctly";
+
+    /**
+     * @throws JsonException
+     */
+    public function receivePSOBroadcast(): JsonResponse
+    {
+
+
+        $travelDetails = data_get($this->data, 'Travel_Detail', []);
+
+        foreach ($travelDetails as $detail) {
+            PSOTravelLog::where('id', data_get($detail, 'travel_detail_request_id'))
+                ->update([
+                    'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
+                    'status' => TravelLogStatus::COMPLETED,
+                ]);
         }
 
 
-        // Send the payload to the API
-        $apiResponse = $this->sendOrSimulateBuilder()
-            ->payload(array_merge(
-                ['Travel_Detail_Request' => $payload],
-                $broadcast
-            ))
-            ->environment(data_get($this->data, 'environment'))
-            ->token($this->sessionToken)
-            ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
-            ->additionalDetails($additionalDetails)
-            ->send();
+        return response()->json([
+            'status' => 204,
+            'description' => 'all good'
 
-        $responseArray = $apiResponse->getData(true);
-
-
-//        return $this->ok($broadcast);
-
-        $travelLog->update(
-            [
-                'input_reference' => $this->travelLogId,
-                'input_payload' => json_encode(data_get($responseArray, 'data.payloadToPso'), JSON_THROW_ON_ERROR),
-                'pso_response' => json_encode(data_get($responseArray, 'data.responseFromPso'), JSON_THROW_ON_ERROR),
-                'status' => 'sent'
-            ]
-        );
-
-
-        return $apiResponse;
-        // $response = $this->sendTravelRequest($payload);
-
-        // TODO: Update travel log with response
-        // this would happen in the receiving service
-        // $this->updateTravelLog($response);
-
-        // TODO: Return processed response
+        ], 204, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
 
     }
 
-    private function travelPayload(): array
+    /**
+     * @throws ConnectionException
+     */
+    protected function getDistanceMatrix(float $latFrom, float $longFrom, float $latTo, float $longTo, string|null $apiKey = null): array|null
     {
-        $broadcastParameters = [
-            [
-                'parameter_name' => 'mediatype',
-                'parameter_value' => 'application/json'
-            ],
-            [
-                'parameter_name' => 'url',
-                // TODO ADD THE URL HERE
-                'parameter_value' => 'URL_TO_OUR_TRAVEL_BROADCAST_RECEIVER_API_HERE'
-            ]
+        $apiKey = $apiKey ?? (string)config('pso-services.settings.google_key');
+
+
+        $query = [
+            'origins' => "{$latTo},{$longTo}",
+            'destinations' => "{$latFrom},{$longFrom}",
+            'key' => $apiKey,
         ];
 
-        $input_reference = InputReferenceBuilder::make($this->datasetId)->inputType(InputMode::CHANGE)->build();
+        $response = Http::timeout(5)
+            ->connectTimeout(5)
+            ->acceptJson()
+            ->get('https://maps.googleapis.com/maps/api/distancematrix/json', $query);
 
-        $broadcast = Broadcast::make(
-            BroadcastAllocationType::SCHEDULING_TRAVEL_ANALYSER,
-            $broadcastParameters
-        );
+        if ($response->failed()) {
+            // Optional: log or throw exception
+            return null;
+        }
 
-        $travel_details = $this->travelDetailRequest($this->data, $this->travelLogId);
-
-        return $this->buildPayload([
-            'Input_Reference' => $input_reference,
-            'Broadcast' => $broadcast['broadcast_details'],
-            'Broadcast_Parameter' => $broadcast['Broadcast_Parameter'],
-            'Travel_Details' => $travel_details,
-        ]);
+        return data_get($response->json(), 'rows.0.elements.0');
     }
 
 
-    private function travelDetailRequest(array $data, string $id): array
+    protected function reverseGeocode(float $lat, float $long): array
     {
+        $geocoder = (new Geocoder(new Client()))
+            ->setApiKey(config('geocoder.key'));
+
+        $address = $geocoder->getAddressForCoordinates($lat, $long);
+
         return [
-            'id' => $id,
-            'latitude_from' => $data['lat_from'],
-            'latitude_to' => $data['lat_to'],
-            'longitude_from' => $data['long_from'],
-            'longitude_to' => $data['long_to']
+            'address' => $address['formatted_address'] ?? null,
+            'accuracy' => $address['accuracy'] ?? null,
         ];
     }
 
-    // TODO: Add method to send the travel request
-    // private function sendTravelRequest(array $payload)
+    /**
+     * @throws JsonException
+     */
+    public function getTravelResults(PSOTravelLog $travelLog): array
+    {
 
-    // TODO: Add method to update travel log with response
-    // private function updateTravelLog($response)
+//        dd(data_get(json_decode($travelLog->pso_response), 'travel_detail_request_id'));
+
+        return
+            [
+                'travel_detail_request_id' => $travelLog->travel_detail_request_id,
+                'start_address' => $travelLog->getAddressFromTextAttribute(),
+                'end_address' => $travelLog->getAddressToTextAttribute(),
+                'pso' => [
+                    'time' => $travelLog->getPsoTimeFormattedAttribute(),
+                    'distance' => $travelLog->getDistanceInKmAttribute(),
+                ],
+                'google' => [
+                    'time' => $travelLog->getGoogleDurationAttribute(),
+                    'distance' => $travelLog->getGoogleDistanceAttribute(),
+                ]
+            ];
+
+    }
+
 
 }

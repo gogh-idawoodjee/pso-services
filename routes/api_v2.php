@@ -14,7 +14,7 @@ Route::post('/health-check', [HealthCheckController::class, 'check']);
 
 // travel routes
 Route::post('/travelanalyzer', [TravelController::class, 'store']); // this is the main service -> send data, returns an ID of some sort
-Route::post('/travelanalyzerservice', [TravelController::class, 'update']); // this is the broadcast listener
+Route::post('/travelanalyzerservice', [TravelController::class, 'update'])->name('travelanalyzer.update'); // this is the broadcast listener
 Route::get('/travelanalyzer/{id}', [TravelController::class, 'show'])->name('travel.analyzer.show'); // this is the return service that returns your details once ready
 
 //Activity routes

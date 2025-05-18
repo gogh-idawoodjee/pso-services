@@ -1,5 +1,7 @@
 <?php
 
+// this is more of a DTO now
+
 namespace App\Helpers\Stubs;
 
 use App\Enums\BroadcastParameterType;

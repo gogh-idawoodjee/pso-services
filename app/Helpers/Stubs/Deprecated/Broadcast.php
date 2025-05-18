@@ -1,12 +1,16 @@
 <?php
 
-namespace App\Helpers\Stubs;
+namespace App\Helpers\Stubs\Deprecated;
 
 use App\Enums\BroadcastAllocationType;
 use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
 use Illuminate\Support\Str;
 
+/**
+ * @deprecated Use App\Builders\ActivityBuilder instead.
+ * This class will be removed in an upcoming release.
+ */
 class Broadcast
 {
     public static function make(
