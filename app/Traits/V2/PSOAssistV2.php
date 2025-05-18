@@ -266,8 +266,10 @@ trait PSOAssistV2
                     ->build();
         }
 
+        $psoPayload = $this->buildPayload($payload);
+        $wrappedPayload = $this->buildPayload($psoPayload, 1, true);
         if ($sessionToken) {
-            $psoPayload = $this->buildPayload($payload);
+
 
             $psoResponse = $this->sendToPso(
                 $psoPayload,
@@ -285,15 +287,14 @@ trait PSOAssistV2
                 $this->sendToPso($rotaUpdatePayload, $environmentData, $sessionToken, PsoEndpointSegment::DATA);
             }
 
-
             if ($psoResponse->status() < 400) {
-                return $this->ok($psoResponse->getData());
+                return $this->sentToPso(['payloadToPso' => $wrappedPayload['payloadToPso'], 'responseFromPso' => $psoResponse->getData()]);
             }
             return $psoResponse;
         }
 
-        $payloadArray = $notSentArrayKey ? [$notSentArrayKey => $payload] : $payload;
-        return $this->notSentToPso($this->buildPayload($payloadArray, 1, true), $additionalDetails);
+
+        return $this->notSentToPso($wrappedPayload, $additionalDetails);
     }
 
 

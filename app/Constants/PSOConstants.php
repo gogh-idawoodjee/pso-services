@@ -11,4 +11,6 @@ class PSOConstants
 
     public const AUDIT_USER_ID = 'Ish Services User';
     public const APP_INSTANCE_ID = 'Ish Services';
+    public const SOURCE_DATA_PARAM_NAME = 'rota_id';
+    public const SOURCE_DATA_PARAM_VALUE = 'master';
 }

@@ -12,7 +12,7 @@ class SourceData
     ): array
     {
         return [
-            'source_data_type' => PSOConstants::ARP_SOURCE_DATATYPE,
+            'source_data_type_id' => PSOConstants::ARP_SOURCE_DATATYPE,
         ];
     }
 }

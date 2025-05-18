@@ -12,7 +12,7 @@ class SendOrSimulateBuilder
     protected string|null $sessionToken;
     protected bool|null $requiresRotaUpdate = null;
     protected string|null $rotaUpdateDescription = null;
-    protected string|null $notSentArrayKey = null;
+//    protected string|null $notSentArrayKey = null;
     protected string|null $additionalDetails = null;
     protected bool $addInputReference = false;
 
@@ -53,12 +53,12 @@ class SendOrSimulateBuilder
         $this->rotaUpdateDescription = $description;
         return $this;
     }
-
-    public function notSentKey(string|null $key): static
-    {
-        $this->notSentArrayKey = $key;
-        return $this;
-    }
+// no longer required
+//    public function notSentKey(string|null $key): static
+//    {
+//        $this->notSentArrayKey = $key;
+//        return $this;
+//    }
 
     public function additionalDetails(string|null $details): static
     {
@@ -77,7 +77,7 @@ class SendOrSimulateBuilder
             $this->sessionToken,
             $this->requiresRotaUpdate,
             $this->rotaUpdateDescription,
-            $this->notSentArrayKey,
+//            $this->notSentArrayKey,
             $this->additionalDetails,
             $this->addInputReference
         );
