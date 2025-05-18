@@ -13,4 +13,6 @@ class PSOConstants
     public const APP_INSTANCE_ID = 'Ish Services';
     public const SOURCE_DATA_PARAM_NAME = 'rota_id';
     public const SOURCE_DATA_PARAM_VALUE = 'master';
+
+    public const UPDATE_ROTA_DESCRIPTION = 'Update Rota from PSO Services';
 }

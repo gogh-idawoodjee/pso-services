@@ -18,7 +18,7 @@ class InputReference
     private string|null $appointment_window;
 
 
-    // todo maybe this shouldn't be a class but a public method on the assist service // done
+    // nolonger on the to do list maybe this shouldn't be a class but a public method on the assist service // done
     public function __construct($description, $input_type, $dataset_id, $datetime = null, $dse_duration = null, $process_type = null, $appointment_window = null)
     {
 

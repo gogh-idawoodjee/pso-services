@@ -103,7 +103,7 @@ class LoadService extends BaseService
         $datasetId = data_get($this->data, 'environment.datasetId');
         $datetime = data_get($this->data, 'data.datetime');
         $id = data_get($this->data, 'data.Id');
-        $description = data_get($this->data, 'data.description') ?? 'Update Rota from PSO Services';
+        $description = data_get($this->data, 'data.description') ?? PSOConstants::UPDATE_ROTA_DESCRIPTION;
 
         $payload = [
             'Input_Reference' => InputReferenceBuilder::make($datasetId)
