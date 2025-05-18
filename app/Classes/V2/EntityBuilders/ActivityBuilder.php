@@ -2,6 +2,7 @@
 
 namespace App\Classes\V2\EntityBuilders;
 
+use App\Enums\ActivityClass;
 use App\Enums\ActivityStatus;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\Location;
@@ -19,12 +20,22 @@ class ActivityBuilder
     protected array $regions = [];
     protected string|null $locality = null;
 
+    protected ActivityClass $activityClass;
+
     public static function make(array $activityData): self
     {
         $instance = new self();
         $instance->data = $activityData;
+        $instance->activityClass = ActivityClass::CALL; // default here
         return $instance;
     }
+
+    public function withActivityClass(ActivityClass $class): self
+    {
+        $this->activityClass = $class;
+        return $this;
+    }
+
 
     public function asAbRequest(bool $flag = true): self
     {
@@ -68,7 +79,7 @@ class ActivityBuilder
 
         $activity = [
             'id' => $activityId,
-            'activity_class_id' => 'CALL',
+            'activity_class_id' => $this->activityClass->value,
             'activity_type_id' => data_get($this->data, 'data.activityTypeId'),
             'location_id' => $activityId,
             'priority' => data_get($this->data, 'data.priority') ?? config('pso-services.defaults.activity.priority'),
