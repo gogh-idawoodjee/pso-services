@@ -103,7 +103,7 @@ class LoadService extends BaseService
         $datasetId = data_get($this->data, 'environment.datasetId');
         $datetime = data_get($this->data, 'data.datetime');
         $id = data_get($this->data, 'data.Id');
-        $description = data_get($this->data, 'data.description');
+        $description = data_get($this->data, 'data.description') ?? 'Update Rota from PSO Services';
 
         $payload = [
             'Input_Reference' => InputReferenceBuilder::make($datasetId)
@@ -126,19 +126,8 @@ class LoadService extends BaseService
             ->payload($payload)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
-            ->notSentKey('Input Reference')
             ->send();
 
-
-//        if ($this->sessionToken) {
-//            $psoResponse = $this->sendToPso($payload, data_get($this->data, 'environment'), $this->sessionToken, PsoEndpointSegment::DATA);
-//            if ($psoResponse->status() < 400) {
-//                return $this->sentToPso($psoResponse);
-//            }
-//            return $psoResponse;
-//        }
-//
-//        return $this->notSentToPso(($this->buildPayload(['Input_Reference' => $payload], 1, true)));
     }
 
 
