@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('psotravellog', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('input_reference')->nullable();
-            $table->json('input_payload');
+            $table->json('input_payload')->nullable();;
             $table->json('output_payload')->nullable();
             $table->string('status')->nullable();
             $table->json('pso_response')->nullable();

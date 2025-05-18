@@ -7,9 +7,10 @@ use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\InputMode;
 use App\Helpers\Stubs\Broadcast;
+use App\Helpers\Stubs\TravelDetailRequest;
 use App\Models\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use JsonException;
 use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
@@ -24,28 +25,67 @@ class TravelService extends BaseService
 
     /**
      */
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, Request $request)
+    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data)
     {
-
-        parent::__construct($sessionToken, $request->all() ?? []);
-        $this->data = $request->get('data');
-        $this->datasetId = $request->input('environment.dataset_id');
+        parent::__construct($sessionToken, $data);
         $this->travelLogId = Uuid::uuid4()->toString();
     }
 
     /**
      * Process the travel request and return the response
      *
-     * @return array Response data
+     * @return JsonResponse Response data
      * @throws JsonException
      */
-    public function process(): array
+    public function process()
     {
-        // Create travel log
-        $payload = $this->travelPayload();
-        $travelLog = $this->createTravelLog($payload, $this->travelLogId);
 
-        // TODO: Send the payload to the API
+        // 1) receive PSO creds + coords - done
+        // 2) send to PSO - done
+        // 3) broadcast back to second endpoint
+        // 4) stuff gets stored
+        // 5) stuff gets returned
+
+        // Create travel log
+        $payload = TravelDetailRequest::make(
+            $this->travelLogId,
+            data_get($this->data, 'data.latFrom'),
+            data_get($this->data, 'data.longFrom'),
+            data_get($this->data, 'data.latTo'),
+            data_get($this->data, 'data.longTo'),
+            data_get($this->data, 'data.travelProfileId'),
+            data_get($this->data, 'data.startDateTime'),
+        );
+
+
+        $travelLog = PSOTravelLog::create([
+            'id' => $this->travelLogId,
+            'status' => 'created' //TODO consider changing this to enum
+        ]);
+
+
+        // Send the payload to the API
+        $apiResponse = $this->sendOrSimulateBuilder()
+            ->payload(['Travel_Detail_Request' => $payload])
+            ->environment(data_get($this->data, 'environment'))
+            ->token($this->sessionToken)
+            ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
+            ->additionalDetails("Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]))
+            ->send();
+
+        $responseArray = $apiResponse->getData(true);
+
+        $travelLog->update(
+            [
+                'input_reference' => $this->travelLogId,
+                'input_payload' => json_encode(data_get($responseArray, 'data.payloadToPso'), JSON_THROW_ON_ERROR),
+                'pso_response' => json_encode(data_get($responseArray, 'data.responseFromPso'), JSON_THROW_ON_ERROR),
+                'status' => 'sent'
+            ]
+        );
+
+
+        return $apiResponse;
         // $response = $this->sendTravelRequest($payload);
 
         // TODO: Update travel log with response
@@ -92,17 +132,6 @@ class TravelService extends BaseService
         ]);
     }
 
-    /**
-     * @throws JsonException
-     */
-    private function createTravelLog(array $payload, string $id): PSOTravelLog
-    {
-        return PSOTravelLog::create([
-            'id' => $id,
-            'input_payload' => json_encode($payload, JSON_THROW_ON_ERROR),
-            'status' => 'pending' //TODO consider changing this to enum
-        ]);
-    }
 
     private function travelDetailRequest(array $data, string $id): array
     {

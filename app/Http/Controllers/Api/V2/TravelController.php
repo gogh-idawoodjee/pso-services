@@ -10,6 +10,7 @@ use App\Traits\V2\ApiResponses;
 use App\Traits\V2\PSOAssistV2;
 
 use Illuminate\Http\JsonResponse;
+use JsonException;
 
 
 class TravelController extends Controller
@@ -19,13 +20,21 @@ class TravelController extends Controller
     use ApiResponses, PSOAssistV2;
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
-    public function store(TravelRequest $request): JsonResponse
+    public function store(TravelRequest $request)
     {
 
-        return $this->executeAuthenticatedAction($request, function ($req) {
-            return $this->ok((new TravelService($req))->process());
+
+        return $this->executeAuthenticatedAction($request, function (TravelRequest $req) {
+            // so we have the token now in $req->input('environment.token')
+            // we should send that the activity service? // all our services should accept a token
+            $travelService = new TravelService(
+                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->validated(),
+            );
+
+            return $travelService->process();
         });
     }
 

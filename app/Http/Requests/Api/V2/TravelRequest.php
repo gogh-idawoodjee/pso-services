@@ -16,13 +16,15 @@ class TravelRequest extends BaseFormRequest
         $commonRules = $this->commonRules();
 
         $additionalRules = [
-            /**
-             * The ID of the activity for which travel is being calculated.
-             * @var string
-             * @example "activity-001"
-             */
-            'data.activityId' => 'string|required',
 
+
+            /**
+             * Starting latitude for travel calculation.
+             * Must be between -90 and 90.
+             * @var float
+             * @example 43.65107
+             */
+            'data.latFrom' => 'numeric|between:-90,90|required',
             /**
              * Starting longitude for travel calculation.
              * Must be between -180 and 180.
