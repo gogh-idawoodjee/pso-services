@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V2\AssistController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\ResourceShiftController;
+use App\Http\Controllers\Api\V2\ResourceUnavailabilityController;
 use App\Http\Controllers\Api\V2\ScheduleExceptionController;
 use App\Http\Controllers\Api\V2\TravelController;
 
@@ -36,5 +37,7 @@ Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class,
 // resource routes
 Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
+Route::post('/resource/unavailability', [ResourceUnavailabilityController::class, 'store']);
+Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabilityController::class, 'update']);
 
 Route::post('/customexception', [ScheduleExceptionController::class, 'store']);
