@@ -15,6 +15,8 @@ class SendOrSimulateBuilder
 //    protected string|null $notSentArrayKey = null;
     protected string|null $additionalDetails = null;
     protected bool $addInputReference = false;
+    protected string|null $inputReferenceDescription = null;
+
 
     public function __construct(
         protected object $caller // the controller or class using the trait
@@ -40,11 +42,13 @@ class SendOrSimulateBuilder
         return $this;
     }
 
-    public function includeInputReference(): static
+    public function includeInputReference(string|null $description = null): static
     {
         $this->addInputReference = true;
+        $this->inputReferenceDescription = $description;
         return $this;
     }
+
 
     public function requiresRotaUpdate(bool|null $flag = null, string|null $description = null): static
     {
@@ -79,7 +83,8 @@ class SendOrSimulateBuilder
             $this->rotaUpdateDescription,
 //            $this->notSentArrayKey,
             $this->additionalDetails,
-            $this->addInputReference
+            $this->addInputReference,
+            $this->inputReferenceDescription // <— Add this line
         );
     }
 }

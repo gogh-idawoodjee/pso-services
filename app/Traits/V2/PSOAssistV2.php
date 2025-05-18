@@ -253,16 +253,20 @@ trait PSOAssistV2
         string|null $sessionToken,
         bool|null   $requiresRotaUpdate = null,
         string|null $rotaUpdateDescription = null,
-        string|null $notSentArrayKey = null,
+//        string|null $notSentArrayKey = null,
         string|null $additionalDetails = null,
-        bool|null   $addInputReference = null
+        bool|null   $addInputReference = null,
+        string|null $inputReferenceDescription = null // ← new param
     ): JsonResponse
     {
+
+
         if ($addInputReference) {
 
-            $payload['inputReference'] =
+            $payload['Input_Reference'] =
                 InputReferenceNew::make(data_get($environmentData, 'datasetId'))
                     ->inputType(InputMode::CHANGE)
+                    ->description($inputReferenceDescription)
                     ->build();
         }
 
@@ -288,7 +292,7 @@ trait PSOAssistV2
             }
 
             if ($psoResponse->status() < 400) {
-                return $this->sentToPso(['payloadToPso' => $wrappedPayload['payloadToPso'], 'responseFromPso' => $psoResponse->getData()]);
+                return $this->sentToPso(['payloadToPso' => $wrappedPayload['payloadToPso'], 'responseFromPso' => $psoResponse->getData()], $additionalDetails);
             }
             return $psoResponse;
         }
