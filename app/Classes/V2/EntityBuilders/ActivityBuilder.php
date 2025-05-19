@@ -21,6 +21,7 @@ class ActivityBuilder
     protected string|null $locality = null;
 
     protected ActivityClass $activityClass;
+    protected ActivityStatusBuilder|null $customStatusBuilder = null;
 
     public static function make(array $activityData): self
     {
@@ -67,6 +68,14 @@ class ActivityBuilder
         return $this;
     }
 
+    public function withActivityStatusBuilder(ActivityStatusBuilder $builder): self
+    {
+
+        $this->customStatusBuilder = $builder;
+        return $this;
+    }
+
+
     public function build(): array
     {
         $activityId = $this->isAbRequest
@@ -77,11 +86,12 @@ class ActivityBuilder
             ? 'Appointment Request for: ' . data_get($this->data, 'data.activityId')
             : data_get($this->data, 'data.description');
 
+        $hasLocation = $this->hasLocation();
+
         $activity = [
             'id' => $activityId,
             'activity_class_id' => $this->activityClass->value,
             'activity_type_id' => data_get($this->data, 'data.activityTypeId'),
-            'location_id' => $activityId,
             'priority' => data_get($this->data, 'data.priority') ?? config('pso-services.defaults.activity.priority'),
             'duration' => PSOHelper::setPSODuration(data_get($this->data, 'data.duration')),
             'description' => $description,
@@ -93,51 +103,86 @@ class ActivityBuilder
             'do_in_locality_incentive' => config('pso-services.defaults.do_in_locality_incentive'),
         ];
 
+        if ($hasLocation) {
+            $activity['location_id'] = $activityId;
+        }
+
         $activitySkills = collect($this->skills ?: data_get($this->data, 'data.skills', []))
             ->map(static fn($skill) => Skill::make($skill, $activityId))
             ->values()
             ->toArray();
 
-        $activityRegions = collect($this->regions ?: data_get($this->data, 'data.regions', []))
-            ->map(static fn($regionId) => Region::make($regionId, $activityId))
-            ->values()
-            ->toArray();
+        $status = $this->resolveStatus($activityId);
+
+        $result = [
+            'Activity' => $activity,
+            'Activity_Status' => $status
+
+        ];
+
+        if ($hasLocation) {
+            $result['Location'] = Location::make(
+                id: $activityId,
+                latitude: data_get($this->data, 'data.lat'),
+                longitude: data_get($this->data, 'data.long'),
+                locality: $this->locality
+            );
+
+            $activityRegions = collect($this->regions ?: data_get($this->data, 'data.regions', []))
+                ->map(static fn($regionId) => Region::make($regionId, $activityId))
+                ->values()
+                ->toArray();
+
+            $result['Location_Region'] = $activityRegions;
+        }
+
+        // Only add SLA and Skill if activity class is not PRIVATE
+        if ($this->activityClass !== ActivityClass::PRIVATE) {
+            $result['Activity_SLA'] = Sla::make(
+                activityId: $activityId,
+                slaTypeId: data_get($this->data, 'data.slaTypeId'),
+                datetimeStart: data_get($this->data, 'data.slaStart'),
+                datetimeEnd: data_get($this->data, 'data.slaEnd')
+            );
+
+            $result['Activity_Skill'] = $activitySkills;
+        }
+
+        return $result;
+    }
 
 
-        $status = $this->isAbRequest
-            ? ActivityStatusBuilder::make($activityId, ActivityStatus::IGNORE)
+    private function hasLocation(): bool
+    {
+        $lat = data_get($this->data, 'data.lat');
+        $long = data_get($this->data, 'data.long');
+
+        return is_numeric($lat) && is_numeric($long);
+    }
+
+
+    private function resolveStatus(string $activityId): array
+    {
+
+        if ($this->isAbRequest) {
+            return ActivityStatusBuilder::make($activityId, ActivityStatus::IGNORE)
                 ->duration(data_get($this->data, 'data.duration'))
                 ->visitId(1)
-                ->build()
-
-            : ActivityStatusBuilder::make($activityId, ActivityStatus::from(data_get($this->data, 'data.status')))
-                ->resourceId(data_get($this->data, 'data.resourceId'))
-                ->fixed(data_get($this->data, 'data.fixed'))
-                ->duration(data_get($this->data, 'data.duration'))
-                ->visitId(data_get($this->data, 'data.visitId') ?? 1)
                 ->build();
+        }
 
-        $location = Location::make(
-            id: $activityId,
-            latitude: data_get($this->data, 'data.lat'),
-            longitude: data_get($this->data, 'data.long'),
-            locality: $this->locality
-        );
+        if ($this->customStatusBuilder) {
+            return $this->customStatusBuilder->build();
+        }
 
-        $sla = Sla::make(
-            activityId: $activityId,
-            slaTypeId: data_get($this->data, 'data.slaTypeId'),
-            datetimeStart: data_get($this->data, 'data.slaStart'),
-            datetimeEnd: data_get($this->data, 'data.slaEnd')
-        );
 
-        return [
-            'Activity' => $activity,
-            'Activity_Status' => $status,
-            'Activity_Skill' => $activitySkills,
-            'Location' => $location,
-            'Activity_SLA' => $sla,
-            'Location_Region' => $activityRegions,
-        ];
+        return ActivityStatusBuilder::make($activityId, ActivityStatus::from(data_get($this->data, 'data.status')))
+            ->resourceId(data_get($this->data, 'data.resourceId'))
+            ->fixed(data_get($this->data, 'data.fixed'))
+            ->duration(data_get($this->data, 'data.duration'))
+            ->visitId(data_get($this->data, 'data.visitId') ?? 1)
+            ->build();
     }
+
+
 }

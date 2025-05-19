@@ -3,11 +3,17 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\ActivityBuilder;
+use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
 use App\Classes\V2\EntityBuilders\ShiftBuilder;
+use App\Enums\ActivityClass;
+use App\Enums\ActivityStatus;
 use App\Enums\ShiftEntity;
+use App\Enums\UnavailabilityEntity;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
 
 class ResourceService extends BaseService
@@ -79,22 +85,30 @@ class ResourceService extends BaseService
     {
         try {
 
+            // starting with just schedule unavail which is just a private activity
 
-            // todo looks like this unavailabilyt stuff still needs to be done
-            $payload = ShiftBuilder::make()
-                ->resourceId(data_get($this->data, 'data.resourceId'))
-                ->description(data_get($this->data, 'data.description'))
+            $entity = data_get($this->data, 'data.isArpObject') ? UnavailabilityEntity::UNAVAILABILITY->value : UnavailabilityEntity::ACTIVITY->value;
+            $activityId = Uuid::uuid4()->toString();
+            data_set($this->data, 'data.activityId', $activityId);
+
+
+            $payload = ActivityBuilder::make($this->data)
+                ->withActivityClass(ActivityClass::PRIVATE)
+                ->withActivityStatusBuilder(
+                    ActivityStatusBuilder::make($activityId, ActivityStatus::COMMITTED)
+                        ->resourceId(data_get($this->data, 'data.resourceId'))
+                        ->fixed(true)
+                        ->dateTimeFixed(data_get($this->data, 'data.baseDateTime'))
+                        ->duration(data_get($this->data, 'data.duration'))
+                )
                 ->build();
 
-            $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
-
-            return $this->sendOrSimulate(
-                [$entity => $payload],
-                data_get($this->data, 'environment'),
-                $this->sessionToken,
-                true, // sends rota update
-                'Updated Rota After Shift Update'
-            );
+            return $this->sendOrSimulateBuilder()
+                ->payload($payload)
+                ->environment(data_get($this->data, 'environment'))
+                ->token($this->sessionToken)
+                ->includeInputReference('Created Unavailability')
+                ->send();
 
 
         } catch (Exception $e) {

@@ -30,6 +30,7 @@ class ActivityStatusBuilder
 
     public function resourceId(string|null $resourceId): static
     {
+
         $this->resourceId = $resourceId;
         return $this;
     }
@@ -101,11 +102,13 @@ class ActivityStatusBuilder
             'reason' => $this->reason,
         ];
 
+
         if (!$this->isUnscheduledStatus()) {
+
             $status['resource_id'] = (string)$this->resourceId;
 
             if ($this->dateTimeFixed) {
-                $status['date_time_fixed'] = $this->dateTimeFixed;
+                $status['date_time_fixed'] = Carbon::parse($this->dateTimeFixed)->toAtomString();
             }
 
             if ($this->dateTimeEarliest) {
@@ -114,14 +117,14 @@ class ActivityStatusBuilder
         }
 
         // optionally add 'duration' field
-        // $status['duration'] = $durationFormatted;
+        $status['duration'] = $durationFormatted;
 
         return $status;
     }
 
     protected function isUnscheduledStatus(): bool
     {
-        return !in_array($this->statusId, [
+        return in_array($this->statusId, [
             ActivityStatusEnum::IGNORE,
             ActivityStatusEnum::UNALLOCATED,
             ActivityStatusEnum::ALLOCATED,
