@@ -49,6 +49,32 @@ trait PSOAssistV2
     }
 
 
+    public function getResourceFromPSO(string $datasetId, string $resourceId, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
+    {
+        try {
+            $timeout = config('psott.defaults.timeout', 10);
+            $baseUrl = rtrim(data_get($environmentData, 'baseUrl'), '/');
+            $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . PsoEndpointSegment::RESOURCE->value;
+
+            $queryParams = http_build_query([
+                'includeOutput' => 'true',
+                'datasetId' => $datasetId,
+                'resourceId' => $resourceId,
+            ]);
+
+            $url = "{$baseUrl}{$endpoint}?{$queryParams}";
+
+            $response = Http::timeout($timeout)
+                ->connectTimeout($timeout)
+                ->withHeaders(['apiKey' => $sessionToken])
+                ->get($url);
+
+            return $this->handleDataResponse($response);
+        } catch (ConnectionException) {
+            return $this->connectionFailureResponse();
+        }
+    }
+
     /**
      * Creates standard connection failure response
      *

@@ -3,49 +3,22 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\ShowResourceRequest;
+use App\Traits\V2\PSOAssistV2;
 
 class ResourceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+    use PSOAssistV2;
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(ShowResourceRequest $request, string $resourceId)
     {
-        //
+
+        return $request->headers->all();
+
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
