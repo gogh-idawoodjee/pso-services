@@ -41,6 +41,8 @@ class PSOAuthService
                     'password' => data_get($environment, 'password'),
                 ]);
 
+
+
             return $this->handleSessionResponse($response);
         } catch (ConnectionException) {
             return $this->connectionFailureResponse();
@@ -109,6 +111,7 @@ class PSOAuthService
     private function handleErrorResponse(Response $response): JsonResponse
     {
         $statusCode = $this->adjustStatusCode($response);
+
         $errorDetails = $this->parseResponseBody($response->body());
 
         return response()->json([

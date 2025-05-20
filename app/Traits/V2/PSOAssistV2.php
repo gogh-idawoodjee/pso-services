@@ -32,6 +32,7 @@ trait PSOAssistV2
      */
     public function sendToPso($payload, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
     {
+
         try {
             $timeout = config('psott.defaults.timeout', 10);
             $baseUrl = data_get($environmentData, 'baseUrl');
@@ -42,18 +43,23 @@ trait PSOAssistV2
                 ->withHeaders(['apiKey' => $sessionToken])
                 ->post($url, $payload);
 
+
             return $this->handleDataResponse($response);
         } catch (ConnectionException) {
+
             return $this->connectionFailureResponse();
         }
     }
 
 
-    public function getResourceFromPSO(string $datasetId, string $resourceId, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
+    /**
+     * @throws JsonException
+     */
+    public function getResourceFromPSO(string $datasetId, string $resourceId, string $baseUrl, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
     {
         try {
             $timeout = config('psott.defaults.timeout', 10);
-            $baseUrl = rtrim(data_get($environmentData, 'baseUrl'), '/');
+
             $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . PsoEndpointSegment::RESOURCE->value;
 
             $queryParams = http_build_query([
@@ -169,6 +175,7 @@ trait PSOAssistV2
     {
         $statusCode = $response->status();
 
+
         if ($statusCode === 400 && !empty($response->body())) {
             try {
                 $errorDetails = json_decode($response->body(), false, 512, JSON_THROW_ON_ERROR);
@@ -226,49 +233,51 @@ trait PSOAssistV2
      */
     protected function executeAuthenticatedAction(Request $request, callable $action): JsonResponse
     {
-        if (!data_get($request, 'environment.sendToPso')) {
-            // continue if no auth is required
+        // Get normalized auth details from either request body or headers
+        $authDetails = $this->getAuthDetails($request);
+
+        // Check if auth is required (sendToPso must be true)
+        if (!data_get($authDetails, 'sendToPso')) {
+            // No auth needed, just run the action
             return $action($request);
         }
 
         $authService = app(PSOAuthService::class);
 
-        // Check if we already have a token
-        if (data_get($request, 'environment.token')) {
-            // Validate token if needed
-            // $isValid = $authService->validateToken(data_get($request, 'environment.token'), data_get($request, 'environment', []));
+        // If token already present, skip getting token and run action directly
+        if (data_get($authDetails, 'token')) {
             return $action($request);
         }
 
-
         try {
-            $response = $authService->getToken(data_get($request, 'environment', []));
-            Log::info('going the auth route');
+            // Attempt to get a fresh token from the auth service
+            $response = $authService->getToken($authDetails);
 
             if ($response->status() === 200) {
-                Log::info('response was a 200, continuing with the action');
-
-                // Extract token from response
+                // Extract token from response data
                 $token = data_get($response->getData(), 'message.SessionToken');
-                Log::info('token is ' . $token);
 
-                // Merge the token into the request
+                // Merge token into request's environment input for downstream consistency
                 $request->merge([
                     'environment' => array_merge(
                         (array)$request->input('environment', []),
-                        compact('token')
+                        ['token' => $token]
                     ),
                 ]);
 
+                // Run the action now that token is present
                 return $action($request);
             }
 
+            // If we got a non-200 response from auth service, return it as is
             return $response;
+
         } catch (Exception $e) {
-            Log::error($e->getMessage());
-            return $this->error('something totally funky went wrong', 500);
+            Log::error('Auth error: ' . $e->getMessage());
+            return $this->error('Authentication failed', 500);
         }
     }
+
 
     /**
      * @throws JsonException
@@ -332,5 +341,34 @@ trait PSOAssistV2
     {
         return new SendOrSimulateBuilder($this);
     }
+
+    protected function getAuthDetails(Request $request): array
+    {
+        // Try to get environment data from request input (POST/PATCH)
+        $env = data_get($request->all(), 'environment', []);
+
+        // Normalize headers keys to lowercase with first value
+        $headers = collect($request->headers->all())->mapWithKeys(static fn($values, $key) => [
+            strtolower($key) => $values[0] ?? null,
+        ]);
+
+        // Use data_get on env array, fallback to headers if missing
+        $token = data_get($env, 'token', $headers->get('token'));
+        $baseUrl = data_get($env, 'baseUrl', $headers->get('baseurl'));
+        $accountId = data_get($env, 'accountId', $headers->get('accountid'));
+        $username = data_get($env, 'username', $headers->get('username'));
+        $password = data_get($env, 'password', $headers->get('password'));
+
+        // Determine sendToPso
+        $sendToPso = data_get($env, 'sendToPso');
+
+        // If sendToPso not explicitly set in env, but env is empty (means headers used), force true
+        if ($sendToPso === null && empty($env)) {
+            $sendToPso = true;
+        }
+
+        return compact('token', 'baseUrl', 'accountId', 'username', 'password', 'sendToPso');
+    }
+
 
 }
