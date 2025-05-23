@@ -2,17 +2,15 @@
 
 namespace App\Services\V2;
 
+use App\Classes\V2\BaseService;
 use App\Enums\PsoEndpointSegment;
-use App\Traits\V2\PSOAssistV2;
+
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use JsonException;
 
-class ScheduleService
+class ScheduleService extends BaseService
 {
-    use PSOAssistV2;
-
-    private const TIMEOUT = 5;
 
     /**
      * @throws JsonException
@@ -20,7 +18,7 @@ class ScheduleService
     public static function getScheduleData(string $baseUrl, string $datasetId, string $token, bool $includeInput = true, bool $includeOutput = true): array|false
     {
 
-        $instance = new static();
+        $instance = new static(null, []);
 
         $response = $instance->getPsoData(
             $datasetId,
