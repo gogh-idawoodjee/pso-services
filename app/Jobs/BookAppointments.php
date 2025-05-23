@@ -2,8 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Services\PSOLoadTestService;
-
+use App\Services\V1\PSOLoadTestService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

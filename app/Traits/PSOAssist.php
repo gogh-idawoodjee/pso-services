@@ -3,13 +3,13 @@
 namespace App\Traits;
 
 use App\Helpers\PSOHelper;
-use App\Services\IFSPSOAssistService;
+use App\Services\V1\IFSPSOAssistService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Str;
 
 trait PSOAssist

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\PSOHelper;
 use App\Http\Controllers\Controller;
-use App\Services\IFSPSOResourceService;
+use App\Services\V1\IFSPSOResourceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

@@ -2,7 +2,7 @@
 
 namespace App\Console;
 
-use App\Services\IFSPSOAssistService;
+use App\Services\V1\IFSPSOAssistService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 

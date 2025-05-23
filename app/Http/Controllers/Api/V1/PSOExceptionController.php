@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\PSOHelper;
 use App\Http\Controllers\Controller;
-use App\Services\IFSPSOExceptionService;
+use App\Services\V1\IFSPSOExceptionService;
 use Illuminate\Http\Request;
 
 class PSOExceptionController extends Controller

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\V1;
 
+use App\Helpers\PSOHelper;
 use App\Models\PsoEnvironment;
 use Exception;
 use Illuminate\Support\Facades\Http;
-use App\Helpers\PSOHelper;
 
 class IFSService
 

@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PSOHelper;
-use App\Services\IFSPSOActivityService;
+use App\Services\V1\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
 use Illuminate\Validation\ValidationException;
 
 class PSOActivitySLAController extends Controller

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\PSOHelper;
 use App\Models\V2\PSOAppointment;
-use App\Services\IFSPSOAppointmentService;
+use App\Services\V1\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
