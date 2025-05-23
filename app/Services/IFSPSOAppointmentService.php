@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Classes\V1\InputReference;
 use App\Classes\V1\PSOActivity;
 use App\Helpers\PSOHelper;
-use App\Models\PSOAppointment;
+use App\Models\V2\PSOAppointment;
 use Carbon\Carbon;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

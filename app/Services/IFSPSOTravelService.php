@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Classes\V1\InputReference;
-use App\Models\PSOTravelLog;
+use App\Models\V2\PSOTravelLog;
 use Carbon\CarbonInterval;
 use Exception;
 use GuzzleHttp\Client;

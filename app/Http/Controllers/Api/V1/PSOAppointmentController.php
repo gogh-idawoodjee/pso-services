@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PSOHelper;
-use App\Models\PSOAppointment;
+use App\Models\V2\PSOAppointment;
 use App\Services\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

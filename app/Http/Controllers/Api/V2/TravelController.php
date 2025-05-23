@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\TravelRequest;
-use App\Models\PSOTravelLog;
+use App\Models\V2\PSOTravelLog;
 use App\Services\V2\TravelService;
 use App\Traits\V2\ApiResponses;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use JsonException;
 
 

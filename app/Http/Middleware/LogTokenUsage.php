@@ -2,10 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\V2\TokenUsageLog;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\TokenUsageLog;
 
 class LogTokenUsage
 {

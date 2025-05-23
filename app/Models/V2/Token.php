@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\V2;
 
+use App\Traits\Uuids;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\Uuids;
 
 class Token extends Model
 {

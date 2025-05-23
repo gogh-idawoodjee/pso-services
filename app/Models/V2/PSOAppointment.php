@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\V2;
 
 use App\Traits\Uuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
 
 
 class PSOAppointment extends Model

@@ -13,7 +13,7 @@
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -54,54 +54,54 @@ namespace App\Models{
  * @property string|null $dataset_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment query()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptDeclineDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptDeclineInputReferenceId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptDeclinePayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptedOffer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptedOfferId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAcceptedOfferWindowStartDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereActivityId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckComplete($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckInputReferenceId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckOfferId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckPayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointedCheckResult($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointmentRequest($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointmentResponse($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointmentTemplateDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointmentTemplateDuration($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereAppointmentTemplateId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereBaseUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereBestOffer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereBookAppointmentPayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereDatasetId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereInputReferenceId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereInputRequest($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereInvalidOffers($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereOfferExpiryDatetime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereRunId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereSlotUsageRuleId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereSummary($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereTotalInvalidOffersReturned($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereTotalOffersReturned($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereTotalValidOffersReturned($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOAppointment whereValidOffers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment query()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptDeclineDatetime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptDeclineInputReferenceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptDeclinePayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptedOffer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptedOfferId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAcceptedOfferWindowStartDatetime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereActivityId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckComplete($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckDatetime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckInputReferenceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckOfferId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckPayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointedCheckResult($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointmentRequest($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointmentResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointmentTemplateDatetime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointmentTemplateDuration($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereAppointmentTemplateId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereBestOffer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereBookAppointmentPayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereDatasetId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereInputReferenceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereInputRequest($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereInvalidOffers($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereOfferExpiryDatetime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereRunId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereSlotUsageRuleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereSummary($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereTotalInvalidOffersReturned($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereTotalOffersReturned($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereTotalValidOffersReturned($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOAppointment whereValidOffers($value)
  */
 	class PSOAppointment extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -113,25 +113,25 @@ namespace App\Models{
  * @property string $transfer_stats
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereInputReference($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereOutputPayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog wherePsoResponse($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog wherePsoSuggestions($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereResponseTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereTransferStats($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOCommitLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereInputReference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereOutputPayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog wherePsoResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog wherePsoSuggestions($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereResponseTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereTransferStats($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOCommitLog whereUpdatedAt($value)
  */
 	class PSOCommitLog extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -143,25 +143,25 @@ namespace App\Models{
  * @property string|null $transfer_stats
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereInputPayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereInputReference($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereOutputPayload($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog wherePsoResponse($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereResponseTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereTransferStats($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PSOTravelLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereInputPayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereInputReference($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereOutputPayload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog wherePsoResponse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereResponseTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereTransferStats($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\PSOTravelLog whereUpdatedAt($value)
  */
 	class PSOTravelLog extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -198,7 +198,7 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -242,7 +242,7 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -269,19 +269,19 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @property-read mixed $is_valid_token
- * @method static \Illuminate\Database\Eloquent\Builder|Token newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Token newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Token query()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\Token newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\Token newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|V2\Token query()
  */
 	class Token extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @method static \Illuminate\Database\Eloquent\Builder|psorun newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|psorun newQuery()
@@ -292,7 +292,7 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * 
+ *
  *
  * @method static \Illuminate\Database\Eloquent\Builder|psorundata newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|psorundata newQuery()

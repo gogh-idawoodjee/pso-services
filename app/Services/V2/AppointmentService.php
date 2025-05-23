@@ -10,7 +10,7 @@ use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
-use App\Models\PSOAppointment;
+use App\Models\V2\PSOAppointment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\V2;
 
 use App\Enums\TravelLogStatus;
 use App\Traits\Uuids;

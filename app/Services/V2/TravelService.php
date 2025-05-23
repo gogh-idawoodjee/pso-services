@@ -10,7 +10,7 @@ use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
 use App\Enums\TravelLogStatus;
 use App\Helpers\Stubs\TravelDetailRequest;
-use App\Models\PSOTravelLog;
+use App\Models\V2\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
 use GuzzleHttp\Client;
 use Illuminate\Http\Client\ConnectionException;

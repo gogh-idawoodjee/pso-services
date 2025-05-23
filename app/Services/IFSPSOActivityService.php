@@ -7,7 +7,7 @@ use App\Classes\V1\PSOActivity;
 use App\Classes\V1\PSOActivityStatus;
 use App\Classes\V1\PSODeleteObject;
 use App\Helpers\PSOHelper;
-use App\Models\PSOCommitLog;
+use App\Models\V2\PSOCommitLog;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
