@@ -29,6 +29,11 @@ use SensitiveParameter;
 class ResourceService extends BaseService
 {
 
+    protected array $resources;
+    protected array $rawScheduleData;
+    protected array $selectOptions = [];
+
+
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, $data)
     {
         parent::__construct($sessionToken, $data);
@@ -167,7 +172,7 @@ class ResourceService extends BaseService
     public function getResource(string $datasetId, string $resourceId, string $baseUrl): JsonResponse
     {
 
-        $resource = $this->getResourceFromPSO($datasetId, $resourceId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE)->getData(true);
+        $resource = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE, $resourceId)->getData(true);
         $resourceData = data_get($resource, 'dsScheduleData.Resources');
         $resourceTypeId = data_get($resource, 'dsScheduleData.Resources.resource_type_id');
         $resourceType = collect(data_get($resource, 'dsScheduleData.Resource_Type', []))
@@ -382,6 +387,69 @@ class ResourceService extends BaseService
         ]);
     }
 
+
+    public function getResourceList(string $datasetId, string $baseUrl)
+    {
+
+        $this->rawScheduleData = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::DATA, null, true)->getData(true);
+        $this->resources = data_get($this->rawScheduleData, 'dsScheduleData.Resources');
+        return $this;
+
+    }
+
+    public function getResources(): array
+    {
+        return $this->resources;
+    }
+
+    public function getRawScheduleData(): array
+    {
+        return $this->rawScheduleData;
+    }
+
+    public function toResponse(): JsonResponse
+    {
+        return $this->ok($this->resources);
+    }
+
+    public function toSelectOptions()
+    {
+        if (!$this->resources) {
+            return $this;
+        }
+
+        $selectOptions = [];
+
+        foreach ($this->resources as $resource) {
+            $id = data_get($resource, 'id');
+            $firstName = data_get($resource, 'first_name', '');
+            $surname = data_get($resource, 'surname', '');
+
+            // Handle cases where surname might be missing
+            $displayName = trim($firstName . ' ' . $surname);
+
+            // If after trimming the display name is empty, use the ID or some fallback
+            if (empty($displayName)) {
+                $displayName = $id ?? 'Unknown Resource';
+            }
+
+            $selectOptions[$id] = $displayName;
+        }
+
+        $this->selectOptions = $selectOptions;
+
+        return $this;
+    }
+
+    /**
+     * Get the select options array
+     *
+     * @return array
+     */
+    public function getSelectOptions()
+    {
+        return $this->selectOptions ?? [];
+    }
 
 
 }

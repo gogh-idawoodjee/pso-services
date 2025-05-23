@@ -47,7 +47,8 @@ trait PSOAssistV2
             return $this->handleDataResponse($response);
         } catch (ConnectionException) {
 
-            return $this->connectionFailureResponse();
+            return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
+
         }
     }
 
@@ -55,20 +56,35 @@ trait PSOAssistV2
     /**
      * @throws JsonException
      */
-    public function getResourceFromPSO(string $datasetId, string $resourceId, string $baseUrl, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
+
+    public function getPsoData(
+        string                       $datasetId,
+        string                       $baseUrl,
+        #[SensitiveParameter] string $sessionToken,
+        PsoEndpointSegment           $segment,
+        string|null                  $resourceId = null,
+        bool                         $includeInput = false
+    ): JsonResponse
     {
         try {
             $timeout = config('psott.defaults.timeout', 10);
 
-            $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . PsoEndpointSegment::RESOURCE->value;
+            $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $segment->value;
 
-            $queryParams = http_build_query([
+            $queryParams = [
                 'includeOutput' => 'true',
                 'datasetId' => $datasetId,
-                'resourceId' => $resourceId,
-            ]);
+            ];
 
-            $url = "{$baseUrl}{$endpoint}?{$queryParams}";
+            if ($includeInput) {
+                $queryParams['includeInput'] = 'true'; // Fixed the typo
+            }
+
+            if ($resourceId) {
+                $queryParams['resourceId'] = $resourceId;
+            }
+
+            $url = "{$baseUrl}{$endpoint}?" . http_build_query($queryParams);
 
             $response = Http::timeout($timeout)
                 ->connectTimeout($timeout)
@@ -77,22 +93,12 @@ trait PSOAssistV2
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException) {
-            return $this->connectionFailureResponse();
+
+            return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
+
         }
     }
 
-    /**
-     * Creates standard connection failure response
-     *
-     * @return JsonResponse
-     */
-    private function connectionFailureResponse(): JsonResponse
-    {
-        return response()->json(
-            ['error' => 'Connection failed. The request timed out or the server could not be reached.'],
-            504
-        );
-    }
 
     /**
      * Handle error responses and format them consistently.
@@ -105,10 +111,12 @@ trait PSOAssistV2
         $statusCode = $this->adjustStatusCode($response);
         $errorDetails = $this->parseResponseBody($response->body());
 
-        return response()->json([
+        return $this->error([
             'error' => $this->getErrorMessage($statusCode),
             'details' => $errorDetails,
         ], $statusCode);
+
+
     }
 
     /**
@@ -261,7 +269,7 @@ trait PSOAssistV2
                 $request->merge([
                     'environment' => array_merge(
                         (array)$request->input('environment', []),
-                        ['token' => $token]
+                        compact('token')
                     ),
                 ]);
 

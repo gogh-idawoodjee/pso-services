@@ -36,6 +36,7 @@ Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::cla
 Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show']);
 
 // resource routes
+Route::get('/resource', [ResourceController::class, 'index']);
 Route::get('/resource/{resourceId}', [ResourceController::class, 'show']);
 Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
