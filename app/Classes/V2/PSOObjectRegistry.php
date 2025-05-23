@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Classes\V1;
+namespace App\Classes\V2;
 
 class PSOObjectRegistry
 {
