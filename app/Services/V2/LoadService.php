@@ -79,7 +79,7 @@ class LoadService extends BaseService
         if ($keepPsoData) {
             if ($sendToPso) {
                 $keepPsoDataMessage = 'Keeping Existing PSO Data';
-                $scheduleData = ScheduleService::getScheduleData($baseUrl, $datasetId, $this->sessionToken);
+                $scheduleData = ScheduleService::getScheduleData($baseUrl, $datasetId, $this->sessionToken, true, true);
                 $payload = array_merge($payload, $scheduleData);
             } else {
                 $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';

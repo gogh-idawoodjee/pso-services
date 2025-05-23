@@ -2,40 +2,64 @@
 
 namespace App\Services\V2;
 
-use Illuminate\Support\Facades\Http;
+use App\Enums\PsoEndpointSegment;
+use App\Traits\V2\PSOAssistV2;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Client\ConnectionException;
-use Throwable;
+use JsonException;
 
 class ScheduleService
 {
+    use PSOAssistV2;
+
     private const TIMEOUT = 5;
 
     /**
-     * @throws ConnectionException
+     * @throws JsonException
      */
     public static function getScheduleData(string $baseUrl, string $datasetId, string $token, bool $includeInput = true, bool $includeOutput = true): array|false
     {
-        try {
-            $response = Http::withHeaders([
-                'apiKey' => $token,
-            ])
-                ->timeout(self::TIMEOUT)
-                ->connectTimeout(self::TIMEOUT)
-                ->get(
-                    "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/data",
-                    compact('includeInput', 'includeOutput', 'datasetId')
-                );
-        } catch (ConnectionException|Throwable) {
+
+        $instance = new static();
+
+        $response = $instance->getPsoData(
+            $datasetId,
+            $baseUrl,
+            $token,
+            PsoEndpointSegment::DATA, // This should correspond to the 'data' endpoint
+            null, // resourceId - not needed for schedule data
+            $includeInput,
+            $includeOutput
+        );
+
+        if ($response->status() !== 200) {
             return false;
         }
 
-        if (!$response->ok()) {
-            return false;
-        }
+        // Extract the actual data from JsonResponse
+        $responseData = $response->getData(true); // true = return as array
+        $fullSchedule = $responseData; // or $responseData[0] if it's wrapped
 
-        $fullSchedule = $response->collect()->first();
+        // the old way below
+//        try {
+//            $response = Http::withHeaders([
+//                'apiKey' => $token,
+//            ])
+//                ->timeout(self::TIMEOUT)
+//                ->connectTimeout(self::TIMEOUT)
+//                ->get(
+//                    "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/data",
+//                    compact('includeInput', 'includeOutput', 'datasetId')
+//                );
+//        } catch (ConnectionException|Throwable) {
+//            return false;
+//        }
+//
+//        if (!$response->ok()) {
+//            return false;
+//        }
+//
+//        $fullSchedule = $response->collect()->first();
 
         $activities = self::normalizeCollection($fullSchedule, 'Activity');
         $activityKeys = $activities->pluck('id');

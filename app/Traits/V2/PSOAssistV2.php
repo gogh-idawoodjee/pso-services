@@ -63,7 +63,8 @@ trait PSOAssistV2
         #[SensitiveParameter] string $sessionToken,
         PsoEndpointSegment           $segment,
         string|null                  $resourceId = null,
-        bool                         $includeInput = false
+        bool                         $includeInput = false,
+        bool                         $includeOutput = false
     ): JsonResponse
     {
         try {
@@ -78,6 +79,10 @@ trait PSOAssistV2
 
             if ($includeInput) {
                 $queryParams['includeInput'] = 'true'; // Fixed the typo
+            }
+
+            if ($includeOutput) {
+                $queryParams['includeOutput'] = 'true'; // Fixed the typo
             }
 
             if ($resourceId) {
