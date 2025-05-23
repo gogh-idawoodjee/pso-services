@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Classes;
+namespace App\Classes\V1;
 
+
+use App\Classes\Activity;
 
 class PSOActivitySLA extends Activity
 {

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Classes\InputReference;
-use App\Classes\PSOActivity;
-use App\Classes\PSOActivityStatus;
-use App\Classes\PSODeleteObject;
+use App\Classes\V1\InputReference;
+use App\Classes\V1\PSOActivity;
+use App\Classes\V1\PSOActivityStatus;
+use App\Classes\V1\PSODeleteObject;
 use App\Helpers\PSOHelper;
 use App\Models\PSOCommitLog;
 use Carbon\Carbon;
@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
 

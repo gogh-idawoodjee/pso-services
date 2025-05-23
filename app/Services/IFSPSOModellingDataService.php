@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Classes\PSORegion;
-use App\Classes\PSORegionType;
+use App\Classes\V1\PSORegion;
+use App\Classes\V1\PSORegionType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 

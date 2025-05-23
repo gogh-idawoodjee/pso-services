@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Classes;
+namespace App\Classes\V1;
 
 use Illuminate\Support\Arr;
 

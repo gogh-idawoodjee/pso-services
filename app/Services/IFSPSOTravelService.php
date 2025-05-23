@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use App\Classes\InputReference;
-
+use App\Classes\V1\InputReference;
 use App\Models\PSOTravelLog;
 use Carbon\CarbonInterval;
 use Exception;
@@ -11,10 +10,8 @@ use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
-
 use Spatie\Geocoder\Geocoder;
 
 class IFSPSOTravelService extends IFSService

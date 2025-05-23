@@ -2,24 +2,23 @@
 
 namespace App\Services;
 
-use App\Classes\InputReference;
-use App\Classes\PSODeleteObject;
-use App\Classes\PSOResource;
+use App\Classes\V1\InputReference;
+use App\Classes\V1\PSODeleteObject;
+use App\Classes\V1\PSOResource;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Carbon\CarbonInterval;
 use DateInterval;
 use Exception;
-
 use Faker\Factory;
 use GoogleMaps;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use JsonException;
 

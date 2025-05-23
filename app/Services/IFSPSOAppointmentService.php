@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Classes\InputReference;
-use App\Classes\PSOActivity;
+use App\Classes\V1\InputReference;
+use App\Classes\V1\PSOActivity;
 use App\Helpers\PSOHelper;
 use App\Models\PSOAppointment;
 use Carbon\Carbon;

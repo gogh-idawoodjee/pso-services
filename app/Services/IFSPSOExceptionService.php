@@ -2,16 +2,10 @@
 
 namespace App\Services;
 
-use App\Classes\InputReference;
-use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
+use App\Classes\V1\InputReference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use JsonException;
-use App\Helpers\PSOHelper;
 
 class IFSPSOExceptionService extends IFSService
 {

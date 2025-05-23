@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Stubs;
 
-use App\Classes\PSOObjectRegistry;
+use App\Classes\V1\PSOObjectRegistry;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 

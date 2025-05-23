@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Classes;
+namespace App\Classes\V1;
 
+use App\Classes\Activity;
 use App\Helpers\PSOHelper;
 use Carbon\Carbon;
 

@@ -1,20 +1,20 @@
 <?php
 
+use App\Http\Controllers\Api\V1\PSOExceptionController;
+use App\Http\Controllers\Api\V1\PSORegionController;
+use App\Http\Controllers\Api\V1\PSOResourceController;
+use App\Http\Controllers\Api\V1\PSOResourceEventController;
+use App\Http\Controllers\Api\V1\PSOResourceRelocationController;
+use App\Http\Controllers\Api\V1\PSOResourceShiftController;
+use App\Http\Controllers\Api\V1\PSOSandboxController;
+use App\Http\Controllers\Api\V1\PSOTravelLogController;
+use App\Http\Controllers\Api\V1\PSOUnavailabilityController;
 use App\Http\Controllers\PSOActivityController;
 use App\Http\Controllers\PSOActivitySLAController;
 use App\Http\Controllers\PSOActivityStatusController;
 use App\Http\Controllers\PSOAppointmentController;
 use App\Http\Controllers\PSOAssistController;
 use App\Http\Controllers\PSOCommitController;
-use App\Http\Controllers\PSOExceptionController;
-use App\Http\Controllers\PSOResourceController;
-use App\Http\Controllers\PSOResourceEventController;
-use App\Http\Controllers\PSOResourceRelocationController;
-use App\Http\Controllers\PSOResourceShiftController;
-use App\Http\Controllers\PSOSandboxController;
-use App\Http\Controllers\PSORegionController;
-use App\Http\Controllers\PSOTravelLogController;
-use App\Http\Controllers\PSOUnavailabilityController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

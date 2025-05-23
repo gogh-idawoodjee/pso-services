@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\V2;
 
-use App\Classes\PSOObjectRegistry;
+use App\Classes\V1\PSOObjectRegistry;
 use Illuminate\Validation\Rule;
 
 class DeleteObjectRequest extends BaseFormRequest
