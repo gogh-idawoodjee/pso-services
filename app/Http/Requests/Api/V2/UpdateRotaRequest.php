@@ -1,8 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V2;
-
-use App\Http\Requests\Api\V2\BaseFormRequest;
+namespace App\Http\Requests\Api\V2;
 
 class UpdateRotaRequest extends BaseFormRequest
 {

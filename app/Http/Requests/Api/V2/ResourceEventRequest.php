@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\V2;
+namespace App\Http\Requests\Api\V2;
 
 use App\Enums\EventType;
-use App\Http\Requests\Api\V2\BaseFormRequest;
 use Illuminate\Validation\Rules\Enum;
 
 class ResourceEventRequest extends BaseFormRequest

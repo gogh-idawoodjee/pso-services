@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\DeleteObjectRequest;
 use App\Http\Requests\Api\V2\LoadPsoRequest;
+use App\Http\Requests\Api\V2\UpdateRotaRequest;
 use App\Services\V2\DeleteService;
 use App\Services\V2\LoadService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 
 
 class AssistController extends Controller

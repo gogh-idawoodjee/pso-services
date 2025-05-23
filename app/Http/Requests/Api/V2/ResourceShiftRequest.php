@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Api\V2;
+namespace App\Http\Requests\Api\V2;
 
-use App\Http\Requests\Api\V2\BaseFormRequest;
 use Illuminate\Validation\Validator;
 
 class ResourceShiftRequest extends BaseFormRequest
