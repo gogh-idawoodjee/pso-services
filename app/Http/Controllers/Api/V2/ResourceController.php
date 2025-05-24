@@ -22,15 +22,13 @@ class ResourceController extends Controller
     {
 
         return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) use ($resourceId) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
+
             $resourceService = new ResourceService(
                 $req->filled('environment.token') ? $req->input('environment.token') : $req->headers->get('token'),
-//                $req->headers->get('token'),
+
                 $req->validated(),
             );
 
-//            dd($resourceService);
             $datasetId = $req->headers->get('datasetId');
 
             $baseUrl = $req->headers->get('baseUrl');
@@ -39,6 +37,9 @@ class ResourceController extends Controller
 
     }
 
+    /**
+     * @throws JsonException
+     */
     public function index(ResourceRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) {

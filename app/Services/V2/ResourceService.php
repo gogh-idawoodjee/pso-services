@@ -24,7 +24,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JsonException;
 use Ramsey\Uuid\Uuid;
-use SensitiveParameter;
 
 class ResourceService extends BaseService
 {
@@ -34,15 +33,10 @@ class ResourceService extends BaseService
     protected array $selectOptions = [];
 
 
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, $data)
-    {
-        parent::__construct($sessionToken, $data);
-    }
 
     public function createEvent(): JsonResponse|null
     {
         try {
-
 
             $payload =
                 ResourceEventBuilder::make(data_get($this->data, 'resourceId'), data_get($this->data, 'eventType'))
@@ -388,7 +382,10 @@ class ResourceService extends BaseService
     }
 
 
-    public function getResourceList(string $datasetId, string $baseUrl)
+    /**
+     * @throws JsonException
+     */
+    public function getResourceList(string $datasetId, string $baseUrl): self
     {
 
         $this->rawScheduleData = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::DATA, null, true)->getData(true);
@@ -412,7 +409,7 @@ class ResourceService extends BaseService
         return $this->ok($this->resources);
     }
 
-    public function toSelectOptions()
+    public function toSelectOptions(): self
     {
         if (!$this->resources) {
             return $this;
@@ -446,7 +443,7 @@ class ResourceService extends BaseService
      *
      * @return array
      */
-    public function getSelectOptions()
+    public function getSelectOptions(): array
     {
         return $this->selectOptions ?? [];
     }
