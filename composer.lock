@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "519382280de332547b24f178b96407f3",
+    "content-hash": "ab4e425488f392f1e4ff1fc553ecc327",
     "packages": [
         {
             "name": "alexpechkarev/geometry-library",
@@ -9338,7 +9338,8 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "ext-openssl": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

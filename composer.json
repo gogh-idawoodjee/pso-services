@@ -24,7 +24,8 @@
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10",
         "nesbot/carbon": "^3.9",
-        "spatie/geocoder": "^3.15"
+        "spatie/geocoder": "^3.15",
+        "ext-openssl": "*"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.0",

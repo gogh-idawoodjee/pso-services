@@ -14,12 +14,12 @@ return new class extends Migration {
     {
         Schema::create('psocommitlog', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('input_reference');
-            $table->json('pso_suggestions');
-            $table->json('output_payload');
-            $table->json('pso_response');
-            $table->text('response_time');
-            $table->json('transfer_stats');
+            $table->uuid('input_reference')->nullable();
+            $table->json('pso_suggestions')->nullable();
+            $table->json('output_payload')->nullable();
+            $table->json('pso_response')->nullable();
+            $table->text('response_time')->nullable();
+            $table->json('transfer_stats')->nullable();
             $table->timestamps();
         });
     }
