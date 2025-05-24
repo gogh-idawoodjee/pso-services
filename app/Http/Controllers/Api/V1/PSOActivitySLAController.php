@@ -1,8 +1,9 @@
-<?php /** @noinspection ALL */
+<?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\PSOHelper;
+use App\Http\Controllers\Controller;
 use App\Services\V1\IFSPSOActivityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -9,12 +9,12 @@ use App\Http\Controllers\Api\V1\PSOResourceShiftController;
 use App\Http\Controllers\Api\V1\PSOSandboxController;
 use App\Http\Controllers\Api\V1\PSOTravelLogController;
 use App\Http\Controllers\Api\V1\PSOUnavailabilityController;
-use App\Http\Controllers\PSOActivityController;
-use App\Http\Controllers\PSOActivitySLAController;
-use App\Http\Controllers\PSOActivityStatusController;
-use App\Http\Controllers\PSOAppointmentController;
-use App\Http\Controllers\PSOAssistController;
-use App\Http\Controllers\PSOCommitController;
+use App\Http\Controllers\Api\V1\PSOActivityController;
+use App\Http\Controllers\Api\V1\PSOActivitySLAController;
+use App\Http\Controllers\Api\V1\PSOActivityStatusController;
+use App\Http\Controllers\Api\V1\PSOAppointmentController;
+use App\Http\Controllers\Api\V1\PSOAssistController;
+use App\Http\Controllers\Api\V1\PSOCommitController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

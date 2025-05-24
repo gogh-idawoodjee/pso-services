@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use SensitiveParameter;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class TokenController extends Controller
 {
@@ -39,7 +40,7 @@ class TokenController extends Controller
         $token = $this->tokenService->getToken($request->username, $request->password);
 
         if (!$token) {
-            return response()->json(['error' => 'Authentication failed'], Response::HTTP_UNAUTHORIZED);
+            return response()->json(['error' => 'Authentication failed'], ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
         return response()->json([

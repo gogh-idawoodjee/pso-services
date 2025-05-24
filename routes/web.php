@@ -38,4 +38,3 @@ Route::get('/', static function () {
 ////    Route::get('/resource', [ResourceController::class, 'index'])->name('resource.show');
 //});
 
-//require __DIR__ . '/auth.php';

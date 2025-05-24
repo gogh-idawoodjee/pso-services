@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\PSOHelper;
+use App\Http\Controllers\Controller;
 use App\Models\V2\PSOAppointment;
 use App\Services\V1\IFSPSOAppointmentService;
 use Illuminate\Http\JsonResponse;
