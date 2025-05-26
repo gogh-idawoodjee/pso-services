@@ -56,6 +56,6 @@ return [
         'force_appointed_check' => false,
         'use_region_as_locality' => true,
         'google_key' => env('GOOGLE_MAPS_API_KEY'),
-        'shared_encryption_key' => ''
+        'shared_encryption_key' => env('SHREDDER_KEY'),
     ]
 ];

@@ -44,7 +44,7 @@ class EncryptionHelper
 
     private static function getKey(): string
     {
-        $secret = config('encryption.custom_key', 'fallback-default-key');
+        $secret = config('pso-services.settings.shared_encryption_key', 'fallback-default-key');
         return hash('sha256', $secret, true); // 32-byte key
     }
 }
