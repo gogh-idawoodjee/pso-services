@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\V2;
 
 use Illuminate\Validation\Validator;
-use Illuminate\Validation\Rule;
 use Override;
 
 class SystemUsageRequest extends BaseGetFormRequest

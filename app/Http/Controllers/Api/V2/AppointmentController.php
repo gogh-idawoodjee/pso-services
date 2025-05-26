@@ -64,7 +64,7 @@ class AppointmentController extends Controller
      */
     public function show(string $AppointmentRequestId): JsonResponse
     {
-        //
+        // todo implement this method
     }
 
 

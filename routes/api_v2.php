@@ -27,6 +27,7 @@ Route::delete('/activity/', [ActivityController::class, 'destroy']);
 Route::delete('/delete', [AssistController::class, 'destroy']);
 Route::post('/load', [AssistController::class, 'store']);
 Route::patch('/rota', [AssistController::class, 'update']);
+Route::get('/usage', [AssistController::class, 'show']);
 
 // appointment routes
 Route::post('/appointment', [AppointmentController::class, 'store']);
@@ -44,4 +45,4 @@ Route::post('/resource/unavailability', [ResourceUnavailabilityController::class
 Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabilityController::class, 'update']);
 
 
-Route::post('/customexception', [ScheduleExceptionController::class, 'store']);
+Route::post('/exception', [ScheduleExceptionController::class, 'store']);

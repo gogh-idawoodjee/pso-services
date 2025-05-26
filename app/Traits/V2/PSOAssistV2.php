@@ -8,7 +8,6 @@ use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
 use App\Helpers\PSOHelper;
-use Date;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -67,8 +66,8 @@ trait PSOAssistV2
         string|null                  $resourceId = null,
         bool                         $includeInput = false,
         bool                         $includeOutput = false,
-        Date|null                    $minDate = null,
-        Date|null                    $maxDate = null
+        string|null                  $minDate = null,
+        string|null                  $maxDate = null
     ): JsonResponse
     {
         try {

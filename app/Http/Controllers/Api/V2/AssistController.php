@@ -12,6 +12,7 @@ use App\Services\V2\DeleteService;
 use App\Services\V2\LoadService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
+use JsonException;
 
 class AssistController extends Controller
 {
@@ -21,8 +22,9 @@ class AssistController extends Controller
 
     /**
      * Get System Usage
+     * @throws JsonException
      */
-    public function show(SystemUsageRequest $request)
+    public function show(SystemUsageRequest $request): JsonResponse
     {
 
         return $this->executeAuthenticatedAction($request, function (SystemUsageRequest $req) {
