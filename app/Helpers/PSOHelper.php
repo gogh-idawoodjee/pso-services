@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -47,8 +48,7 @@ class PSOHelper
     /**
      * @throws ValidationException
      */
-    public static function ValidateSendToPSO(Request $request)
-        // replaced with inline validation see BaseFormRequest
+    public static function ValidateSendToPSO(Request $request)// replaced with inline validation see BaseFormRequest
     : void
     {
         Validator::make($request->all(), [
@@ -113,5 +113,16 @@ class PSOHelper
 //        }
 //        return false;
 //    }
+
+
+    public static function toUrlEncodedIso8601($datetime): string
+    {
+        if (!$datetime instanceof Carbon) {
+            $datetime = Carbon::parse($datetime);
+        }
+
+        // Format to ISO 8601 (without timezone) and encode
+        return urlencode($datetime->format('Y-m-d\TH:i:s'));
+    }
 
 }

@@ -9,5 +9,6 @@ enum PsoEndpointSegment: string
     case SESSION = 'session';
     case DATA = 'data';
     case RESOURCE = 'resource';
+    case USAGE = 'usage';
 
 }

@@ -7,6 +7,8 @@ use App\Classes\V2\SendOrSimulateBuilder;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
+use App\Helpers\PSOHelper;
+use Date;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -64,7 +66,9 @@ trait PSOAssistV2
         PsoEndpointSegment           $segment,
         string|null                  $resourceId = null,
         bool                         $includeInput = false,
-        bool                         $includeOutput = false
+        bool                         $includeOutput = false,
+        Date|null                    $minDate = null,
+        Date|null                    $maxDate = null
     ): JsonResponse
     {
         try {
@@ -87,6 +91,14 @@ trait PSOAssistV2
 
             if ($resourceId) {
                 $queryParams['resourceId'] = $resourceId;
+            }
+
+            if ($minDate) {
+                $queryParams['minimumDateTime'] = PSOHelper::toUrlEncodedIso8601($minDate);
+            }
+
+            if ($maxDate) {
+                $queryParams['maximumDateTime'] = PSOHelper::toUrlEncodedIso8601($maxDate);
             }
 
             $url = "{$baseUrl}{$endpoint}?" . http_build_query($queryParams);
