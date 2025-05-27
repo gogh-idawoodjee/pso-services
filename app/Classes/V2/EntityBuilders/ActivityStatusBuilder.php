@@ -116,8 +116,10 @@ class ActivityStatusBuilder
             }
         }
 
-        // optionally add 'duration' field
-        $status['duration'] = $durationFormatted;
+        if ($this->duration) {
+            // optionally add 'duration' field
+            $status['duration'] = $durationFormatted;
+        }
 
         return $status;
     }
