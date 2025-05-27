@@ -3,8 +3,6 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
-use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
-use App\Enums\InputMode;
 use App\Helpers\Stubs\DeleteObject;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -32,14 +30,8 @@ class DeleteService extends BaseService
             $delete_input = DeleteObject::make(data_get($this->data, 'data'), $this->isRotaObject);
 
 
-            $input_ref = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))
-                ->inputType(InputMode::CHANGE)
-                ->build();
-
-            $payload = ['Object_Deletion' => $delete_input, 'Input_Reference' => $input_ref];
-
             return $this->sendOrSimulateBuilder()
-                ->payload(['Object_Deletion' => $payload])
+                ->payload(['Object_Deletion' => $delete_input])
                 ->environment(data_get($this->data, 'environment'))
                 ->includeInputReference()
                 ->token($this->sessionToken)
