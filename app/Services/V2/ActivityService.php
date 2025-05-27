@@ -42,11 +42,13 @@ class ActivityService extends BaseService
                 ->fixed((bool)$this->resourceId)
                 ->build();
 
-            return $this->sendOrSimulate(
-                ['Activity_Status' => $payload],
-                data_get($this->data, 'environment'),
-                $this->sessionToken
-            );
+            return $this->sendOrSimulateBuilder()
+                ->payload(['Activity_Status' => $payload])
+                ->environment(data_get($this->data, 'environment'))
+                ->token($this->sessionToken)
+                ->includeInputReference()
+                ->send();
+
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -65,11 +67,14 @@ class ActivityService extends BaseService
                 ]))->all(),
             ];
 
-            return $this->sendOrSimulate(
-                $payload,
-                data_get($this->data, 'environment'),
-                $this->sessionToken
-            );
+
+            return $this->sendOrSimulateBuilder()
+                ->payload($payload)
+                ->environment(data_get($this->data, 'environment'))
+                ->token($this->sessionToken)
+                ->includeInputReference()
+                ->send();
+
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
