@@ -23,8 +23,13 @@ class ActivityStatusRequest extends BaseFormRequest
 
     public function rules(): array
     {
-        $allStatusValues = collect(array_keys(ActivityStatus::allStatuses()))
-            ->map(static fn($status) => Str::lower($status));
+        $allStatusValues = collect(ActivityStatus::cases())->flatMap(static function ($status) {
+            return [
+                strtolower($status->name) => true,
+                (string)$status->value => true,
+            ];
+        });
+
 
         $commonRules = $this->commonRules();
 
@@ -50,11 +55,12 @@ class ActivityStatusRequest extends BaseFormRequest
                 'required',
                 'string',
                 function ($attribute, $value, $fail) use ($allStatusValues) {
-                    if (!$allStatusValues->contains(Str::lower($value))) {
+                    if (!$allStatusValues->has((string)$value) && !$allStatusValues->has(Str::lower($value))) {
                         $fail('The selected status is invalid.');
                     }
                 },
             ],
+
 
             /**
              * The ID of the resource assigned to the activity.
@@ -70,6 +76,7 @@ class ActivityStatusRequest extends BaseFormRequest
 
     public function withValidator($validator): void
     {
+        parent::withValidator($validator);
         $statusesRequiringResource = collect(array_keys(ActivityStatus::statusesGreaterThanAllocated()))
             ->map(static fn($status) => Str::lower($status));
 
@@ -98,11 +105,15 @@ class ActivityStatusRequest extends BaseFormRequest
         $statusString = strtolower($statusString);
 
         foreach (ActivityStatus::cases() as $case) {
-            if (strtolower($case->name) === $statusString) {
+            if (
+                $case->value === $statusString ||
+                strtolower($case->name) === $statusString
+            ) {
                 $this->parsedStatus = $case;
                 return;
             }
         }
+
 
         throw new UnexpectedValueException("Unexpected status value '{$statusString}'");
     }
