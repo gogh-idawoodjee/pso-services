@@ -9,6 +9,7 @@ use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
 use App\Classes\V2\EntityBuilders\ShiftBuilder;
 use App\Enums\ActivityClass;
 use App\Enums\ActivityStatus;
+use App\Enums\EventType;
 use App\Enums\PsoEndpointSegment;
 use App\Enums\ShiftEntity;
 use App\Helpers\LocationHelper;
@@ -33,23 +34,24 @@ class ResourceService extends BaseService
     protected array $selectOptions = [];
 
 
-
     public function createEvent(): JsonResponse|null
     {
         try {
 
             $payload =
-                ResourceEventBuilder::make(data_get($this->data, 'resourceId'), data_get($this->data, 'eventType'))
-                    ->eventDateTime(data_get($this->data, 'eventDateTime'))
-                    ->latitude(data_get($this->data, 'lat'))
-                    ->longitude(data_get($this->data, 'long'))
+                ResourceEventBuilder::make(data_get($this->data, 'data.resourceId'), EventType::from(data_get($this->data, 'data.eventType')))
+                    ->eventDateTime(data_get($this->data, 'data.eventDateTime'))
+                    ->latitude(data_get($this->data, 'data.lat'))
+                    ->longitude(data_get($this->data, 'data.long'))
                     ->build();
 
-            return $this->sendOrSimulate(
-                ['Schedule_Event' => $payload],
-                data_get($this->data, 'environment'),
-                $this->sessionToken
-            );
+            return $this->sendOrSimulateBuilder()
+                ->payload(['Schedule_event' => $payload])
+                ->environment(data_get($this->data, 'environment'))
+                ->token($this->sessionToken)
+                ->includeInputReference('Created Event')
+                ->send();
+
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
