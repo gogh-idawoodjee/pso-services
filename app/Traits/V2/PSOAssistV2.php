@@ -182,7 +182,6 @@ trait PSOAssistV2
     {
         if ($response->successful()) {
             $psoResponse = $response->json();
-            Log::info('pso response is ' . json_encode($psoResponse, JSON_THROW_ON_ERROR));
             return response()->json($psoResponse);
         }
 
