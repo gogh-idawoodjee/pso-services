@@ -37,8 +37,25 @@ class PSOHelper
      */
     public static function setPSODuration($duration): string
     {
-        return 'PT' . intdiv((int)$duration, 60) . 'H' . ((int)$duration % 60) . 'M';
+        $duration = (int)$duration;
+        $hours = intdiv($duration, 60);
+        $minutes = $duration % 60;
+
+        $result = 'PT';
+        if ($hours > 0) {
+            $result .= $hours . 'H';
+        }
+        if ($minutes > 0) {
+            $result .= $minutes . 'M';
+        }
+
+        // If both hours and minutes are zero, return 'PT0M' as a fallback
+        if ($result !== 'PT') {
+            return $result;
+        }
+        return 'PT0M';
     }
+
 
     public static function setPSODurationDays($duration): string
     {
