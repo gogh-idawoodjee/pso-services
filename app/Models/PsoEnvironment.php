@@ -10,7 +10,41 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Builder;
 
-/** @mixin Builder */
+/**
+ * 
+ *
+ * @mixin Builder
+ * @property string $id
+ * @property string $user_id
+ * @property string|null $name
+ * @property string $base_url
+ * @property string $account_id
+ * @property string $username
+ * @property string $manual_scheduling_shift_id
+ * @property string $standard_shift_id
+ * @property string $password
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PsoDataset> $datasets
+ * @property-read int|null $datasets_count
+ * @property-read \App\Models\PsoDataset|null $defaultdataset
+ * @property-read \App\Models\PsoToken|null $token
+ * @method static Builder<static>|PsoEnvironment newModelQuery()
+ * @method static Builder<static>|PsoEnvironment newQuery()
+ * @method static Builder<static>|PsoEnvironment query()
+ * @method static Builder<static>|PsoEnvironment whereAccountId($value)
+ * @method static Builder<static>|PsoEnvironment whereBaseUrl($value)
+ * @method static Builder<static>|PsoEnvironment whereCreatedAt($value)
+ * @method static Builder<static>|PsoEnvironment whereId($value)
+ * @method static Builder<static>|PsoEnvironment whereManualSchedulingShiftId($value)
+ * @method static Builder<static>|PsoEnvironment whereName($value)
+ * @method static Builder<static>|PsoEnvironment wherePassword($value)
+ * @method static Builder<static>|PsoEnvironment whereStandardShiftId($value)
+ * @method static Builder<static>|PsoEnvironment whereUpdatedAt($value)
+ * @method static Builder<static>|PsoEnvironment whereUserId($value)
+ * @method static Builder<static>|PsoEnvironment whereUsername($value)
+ * @mixin \Eloquent
+ */
 class PsoEnvironment extends Model
 {
     use HasFactory;

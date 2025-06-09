@@ -6,6 +6,15 @@ use App\Traits\Uuids;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * 
+ *
+ * @property-read mixed $is_valid_token
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Token newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Token newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Token query()
+ * @mixin \Eloquent
+ */
 class Token extends Model
 {
     use Uuids;

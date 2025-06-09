@@ -10,6 +10,37 @@ use Illuminate\Support\Str;
 use Override;
 
 
+/**
+ * 
+ *
+ * @property string $id
+ * @property string $account_id
+ * @property string $base_url
+ * @property string|null $description
+ * @property string $name
+ * @property string $slug
+ * @property string $password
+ * @property string $username
+ * @property int $user_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereAccountId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUsername($value)
+ * @mixin \Eloquent
+ */
 class Environment extends Model
 {
     use HasUuids;

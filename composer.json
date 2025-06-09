@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "A Laravel-based application.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "authors": [
         {
