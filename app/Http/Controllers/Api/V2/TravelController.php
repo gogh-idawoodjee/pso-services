@@ -14,7 +14,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use JsonException;
-
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 
 class TravelController extends Controller
 
@@ -42,6 +42,7 @@ class TravelController extends Controller
         });
     }
 
+
     /**
      * Receives the Travel Broadcast from PSO.
      *
@@ -49,6 +50,7 @@ class TravelController extends Controller
      * @return JsonResponse
      * @throws JsonException
      */
+    #[ExcludeRouteFromDocs]
     public function update(Request $request): JsonResponse
     {
         // this is the receiving method
