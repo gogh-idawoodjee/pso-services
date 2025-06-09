@@ -14,6 +14,8 @@ class ResourceUnavailabilityController extends Controller
 
     use PSOAssistV2;
 
+    // todo add timezone support
+
     /**
      * Create a new resource unavailability.
      */
