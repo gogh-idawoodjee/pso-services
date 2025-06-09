@@ -3,12 +3,14 @@
 namespace App\Models\V2;
 
 use App\Traits\Uuids;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
- * 
+ *
  *
  * @method static Builder|static where(string $column, mixed $operator = null, mixed $value = null)
  * @method static Builder|static query()
@@ -27,8 +29,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $appointment_template_id
  * @property string|null $slot_usage_rule_id
  * @property string|null $appointment_template_duration
- * @property \Illuminate\Support\Carbon|null $appointment_template_datetime
- * @property \Illuminate\Support\Carbon $offer_expiry_datetime
+ * @property Carbon|null $appointment_template_datetime
+ * @property Carbon $offer_expiry_datetime
  * @property string|null $appointment_response
  * @property string|null $valid_offers
  * @property string|null $invalid_offers
@@ -41,14 +43,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool|null $appointed_check_complete
  * @property bool|null $appointed_check_result
  * @property string|null $appointed_check_input_reference_id
- * @property \Illuminate\Support\Carbon|null $appointed_check_datetime
+ * @property Carbon|null $appointed_check_datetime
  * @property int|null $accepted_offer_id
  * @property string|null $accepted_offer
  * @property string|null $accept_decline_input_reference_id
- * @property \Illuminate\Support\Carbon|null $accept_decline_datetime
+ * @property Carbon|null $accept_decline_datetime
  * @property string|null $user_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @method static Builder<static>|PSOAppointment newModelQuery()
  * @method static Builder<static>|PSOAppointment newQuery()
  * @method static Builder<static>|PSOAppointment whereAcceptDeclineDatetime($value)
@@ -87,7 +89,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder<static>|PSOAppointment whereUpdatedAt($value)
  * @method static Builder<static>|PSOAppointment whereUserId($value)
  * @method static Builder<static>|PSOAppointment whereValidOffers($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class PSOAppointment extends Model
 {

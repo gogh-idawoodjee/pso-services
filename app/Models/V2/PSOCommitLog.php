@@ -3,12 +3,14 @@
 namespace App\Models\V2;
 
 use App\Traits\Uuids;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
- * 
+ *
  *
  * @mixin Builder
  * @property string $id
@@ -18,8 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $pso_response
  * @property string $response_time
  * @property string $transfer_stats
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @method static Builder<static>|PSOCommitLog newModelQuery()
  * @method static Builder<static>|PSOCommitLog newQuery()
  * @method static Builder<static>|PSOCommitLog query()
@@ -32,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder<static>|PSOCommitLog whereResponseTime($value)
  * @method static Builder<static>|PSOCommitLog whereTransferStats($value)
  * @method static Builder<static>|PSOCommitLog whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class PSOCommitLog extends Model
 {

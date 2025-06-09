@@ -3,15 +3,18 @@
 namespace App\Models\V2;
 use App\Models\V2\Scopes\UserOwnedModel;
 use App\Models\User;
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Override;
 
 
 /**
- * 
+ *
  *
  * @property string $id
  * @property string $account_id
@@ -22,24 +25,24 @@ use Override;
  * @property string $password
  * @property string $username
  * @property int $user_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read User $user
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereAccountId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereBaseUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment wherePassword($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereSlug($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Environment whereUsername($value)
- * @mixin \Eloquent
+ * @method static Builder<static>|Environment newModelQuery()
+ * @method static Builder<static>|Environment newQuery()
+ * @method static Builder<static>|Environment query()
+ * @method static Builder<static>|Environment whereAccountId($value)
+ * @method static Builder<static>|Environment whereBaseUrl($value)
+ * @method static Builder<static>|Environment whereCreatedAt($value)
+ * @method static Builder<static>|Environment whereDescription($value)
+ * @method static Builder<static>|Environment whereId($value)
+ * @method static Builder<static>|Environment whereName($value)
+ * @method static Builder<static>|Environment wherePassword($value)
+ * @method static Builder<static>|Environment whereSlug($value)
+ * @method static Builder<static>|Environment whereUpdatedAt($value)
+ * @method static Builder<static>|Environment whereUserId($value)
+ * @method static Builder<static>|Environment whereUsername($value)
+ * @mixin Eloquent
  */
 class Environment extends Model
 {

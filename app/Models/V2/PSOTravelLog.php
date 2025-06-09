@@ -4,8 +4,10 @@ namespace App\Models\V2;
 
 use App\Enums\TravelLogStatus;
 use App\Traits\Uuids;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use JsonException;
 
 /** @mixin Builder */
@@ -13,7 +15,7 @@ use JsonException;
 // Optional PHPDoc for better IDE support
 
 /**
- * 
+ *
  *
  * @property TravelLogStatus $status
  * @property string|null $travel_detail_request_id
@@ -27,8 +29,8 @@ use JsonException;
  * @property string|null $pso_response
  * @property string|null $response_time
  * @property string|null $transfer_stats
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read string|null $address_from_text
  * @property-read string|null $address_to_text
  * @property-read string|null $distance_in_km
@@ -53,7 +55,7 @@ use JsonException;
  * @method static Builder<static>|PSOTravelLog whereStatus($value)
  * @method static Builder<static>|PSOTravelLog whereTransferStats($value)
  * @method static Builder<static>|PSOTravelLog whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class PSOTravelLog extends Model
 {
@@ -167,12 +169,18 @@ class PSOTravelLog extends Model
         return data_get($response, 'duration.text');
     }
 
+    /**
+     * @throws JsonException
+     */
     public function getAddressFromTextAttribute(): string|null
     {
         $data = json_decode($this->address_from, true, 512, JSON_THROW_ON_ERROR);
         return data_get($data, 'address');
     }
 
+    /**
+     * @throws JsonException
+     */
     public function getAddressToTextAttribute(): string|null
     {
         $data = json_decode($this->address_to, true, 512, JSON_THROW_ON_ERROR);
