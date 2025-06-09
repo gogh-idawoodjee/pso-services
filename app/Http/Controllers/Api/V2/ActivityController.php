@@ -32,7 +32,16 @@ class ActivityController extends Controller
     }
 
     /**
-     * Delete Activity or Activities
+     * Delete Activity or Activities.
+     *
+     * Deletes one or more activities.
+     *
+     * @response array{
+     *   data: array|null,
+     *   status: int,
+     *   message: string,
+     *   additionalDetails: array|null
+     * }
      */
     public function destroy(ActivityDeleteRequest $request): JsonResponse
     {
