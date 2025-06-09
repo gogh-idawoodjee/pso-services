@@ -24,12 +24,12 @@ return [
         /*
          * API version.
          */
-        'version' => env('API_VERSION', '0.0.1'),
+        'version' => env('API_VERSION', '2.0'),
 
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => '',
+        'description' => 'Ish PSO Services API',
     ],
 
     /*
@@ -39,7 +39,7 @@ return [
         /*
          * Define the title of the documentation's website. App name is used when this config is `null`.
          */
-        'title' => null,
+        'title' => 'Ish PSO Services API',
 
         /*
          * Define the theme of the documentation. Available options are `light` and `dark`.
@@ -54,7 +54,7 @@ return [
         /*
          * Hide the schemas in the Table of Contents. Enabled by default.
          */
-        'hide_schemas' => false,
+        'hide_schemas' => true,
 
         /*
          * URL to an image that displays as a small square logo next to the title, above the table of contents.
