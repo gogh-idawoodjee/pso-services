@@ -69,6 +69,7 @@ class ActivityStatusRequest extends BaseFormRequest
              * @example "resource-123"
              */
             'data.resourceId' => ['nullable', 'string'],
+            'data.duration' => ['nullable', 'integer', 'gt:0'],
         ];
 
         return array_merge($commonRules, $additionalRules);

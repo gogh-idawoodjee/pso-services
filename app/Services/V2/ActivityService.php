@@ -39,6 +39,7 @@ class ActivityService extends BaseService
 
             $payload = ActivityStatusBuilder::make($this->activityId, $this->activityStatus)
                 ->resourceId($this->resourceId)
+                ->duration(data_get($this->data, 'data.duration'))
                 ->fixed((bool)$this->resourceId)
                 ->build();
 
