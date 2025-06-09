@@ -4,10 +4,13 @@ namespace App\Traits\V2;
 
 use App\Classes\V2\PSOAuthService;
 use App\Classes\V2\SendOrSimulateBuilder;
+use App\Constants\PSOConstants;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
 use App\Helpers\PSOHelper;
+use App\Helpers\Stubs\SourceData;
+use App\Helpers\Stubs\SourceDataParameter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +32,6 @@ trait PSOAssistV2
      * @param array $environmentData Environment configuration
      * @param PsoEndpointSegment $segment PSO API endpoint
      * @return JsonResponse Response from PSO
-     * @throws JsonException
      */
     public function sendToPso($payload, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
     {
@@ -55,7 +57,6 @@ trait PSOAssistV2
 
 
     /**
-     * @throws JsonException
      */
 
     public function getPsoData(
@@ -176,7 +177,6 @@ trait PSOAssistV2
      *
      * @param Response $response
      * @return JsonResponse
-     * @throws JsonException
      */
     private function handleDataResponse(Response $response): JsonResponse
     {
@@ -304,7 +304,6 @@ trait PSOAssistV2
 
 
     /**
-     * @throws JsonException
      */
     public function sendOrSimulate(
         array       $payload,
@@ -341,13 +340,21 @@ trait PSOAssistV2
                 PsoEndpointSegment::DATA
             );
             // send rota update
+            // in sendOrSimulateBuilder()  ->requiresRotaUpdate() takes a true and description in  as params
+            // the description becomes $rotaUpdateDescription
             if ($requiresRotaUpdate) {
-                $rotaUpdatePayload =
+                $rotaUpdatePayload['Input_Reference'] =
                     InputReferenceNew::make(data_get($environmentData, 'datasetId'))
                         ->inputType(InputMode::CHANGE)
-                        ->description($rotaUpdateDescription) // todo test where this description comes from and if its required if requiresrotaupdate is provided
+                        ->description($rotaUpdateDescription) // see note above if statement
                         ->build();
-                $this->sendToPso($rotaUpdatePayload, $environmentData, $sessionToken, PsoEndpointSegment::DATA);
+                $rotaUpdatePayload['Source_Data'] = SourceData::make();
+                $rotaUpdatePayload['Source_Data_Parameter'] = SourceDataParameter::make(
+                    PSOConstants::SOURCE_DATA_PARAM_NAME,
+                    PSOConstants::SOURCE_DATA_PARAM_VALUE
+                );
+
+                $this->sendToPso($this->buildPayload($rotaUpdatePayload), $environmentData, $sessionToken, PsoEndpointSegment::DATA);
             }
 
             if ($psoResponse->status() < 400) {
