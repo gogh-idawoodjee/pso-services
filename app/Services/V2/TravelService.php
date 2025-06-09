@@ -10,6 +10,7 @@ use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
 use App\Enums\TravelLogStatus;
 use App\Helpers\Stubs\TravelDetailRequest;
+use App\Jobs\TravelLogReview;
 use App\Models\V2\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
 use GuzzleHttp\Client;
@@ -89,6 +90,7 @@ class TravelService extends BaseService
             ->additionalDetails($additionalDetails)
             ->send();
 
+
         // Step 6: Update travel log with PSO response
         $responseArray = $apiResponse->getData(true);
 
@@ -98,6 +100,9 @@ class TravelService extends BaseService
             'output_payload' => $this->encodeJson(data_get($responseArray, 'data.responseFromPso')),
             'status' => TravelLogStatus::SENT,
         ]);
+
+        // check the log after 2 minutes
+        TravelLogReview::dispatch($this->travelLogId)->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
 
         return $apiResponse;
     }
@@ -127,7 +132,7 @@ class TravelService extends BaseService
     protected function getAdditionalDetails(): string
     {
         if ($this->sessionToken) {
-            return "Please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
+            return "To review results, please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
         }
         return "Please ensure environment.sendToPso is set to true to use the analyzer correctly";
     }
@@ -227,21 +232,24 @@ class TravelService extends BaseService
     {
 
 //        dd(data_get(json_decode($travelLog->pso_response), 'travel_detail_request_id'));
+        if ($travelLog->status === TravelLogStatus::COMPLETED) {
 
-        return
-            [
-                'travel_detail_request_id' => $travelLog->travel_detail_request_id,
-                'start_address' => $travelLog->getAddressFromTextAttribute(),
-                'end_address' => $travelLog->getAddressToTextAttribute(),
-                'pso' => [
-                    'time' => $travelLog->getPsoTimeFormattedAttribute(),
-                    'distance' => $travelLog->getDistanceInKmAttribute(),
-                ],
-                'google' => [
-                    'time' => $travelLog->getGoogleDurationAttribute(),
-                    'distance' => $travelLog->getGoogleDistanceAttribute(),
-                ]
-            ];
+            return
+                [
+                    'travel_detail_request_id' => $travelLog->travel_detail_request_id,
+                    'start_address' => $travelLog->getAddressFromTextAttribute(),
+                    'end_address' => $travelLog->getAddressToTextAttribute(),
+                    'pso' => [
+                        'time' => $travelLog->getPsoTimeFormattedAttribute(),
+                        'distance' => $travelLog->getDistanceInKmAttribute(),
+                    ],
+                    'google' => [
+                        'time' => $travelLog->getGoogleDurationAttribute(),
+                        'distance' => $travelLog->getGoogleDistanceAttribute(),
+                    ]
+                ];
+        }
+        return [];
 
     }
 
