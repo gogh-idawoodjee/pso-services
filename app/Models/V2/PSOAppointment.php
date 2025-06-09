@@ -3,10 +3,15 @@
 namespace App\Models\V2;
 
 use App\Traits\Uuids;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
-
+/**
+ * @method static Builder|static where(string $column, mixed $operator = null, mixed $value = null)
+ * @method static Builder|static query()
+ * @method static Model|static create(array $attributes = [])
+ */
 class PSOAppointment extends Model
 {
 
