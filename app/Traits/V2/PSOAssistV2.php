@@ -253,6 +253,7 @@ trait PSOAssistV2
      * @param Request $request The request containing environment data
      * @param callable $action The action to execute if authentication is successful
      * @return JsonResponse The response from the action or auth error
+     *
      */
     protected function executeAuthenticatedAction(Request $request, callable $action): JsonResponse
     {
@@ -292,7 +293,7 @@ trait PSOAssistV2
                 return $action($request);
             }
 
-            // If we got a non-200 response from auth service, return it as is
+
             return $response;
 
         } catch (Exception $e) {
