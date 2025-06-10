@@ -148,16 +148,16 @@ class AppointmentService extends BaseService
                 // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
                     $summary = [
+                        'appointmentRequestId' => $appointmentRequestId,
                         'activityId' => data_get($activity, 'Activity.id'),
                         'resourceId' => data_get($selectedOffer, 'prospectiveResourceId'),
                         'assignmentStart' => $allocationStart->toIso8601String(),
                         'assignmentFinish' => $allocationFinish->toIso8601String(),
-
                         'pso_allocation' => 'psoAllocation', // whats this?
                         'selectedDate' => data_get($selectedOffer, 'windowDayEnglish'),
                         'selectedWindow' => data_get($selectedOffer, 'windowStartTime') . ' - ' . data_get($selectedOffer, 'windowEndTime'),
                     ];
-                    return $this->sentToPso($summary, $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso(['acceptedAppointmentSummary' => $summary], $this->buildPayload($payload, 1, true));
                 }
 
                 // If there was an error, just return the error response
@@ -213,8 +213,12 @@ class AppointmentService extends BaseService
                 return $this->error(data_get($declineOffer, 'message'), data_get($declineOffer, 'status'));
             }
 
-            $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->first();
-            $activityId = data_get($appointmentRequest, 'activity_id');
+
+            $appointmentRequestLog = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
+            $validOffers = data_get($appointmentRequestLog, 'total_valid_offers_returned');
+            $invalidOffers = data_get($appointmentRequestLog, 'total_invalid_offers_returned');
+            $activityId = data_get($appointmentRequestLog, 'activity_id');
+
 
             if ($this->sessionToken) {
                 $psoPayload = $this->buildPayload($payload);
@@ -233,10 +237,13 @@ class AppointmentService extends BaseService
                     // delete the activity
                     $this->deleteActivity($activityId, $environmentData, $this->sessionToken);
 
-                    $summary = [ // todo setup this summary
-                        'declined X number of appointments. Removed temporary activity'
+                    $summary = [
+                        'activityId' => $activityId,
+                        'appointmentRequestId' => $appointmentRequestId,
+                        'declinedOffers' => $validOffers,
+                        'totalAppointmentsOffered' => $validOffers + $invalidOffers,
                     ];
-                    return $this->sentToPso($summary, $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso(['declineAppointmentSummary' => $summary], $this->buildPayload($payload, 1, true));
                 }
 
                 // If there was an error, just return the error response
@@ -431,7 +438,7 @@ class AppointmentService extends BaseService
         ]);
 
         if ($bestOfferId !== null) {
-            $newcollect->put('is_best_offer', data_get($offer, 'id') === $bestOfferId);
+            $newcollect->put('isBestOffer', data_get($offer, 'id') === $bestOfferId);
         }
 
         return $newcollect;
