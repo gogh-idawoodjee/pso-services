@@ -15,7 +15,17 @@ class ActivityStatusController extends Controller
     use PSOAssistV2;
 
     /**
-     * Update the specified resource in storage.
+     * Update the Task Status of an Activity.
+     *
+     * @response array{
+     *   data: array|null,
+     *   status: int,
+     *   message: string,
+     *   additionalDetails: array|null
+     * }
+     *
+     * @param ActivityStatusRequest $request
+     * @return JsonResponse
      */
     public function update(ActivityStatusRequest $request): JsonResponse
     {
