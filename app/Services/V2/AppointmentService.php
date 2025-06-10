@@ -2,7 +2,6 @@
 
 namespace App\Services\V2;
 
-
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\AppointmentRequestStatus;
@@ -24,8 +23,7 @@ use SensitiveParameter;
 
 class AppointmentService extends BaseService
 {
-
-
+    
     /**
      * Get appointment offers from PSO
      *
@@ -225,6 +223,10 @@ class AppointmentService extends BaseService
     public function checkAppointed(): JsonResponse
     {
         try {
+            Log::info('checkAppointed started', [
+                'appointmentRequestId' => data_get($this->data, 'data.appointmentRequestId'),
+                'appointmentOfferId' => data_get($this->data, 'data.appointmentOfferId'),
+            ]);
 
             $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
             $appointmentOfferId = data_get($this->data, 'data.appointmentOfferId');
@@ -232,32 +234,30 @@ class AppointmentService extends BaseService
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId);
 
-            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
-
-            // input ref doesn't exist yet, lolzers
+            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))
+                ->inputType(InputMode::CHANGE)
+                ->build();
             $inputReferenceId = data_get($inputReference, 'id');
 
-            $payload = ['Appointment_Offer_Response' => $offerResponsePayload, 'Input_Reference' => $inputReference];
+            $payload = [
+                'Appointment_Offer_Response' => $offerResponsePayload,
+                'Input_Reference' => $inputReference
+            ];
 
-
-            //  see if it exists in the DB and ✅
-            // is not already checked ✅
-            // appointment request is not complete ✅
-            // is not accepted or declined ✅
-            // is not expired ✅
-            // offer is in list of available offers (if not then status 406) ✅
-
-            // I think this whole block neds to be instead of the if statement
-
-
-            $checkAppointed = $this->updateAppointmentRequestCheckAppointed($appointmentRequestId, $appointmentOfferId, $inputReferenceId, (bool)$this->sessionToken);
-
+            $checkAppointed = $this->updateAppointmentRequestCheckAppointed(
+                $appointmentRequestId,
+                $appointmentOfferId,
+                $inputReferenceId,
+                (bool)$this->sessionToken
+            );
 
             if (data_get($checkAppointed, 'status') !== 200 && data_get($checkAppointed, 'status')) {
-
+                Log::warning('checkAppointed failed appointment check', [
+                    'status' => data_get($checkAppointed, 'status'),
+                    'message' => data_get($checkAppointed, 'message'),
+                ]);
                 return $this->error(data_get($checkAppointed, 'message'), data_get($checkAppointed, 'status'));
             }
-
 
             if ($this->sessionToken) {
                 $psoPayload = $this->buildPayload($payload);
@@ -269,31 +269,37 @@ class AppointmentService extends BaseService
                     PsoEndpointSegment::APPOINTMENT
                 );
 
-                // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
                     $summary = collect(data_get(collect($psoResponse->getData())->first(), 'Appointment_Summary', []));
                     $this->updateAppointmentRequestAppointedSummary($appointmentRequestId, $summary);
+
                     $additional_data = [
                         'appointment_summary' => [
                             'appointment_request_id' => $appointmentRequestId,
-                            'slot_is_available' => data_get($summary, 'appointed'),
+                            'is_slot_available' => data_get($summary, 'appointed'),
                             'full_summary' => $summary
                         ]
                     ];
+
+                    Log::info('checkAppointed successful', compact('appointmentRequestId'));
                     return $this->sentToPso($additional_data, $this->buildPayload($payload, 1, true));
                 }
 
-                // If there was an error, just return the error response
+                Log::warning('checkAppointed: PSO responded with an error', ['status' => $psoResponse->status()]);
                 return $psoResponse;
             }
 
-
+            Log::info('checkAppointed skipped PSO send (no session token)', compact('appointmentRequestId'));
             return $this->notSentToPso($this->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            Log::error('Exception caught in checkAppointed()', [
+                'message' => $e->getMessage(),
+                'method' => __METHOD__,
+            ]);
             return $this->error('An unexpected error occurred', 500);
         }
     }
+
 
     /**
      * Collect and format appointment responses
@@ -344,6 +350,7 @@ class AppointmentService extends BaseService
                     'id' => data_get($offer, 'id'),
                     'offer_value' => data_get($offer, 'offer_value'),
                     'window_start_datetime' => data_get($offer, 'window_start_datetime'),
+                    'window_end_datetime' => data_get($offer, 'window_end_datetime'),
                     'prospective_resource_id' => data_get($offer, 'prospective_resource_id'),
                 ]);
             })
@@ -506,11 +513,13 @@ class AppointmentService extends BaseService
     private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, bool|null $sendToPso = null): array|null
     {
 
+        Log::info('starting updateAppointmentRequestCheckAppointed');
         // Call the reusable method to check for validity
         $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId);
 
         // If there's an error, return the response with message and status
         if ($checkResult) {
+            Log::info('found an error in updateAppointmentRequestCheckAppointed');
             return $checkResult; // Return early if validation failed
         }
 
@@ -538,50 +547,45 @@ class AppointmentService extends BaseService
     */
     private function updateAppointmentRequestAppointedSummary(string $appointmentRequestId, Collection $summary): void
     {
-        $appointmentRequest = PSOAppointment::where('appointment_request', $appointmentRequestId)->firstOrFail();
-        $appointmentRequest->update([
-            'appointed_check_result' => data_get($summary, 'appointed'),
-            'appointed_check_complete' => true
+        Log::debug('Looking for PSOAppointment with appointment_request', [
+            'appointment_request_id' => $appointmentRequestId
         ]);
 
+        $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->firstOrFail();
+
+        $appointmentRequest->update([
+            'appointed_check_result' => (bool)data_get($summary, 'appointed'),
+            'appointed_check_complete' => true
+        ]);
     }
 
     private function validateAppointmentSummary(string $appointmentRequestId, string $appointmentOfferId, bool|null $isAcceptRequest = true): array|null
     {
-
         try {
-
-            // Attempt to find the appointment request
             $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
 
+            if (!$appointmentRequest) {
+                Log::warning('Appointment request not found', compact('appointmentRequestId'));
+                return [
+                    'message' => 'Appointment Request ID was not found',
+                    'status' => 404
+                ];
+            }
 
-            // Initialize response structure
-            $response = [
-                'message' => '',
-                'status' => 200, // Default status, assuming all checks pass
-            ];
-
-            // Check if valid offers exist
             $offersCollection = collect($appointmentRequest->valid_offers);
 
             if ($offersCollection->isEmpty()) {
-                Log::error('No valid offers found for appointment request');
+                Log::warning('No valid offers found for appointment request', compact('appointmentRequestId'));
                 return [
                     'message' => 'No valid offers found for appointment request',
                     'status' => 406
                 ];
             }
 
-
-            // Check if the specific offer ID exists
-
-
-            // check only if not a decline request
             if ($isAcceptRequest && !$offersCollection->contains('id', $appointmentOfferId)) {
-                Log::error('This is not a valid appointment offer ID');
-                \Log::info('Checking appointmentOfferId', [
-                    'searching_for' => $appointmentOfferId,
-                    'ids_in_collection' => $offersCollection->pluck('id')->all(),
+                Log::warning('Invalid appointment offer ID', [
+                    'appointmentOfferId' => $appointmentOfferId,
+                    'valid_ids' => $offersCollection->pluck('id')->all(),
                 ]);
                 return [
                     'message' => 'This is not a valid appointment offer ID',
@@ -589,35 +593,35 @@ class AppointmentService extends BaseService
                 ];
             }
 
-
-            // Check if the appointment request status is valid
             if (AppointmentRequestStatus::from(data_get($appointmentRequest, 'status')) !== AppointmentRequestStatus::UNACKNOWLEDGED) {
-                Log::error('Appointment Request ID is no longer valid for check');
+                Log::warning('Appointment request is no longer in a valid status', ['status' => $appointmentRequest->status]);
                 return [
                     'message' => 'Appointment Request ID is no longer valid for check',
                     'status' => 406
                 ];
             }
 
-            // Check if the appointment request has expired
             if ($appointmentRequest->offer_expiry_datetime->isPast()) {
-                Log::error('Appointment Request has expired');
+                Log::warning('Appointment request has expired', ['expiry' => $appointmentRequest->offer_expiry_datetime]);
                 return [
                     'message' => 'Appointment Request has expired',
                     'status' => 406
                 ];
             }
 
+            // All good
+            return null;
 
-        } catch (ModelNotFoundException) {
+        } catch (ModelNotFoundException $e) {
+            Log::error('ModelNotFoundException in validateAppointmentSummary', [
+                'message' => $e->getMessage()
+            ]);
             return [
                 'message' => 'Appointment Request ID was not found',
                 'status' => 404
             ];
         }
-
-        // All checks passed, return null (meaning no error)
-        return null;
     }
+
 
 }
