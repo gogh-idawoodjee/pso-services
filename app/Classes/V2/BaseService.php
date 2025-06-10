@@ -25,7 +25,7 @@ abstract class BaseService
 
     public function LogError(Exception $e, $method, $class): void
     {
-        Log::error('Unexpected error in ' . $method . 'inside ' . $class . ': ' . $e->getMessage());
+        Log::error('Unexpected error in ' . $method . '. This method is inside ' . $class . ': ' . $e->getMessage());
     }
 
 }
