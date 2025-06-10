@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $appointment_request
  * @property string $appointment_request_id
  * @property int $status
- * @property string $activity
+ * @property json $activity
  * @property string $activity_id
  * @property string $base_url
  * @property string $dataset_id
@@ -96,7 +96,6 @@ class PSOAppointment extends Model
 
     use Uuids;
 
-
     protected $table = 'appointment_request';
     protected $guarded = [];
 //    protected $dates = ['accept_decline_datetime', 'appointment_template_datetime', 'offer_expiry_datetime', 'appointed_check_datetime'];
@@ -106,10 +105,18 @@ class PSOAppointment extends Model
         'accept_decline_datetime' => 'datetime',
         'appointment_template_datetime' => 'datetime',
         'offer_expiry_datetime' => 'datetime',
-        'appointed_check_datetime' => 'datetime'
+        'appointed_check_datetime' => 'datetime',
+
     ];
 
     protected function inputRequest(): Attribute
+    {
+        return Attribute::make(
+            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    protected function activity(): Attribute
     {
         return Attribute::make(
             get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
