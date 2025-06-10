@@ -11,6 +11,7 @@ use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
 use App\Models\V2\PSOAppointment;
 use Carbon\Carbon;
+use DateInterval;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,7 @@ use SensitiveParameter;
 
 class AppointmentService extends BaseService
 {
-    
+
     /**
      * Get appointment offers from PSO
      *
@@ -96,13 +97,42 @@ class AppointmentService extends BaseService
             }
 
 
-            // need to get sla_start and sla_end from the offer sent in
-            // get the prospective resource ID
-            // format the window for readable format
+            // need to get sla_start and sla_end from the offer sent in ✅
+            // get the prospective resource ID ✅
+            // format the window for readable format ✅
 
             // build the activity payload again (maybe take it from appointment request or store it correctly)
 
             // delete the old activity
+            $appointmentRequestLog = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
+            $validOffers = collect(data_get($appointmentRequestLog, 'valid_offers'));
+            $selectedOffer = $validOffers->firstWhere('id', $appointmentOfferId);
+            $activity = data_get($appointmentRequestLog, 'activity');
+
+
+            $duration = data_get($activity, 'Activity_Status.duration');
+
+
+            $allocationStart = Carbon::parse(data_get($selectedOffer, 'prospectiveAllocationStart'));
+            $allocationFinish = $allocationStart->copy();
+
+            if ($duration) {
+                try {
+                    Log::debug('Adding duration', compact('duration'));
+                    $interval = new DateInterval($duration);
+                    $allocationFinish->add($interval);
+                    Log::debug('After adding duration', [
+                        'start' => $allocationStart->toIso8601String(),
+                        'finish' => $allocationFinish->toIso8601String()
+                    ]);
+                } catch (Exception $e) {
+                    Log::warning('Invalid duration format', [
+                        'duration' => $duration,
+                        'error' => $e->getMessage()
+                    ]);
+                    $allocationFinish->addHour();
+                }
+            }
 
 
             if ($this->sessionToken) {
@@ -117,14 +147,15 @@ class AppointmentService extends BaseService
 
                 // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
-                    $summary = [ // todo setup this summary
-                        'activity_id' => 'activityId',
-                        'resource_id' => 'resourceId',
-                        'assignment_start' => 'assignmentStart',
-                        'assignment_finish' => 'assignmentFinish',
-                        'pso_allocation' => 'psoAllocation',
-                        'selected_date' => 'selectedDate',
-                        'selected_window' => 'selectedWindow',
+                    $summary = [
+                        'activityId' => data_get($activity, 'Activity.id'),
+                        'resourceId' => data_get($selectedOffer, 'prospectiveResourceId'),
+                        'assignmentStart' => $allocationStart->toIso8601String(),
+                        'assignmentFinish' => $allocationFinish->toIso8601String(),
+
+                        'pso_allocation' => 'psoAllocation', // whats this?
+                        'selectedDate' => data_get($selectedOffer, 'windowDayEnglish'),
+                        'selectedWindow' => data_get($selectedOffer, 'windowStartTime') . ' - ' . data_get($selectedOffer, 'windowEndTime'),
                     ];
                     return $this->sentToPso($summary, $this->buildPayload($payload, 1, true));
                 }
@@ -273,16 +304,16 @@ class AppointmentService extends BaseService
                     $summary = collect(data_get(collect($psoResponse->getData())->first(), 'Appointment_Summary', []));
                     $this->updateAppointmentRequestAppointedSummary($appointmentRequestId, $summary);
 
-                    $additional_data = [
+                    $data = [
                         'appointment_summary' => [
-                            'appointment_request_id' => $appointmentRequestId,
-                            'is_slot_available' => data_get($summary, 'appointed'),
-                            'full_summary' => $summary
+                            'appointmentRequestId' => $appointmentRequestId,
+                            'isSlotAvailable' => data_get($summary, 'appointed'),
+                            'responseFromPso' => $summary
                         ]
                     ];
 
                     Log::info('checkAppointed successful', compact('appointmentRequestId'));
-                    return $this->sentToPso($additional_data, $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso($data, $this->buildPayload($payload, 1, true));
                 }
 
                 Log::warning('checkAppointed: PSO responded with an error', ['status' => $psoResponse->status()]);
@@ -336,9 +367,9 @@ class AppointmentService extends BaseService
             ->map(static function ($offer) {
                 return collect([
                     'id' => data_get($offer, 'id'),
-                    'window_start_datetime' => data_get($offer, 'window_start_datetime'),
-                    'window_end_datetime' => data_get($offer, 'window_end_datetime'),
-                    'offer_value' => data_get($offer, 'offer_value'),
+                    'windowStartDatetime' => data_get($offer, 'window_start_datetime'),
+                    'windowEndDatetime' => data_get($offer, 'window_end_datetime'),
+                    'offerValue' => data_get($offer, 'offer_value'),
                 ]);
             })
             ->values();
@@ -348,10 +379,10 @@ class AppointmentService extends BaseService
             ->map(static function ($offer) {
                 return collect([
                     'id' => data_get($offer, 'id'),
-                    'offer_value' => data_get($offer, 'offer_value'),
-                    'window_start_datetime' => data_get($offer, 'window_start_datetime'),
-                    'window_end_datetime' => data_get($offer, 'window_end_datetime'),
-                    'prospective_resource_id' => data_get($offer, 'prospective_resource_id'),
+                    'offerValue' => data_get($offer, 'offer_value'),
+                    'windowStartDatetime' => data_get($offer, 'window_start_datetime'),
+                    'windowEndDatetime' => data_get($offer, 'window_end_datetime'),
+                    'prospectiveResourceId' => data_get($offer, 'prospective_resource_id'),
                 ]);
             })
             ->values();
@@ -359,13 +390,13 @@ class AppointmentService extends BaseService
         // Build final data
         return [
 
-            'appointment_offers' => [
-                'appointment_request_id' => $appointmentRequestId,
+            'appointmentOffers' => [
+                'appointmentRequestId' => $appointmentRequestId,
                 'summary' => "{$validOffers->count()} valid offers out of {$offers->count()} returned.",
-                'best_offer' => data_get($bestOffer, 'prospective_resource_id') ? $bestOffer : 'no valid offers returned',
-                'valid_offers' => $validOffers,
-                'invalid_offers' => $invalidOffers,
-                'offer_values' => $offerValues,
+                'bestOffer' => data_get($bestOffer, 'prospectiveResourceId') ? $bestOffer : 'no valid offers returned',
+                'validOffers' => $validOffers,
+                'invalidOffers' => $invalidOffers,
+                'allOfferValues' => $offerValues,
             ],
         ];
     }
@@ -387,16 +418,16 @@ class AppointmentService extends BaseService
 
         $newcollect = collect([
             'id' => data_get($offer, 'id'),
-            'window_start_datetime' => data_get($offer, 'window_start_datetime'),
-            'window_end_datetime' => data_get($offer, 'window_end_datetime'),
-            'offer_value' => data_get($offer, 'offer_value'),
-            'prospective_resource_id' => data_get($offer, 'prospective_resource_id'),
-            'prospective_allocation_start' => data_get($offer, 'prospective_allocation_start'),
-            'window_start_english' => $start->toDayDateTimeString(),
-            'window_end_english' => $end->toDayDateTimeString(),
-            'window_day_english' => $start->toFormattedDayDateString(),
-            'window_start_time' => $start->format('g:i A'),
-            'window_end_time' => $end->format('g:i A')
+            'windowStartDatetime' => data_get($offer, 'window_start_datetime'),
+            'windowEndDatetime' => data_get($offer, 'window_end_datetime'),
+            'offerValue' => data_get($offer, 'offer_value'),
+            'prospectiveResourceId' => data_get($offer, 'prospective_resource_id'),
+            'prospectiveAllocationStart' => data_get($offer, 'prospective_allocation_start'),
+            'windowStartEnglish' => $start->toDayDateTimeString(),
+            'windowEndEnglish' => $end->toDayDateTimeString(),
+            'windowDayEnglish' => $start->toFormattedDayDateString(),
+            'windowStartTime' => $start->format('g:i A'),
+            'windowEndTime' => $end->format('g:i A')
         ]);
 
         if ($bestOfferId !== null) {
@@ -409,7 +440,7 @@ class AppointmentService extends BaseService
     /**
      * @throws JsonException
      */
-    public function createAppointmentRecord(string $runId, array $data, array $payload): void
+    private function createAppointmentRecord(string $runId, array $data, array $payload): void
     {
         // Extract common data from the payload
         $appointmentRequest = data_get($payload, 'Appointment_Request');
@@ -444,11 +475,11 @@ class AppointmentService extends BaseService
     private function updateAppointmentRequestWithOffers(string $runId, array $offers, JsonResponse $response): void
     {
         // Extract offer counts using data_get
-        $appointmentOffers = data_get($offers, 'appointment_offers', []);
+        $appointmentOffers = data_get($offers, 'appointmentOffers', []);
 
-        $offersCount = count(data_get($appointmentOffers, 'offer_values', []));
-        $validOffers = data_get($appointmentOffers, 'valid_offers', []);
-        $invalidOffers = data_get($appointmentOffers, 'invalid_offers', []);
+        $offersCount = count(data_get($appointmentOffers, 'allOfferValues', []));
+        $validOffers = data_get($appointmentOffers, 'validOffers', []);
+        $invalidOffers = data_get($appointmentOffers, 'invalidOffers', []);
         $validOffersCount = count($validOffers);
         $invalidOffersCount = count($invalidOffers);
 
@@ -456,7 +487,7 @@ class AppointmentService extends BaseService
         $responseData = json_encode(collect($response->getData())->first(), JSON_THROW_ON_ERROR);
         $validOffersJson = json_encode($validOffers, JSON_THROW_ON_ERROR);
         $invalidOffersJson = json_encode($invalidOffers, JSON_THROW_ON_ERROR);
-        $bestOfferJson = json_encode(data_get($appointmentOffers, 'best_offer', []), JSON_THROW_ON_ERROR);
+        $bestOfferJson = json_encode(data_get($appointmentOffers, 'bestOffer', []), JSON_THROW_ON_ERROR);
         $summary = data_get($appointmentOffers, 'summary', '');
 
         // Find the appointment and update it
@@ -563,7 +594,9 @@ class AppointmentService extends BaseService
     {
         try {
             $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
+            $appointmentRequestStatus = AppointmentRequestStatus::from(data_get($appointmentRequest, 'status'));
 
+            // applies to accept, decline and check
             if (!$appointmentRequest) {
                 Log::warning('Appointment request not found', compact('appointmentRequestId'));
                 return [
@@ -574,6 +607,7 @@ class AppointmentService extends BaseService
 
             $offersCollection = collect($appointmentRequest->valid_offers);
 
+            // applies to accept, decline and check
             if ($offersCollection->isEmpty()) {
                 Log::warning('No valid offers found for appointment request', compact('appointmentRequestId'));
                 return [
@@ -582,6 +616,7 @@ class AppointmentService extends BaseService
                 ];
             }
 
+            // applies only to accept
             if ($isAcceptRequest && !$offersCollection->contains('id', $appointmentOfferId)) {
                 Log::warning('Invalid appointment offer ID', [
                     'appointmentOfferId' => $appointmentOfferId,
@@ -593,13 +628,20 @@ class AppointmentService extends BaseService
                 ];
             }
 
-            if (AppointmentRequestStatus::from(data_get($appointmentRequest, 'status')) !== AppointmentRequestStatus::UNACKNOWLEDGED) {
+            // For accept requests: only allow UNACKNOWLEDGED or CHECKED status
+            // For decline/check requests: only allow UNACKNOWLEDGED status
+            $validStatuses = $isAcceptRequest
+                ? [AppointmentRequestStatus::UNACKNOWLEDGED, AppointmentRequestStatus::CHECKED]
+                : [AppointmentRequestStatus::UNACKNOWLEDGED];
+
+            if (!in_array($appointmentRequestStatus, $validStatuses, true)) {
                 Log::warning('Appointment request is no longer in a valid status', ['status' => $appointmentRequest->status]);
                 return [
                     'message' => 'Appointment Request ID is no longer valid for check',
                     'status' => 406
                 ];
             }
+
 
             if ($appointmentRequest->offer_expiry_datetime->isPast()) {
                 Log::warning('Appointment request has expired', ['expiry' => $appointmentRequest->offer_expiry_datetime]);
