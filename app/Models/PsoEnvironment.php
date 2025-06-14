@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * 
  *
- * @mixin Builder
  * @property string $id
  * @property string $user_id
  * @property string|null $name

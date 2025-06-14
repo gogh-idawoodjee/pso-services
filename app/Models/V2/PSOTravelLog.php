@@ -15,10 +15,8 @@ use JsonException;
 // Optional PHPDoc for better IDE support
 
 /**
+ * 
  *
- *
- * @property TravelLogStatus $status
- * @property string|null $travel_detail_request_id
  * @property string $id
  * @property string|null $input_reference
  * @property string|null $address_from
@@ -26,6 +24,7 @@ use JsonException;
  * @property string|null $google_response
  * @property string|null $input_payload
  * @property string|null $output_payload
+ * @property TravelLogStatus|null $status
  * @property string|null $pso_response
  * @property string|null $response_time
  * @property string|null $transfer_stats
@@ -39,6 +38,7 @@ use JsonException;
  * @property-read string|null $pso_distance
  * @property-read string|null $pso_time
  * @property-read string|null $pso_time_formatted
+ * @property-read string|null $travel_detail_request_id
  * @method static Builder<static>|PSOTravelLog newModelQuery()
  * @method static Builder<static>|PSOTravelLog newQuery()
  * @method static Builder<static>|PSOTravelLog query()

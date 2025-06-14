@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- *
+ * 
  *
  * @property-read mixed $is_valid_token
  * @method static Builder<static>|Token newModelQuery()

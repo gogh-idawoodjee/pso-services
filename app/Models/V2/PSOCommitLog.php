@@ -10,16 +10,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * 
  *
- *
- * @mixin Builder
  * @property string $id
- * @property string $input_reference
- * @property string $pso_suggestions
- * @property string $output_payload
- * @property string $pso_response
- * @property string $response_time
- * @property string $transfer_stats
+ * @property string|null $input_reference
+ * @property string|null $pso_suggestions
+ * @property string|null $output_payload
+ * @property string|null $pso_response
+ * @property string|null $response_time
+ * @property string|null $transfer_stats
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @method static Builder<static>|PSOCommitLog newModelQuery()

@@ -2,6 +2,7 @@
 
 namespace App\Models\V2;
 
+use App\Facades\ShortCode;
 use App\Traits\Uuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,13 +11,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * 
  *
- *
- * @method static Builder|static where(string $column, mixed $operator = null, mixed $value = null)
- * @method static Builder|static query()
- * @method static Model|static create(array $attributes = [])
  * @property string $id
  * @property string|null $run_id
+ * @property string $short_code
  * @property string $appointment_request
  * @property string $appointment_request_id
  * @property int $status
@@ -31,6 +30,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $appointment_template_duration
  * @property Carbon|null $appointment_template_datetime
  * @property Carbon $offer_expiry_datetime
+ * @property string|null $cleanup_datetime
+ * @property int|null $required_manual_cleanup
  * @property string|null $appointment_response
  * @property string|null $valid_offers
  * @property string|null $invalid_offers
@@ -53,6 +54,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @method static Builder<static>|PSOAppointment newModelQuery()
  * @method static Builder<static>|PSOAppointment newQuery()
+ * @method static Builder<static>|PSOAppointment query()
  * @method static Builder<static>|PSOAppointment whereAcceptDeclineDatetime($value)
  * @method static Builder<static>|PSOAppointment whereAcceptDeclineInputReferenceId($value)
  * @method static Builder<static>|PSOAppointment whereAcceptedOffer($value)
@@ -72,6 +74,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|PSOAppointment whereAppointmentTemplateId($value)
  * @method static Builder<static>|PSOAppointment whereBaseUrl($value)
  * @method static Builder<static>|PSOAppointment whereBestOffer($value)
+ * @method static Builder<static>|PSOAppointment whereCleanupDatetime($value)
  * @method static Builder<static>|PSOAppointment whereCreatedAt($value)
  * @method static Builder<static>|PSOAppointment whereDatasetId($value)
  * @method static Builder<static>|PSOAppointment whereId($value)
@@ -79,7 +82,9 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|PSOAppointment whereInputRequest($value)
  * @method static Builder<static>|PSOAppointment whereInvalidOffers($value)
  * @method static Builder<static>|PSOAppointment whereOfferExpiryDatetime($value)
+ * @method static Builder<static>|PSOAppointment whereRequiredManualCleanup($value)
  * @method static Builder<static>|PSOAppointment whereRunId($value)
+ * @method static Builder<static>|PSOAppointment whereShortCode($value)
  * @method static Builder<static>|PSOAppointment whereSlotUsageRuleId($value)
  * @method static Builder<static>|PSOAppointment whereStatus($value)
  * @method static Builder<static>|PSOAppointment whereSummary($value)
@@ -162,5 +167,6 @@ class PSOAppointment extends Model
             get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
         );
     }
+
 
 }

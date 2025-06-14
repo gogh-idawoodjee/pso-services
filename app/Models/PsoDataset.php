@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * 
  *
- * @mixin Builder
  * @property string $id
  * @property string $pso_environment_id
  * @property string $user_id

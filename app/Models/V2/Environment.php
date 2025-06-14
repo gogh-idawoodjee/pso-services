@@ -14,7 +14,7 @@ use Override;
 
 
 /**
- *
+ * 
  *
  * @property string $id
  * @property string $account_id

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * 
  *
- * @mixin Builder
  * @property string $id
  * @property string $name
  * @property string $pso_environment_id
