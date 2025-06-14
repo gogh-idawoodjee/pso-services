@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
 use App\Http\Requests\Api\V2\AppointmentRequest;
 
+use App\Http\Resources\AppointmentResource;
+use App\Models\V2\PSOAppointment;
 use App\Services\V2\AppointmentService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
@@ -62,9 +64,9 @@ class AppointmentController extends Controller
     /**
      * Get Appointment Details
      */
-    public function show(string $AppointmentRequestId): JsonResponse
+    public function show(PSOAppointment $appointmentRequestId): JsonResponse
     {
-        // todo implement this method
+        return $this->ok(new AppointmentResource($appointmentRequestId));
     }
 
 
