@@ -3,7 +3,8 @@
 namespace App\Providers;
 
 use App\Helpers\PSOHelper;
-use App\Models\ExternalSanctumToken;
+use App\Helpers\ShortCodeGenerator;
+use App\Models\V2\ExternalSanctumToken;
 use GoogleMaps\Facade\GoogleMapsFacade;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
+
+        $this->app->singleton('shortcode', function () {
+            return new ShortCodeGenerator();
+        });
 
         if ($this->app->environment('local')) {
 //        $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
