@@ -92,6 +92,19 @@ class ResourceService extends BaseService
 
     }
 
+    public function updateUnavailablity(): JsonResponse|null
+    {
+        try {
+            // assume we have unavailabilities provided
+            $unavailabilties = data_get($this->data, 'data.unavailability_id');
+            // get the current schedule
+
+        } catch (Exception $e) {
+            $this->LogError($e, __METHOD__, __CLASS__);
+            return $this->error('An unexpected error occurred', 500);
+        }
+    }
+
     public function createUnavailability(): JsonResponse|null
     {
         try {
@@ -268,7 +281,7 @@ class ResourceService extends BaseService
 
     }
 
-    public function getRelatedItemsForResource(array $data, string|int $resourceId, $resourceEntity): array
+    private function getRelatedItemsForResource(array $data, string|int $resourceId, $resourceEntity): array
     {
 
         if ($resourceEntity === 'region') {
@@ -385,7 +398,6 @@ class ResourceService extends BaseService
 
 
     /**
-     * @throws JsonException
      */
     public function getResourceList(string $datasetId, string $baseUrl): self
     {
