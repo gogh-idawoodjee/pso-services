@@ -2,7 +2,6 @@
 
 namespace App\Models\V2;
 
-use App\Models\ExternalSanctumToken;
 use App\Models\User;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property array<array-key, mixed>|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read ExternalSanctumToken|null $token
+ * @property-read \App\Models\V2\ExternalSanctumToken|null $token
  * @property-read User|null $user
  * @method static Builder<static>|TokenUsageLog newModelQuery()
  * @method static Builder<static>|TokenUsageLog newQuery()
