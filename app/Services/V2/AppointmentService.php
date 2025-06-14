@@ -7,6 +7,7 @@ use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\AppointmentRequestStatus;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
+use App\Facades\ShortCode;
 use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
 use App\Models\V2\PSOAppointment;
@@ -17,7 +18,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use JsonException;
 use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
@@ -34,16 +37,17 @@ class AppointmentService extends BaseService
     {
 
         $runId = Uuid::uuid4()->toString();
+        $activitySuffix = ShortCode::encodeUuid($runId);
 
         try {
-            $payload = AppointmentRequest::make($this->data);
+            $payload = AppointmentRequest::make($this->data, $activitySuffix);
 
             $environmentData = data_get($this->data, 'environment');
             $timezone = data_get($this->data, 'timezone');
 
             if ($this->sessionToken) {
 
-                $this->createAppointmentRecord($runId, $this->data, $payload);
+                $this->createAppointmentRecord($runId, $this->data, $payload, $activitySuffix);
                 $psoPayload = $this->buildPayload($payload);
 
                 $psoResponse = $this->sendToPso(
@@ -81,10 +85,20 @@ class AppointmentService extends BaseService
             $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
             $appointmentOfferId = data_get($this->data, 'data.appointmentOfferId');
             $environmentData = data_get($this->data, 'environment');
+            $appointmentRequestLog = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
+            $validOffers = collect(data_get($appointmentRequestLog, 'valid_offers'));
+            $selectedOffer = $validOffers->firstWhere('id', $appointmentOfferId);
+            $activity = data_get($appointmentRequestLog, 'activity'); // the activity JSON
+            $suffix = data_get($appointmentRequestLog, 'short_code');
+            $activityId = data_get($appointmentRequestLog, 'activity_id');
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
 
-            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
+            $inputReference = InputReferenceBuilder::make(
+                data_get($this->data, 'environment.datasetId'))
+                ->inputType(InputMode::CHANGE)
+                ->description('Accept and Book Appointment for ' . $activityId . ' with appointment request ID ' . $appointmentRequestId)
+                ->build();
             // input ref doesn't exist yet, lolzers
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -96,19 +110,16 @@ class AppointmentService extends BaseService
                 return $this->error(data_get($acceptOffer, 'message'), data_get($acceptOffer, 'status'));
             }
 
+            // todo delete the old activity ?? should we just rely on the background job to delete the old activity?
+            // once we delete the old activity set cleanup_datetime to now and required_manual_cleanup to false
 
-            // need to get sla_start and sla_end from the offer sent in ✅
-            // get the prospective resource ID ✅
-            // format the window for readable format ✅
-
-            // build the activity payload again (maybe take it from appointment request or store it correctly)
-
-            // delete the old activity
-            $appointmentRequestLog = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
-            $validOffers = collect(data_get($appointmentRequestLog, 'valid_offers'));
-            $selectedOffer = $validOffers->firstWhere('id', $appointmentOfferId);
-            $activity = data_get($appointmentRequestLog, 'activity');
-
+            $bookAppointmentPayload = $this->createBookAppointmentPayload(
+                $activity,
+                $activityId,
+                $suffix,
+                data_get($selectedOffer, 'windowStartDatetime'),
+                data_get($selectedOffer, 'windowEndDatetime')
+            );
 
             $duration = data_get($activity, 'Activity_Status.duration');
 
@@ -118,13 +129,9 @@ class AppointmentService extends BaseService
 
             if ($duration) {
                 try {
-                    Log::debug('Adding duration', compact('duration'));
                     $interval = new DateInterval($duration);
                     $allocationFinish->add($interval);
-                    Log::debug('After adding duration', [
-                        'start' => $allocationStart->toIso8601String(),
-                        'finish' => $allocationFinish->toIso8601String()
-                    ]);
+
                 } catch (Exception $e) {
                     Log::warning('Invalid duration format', [
                         'duration' => $duration,
@@ -135,7 +142,13 @@ class AppointmentService extends BaseService
             }
 
 
+            $payload = array_merge($payload, (array)$bookAppointmentPayload);
+
+
             if ($this->sessionToken) {
+                // need to add the activity details to the payload first
+
+
                 $psoPayload = $this->buildPayload($payload);
 
                 $psoResponse = $this->sendToPso(
@@ -172,6 +185,55 @@ class AppointmentService extends BaseService
             return $this->error('An unexpected error occurred', 500);
         }
     }
+
+    private function overrideActivitySlaTimestamps(array|object $sla, string $slaStart, string $slaEnd): array|object
+    {
+        if (is_array($sla)) {
+            $sla['datetime_start'] = $slaStart;
+            $sla['datetime_end'] = $slaEnd;
+        } elseif (true) {
+            $sla->datetime_start = $slaStart;
+            $sla->datetime_end = $slaEnd;
+        }
+
+        return $sla;
+    }
+
+
+    private function createBookAppointmentPayload($activity, string $activityId, string $suffix, $slaStart, $slaEnd)
+    {
+        $search = $activityId . $suffix;
+        $replace = $activityId;
+
+        if (is_array($activity)) {
+            foreach ($activity as $key => $value) {
+                if ($key === 'Activity_SLA' && is_array($value)) {
+                    $value = $this->overrideActivitySlaTimestamps($value, $slaStart, $slaEnd);
+                }
+
+                $activity[$key] = $this->createBookAppointmentPayload($value, $activityId, $suffix, $slaStart, $slaEnd);
+            }
+        } elseif (is_object($activity)) {
+            foreach ($activity as $key => $value) {
+                if ($key === 'Activity_SLA' && is_object($value)) {
+                    $value = $this->overrideActivitySlaTimestamps($value, $slaStart, $slaEnd);
+                }
+
+                $activity->$key = $this->createBookAppointmentPayload($value, $activityId, $suffix, $slaStart, $slaEnd);
+            }
+        } elseif (is_string($activity)) {
+            if ($activity === $search) {
+                return $replace;
+            }
+
+            if (str_contains($activity, $search)) {
+                return Str::replace($search, $replace, $activity);
+            }
+        }
+
+        return $activity;
+    }
+
 
     private function deleteActivity(string $activityId, array $environmentData, #[SensitiveParameter] string $sessionToken): void
     {
@@ -218,6 +280,9 @@ class AppointmentService extends BaseService
             $validOffers = data_get($appointmentRequestLog, 'total_valid_offers_returned');
             $invalidOffers = data_get($appointmentRequestLog, 'total_invalid_offers_returned');
             $activityId = data_get($appointmentRequestLog, 'activity_id');
+
+            // todo delete the old activity
+            // once we delete the old activity set cleanup_datetime to now and required_manual_cleanup to false
 
 
             if ($this->sessionToken) {
@@ -423,7 +488,7 @@ class AppointmentService extends BaseService
         $start = Carbon::parse(data_get($offer, 'window_start_datetime'))->setTimezone($timezone);
         $end = Carbon::parse(data_get($offer, 'window_end_datetime'))->setTimezone($timezone);
 
-        $newcollect = collect([
+        $summary = collect([
             'id' => data_get($offer, 'id'),
             'windowStartDatetime' => data_get($offer, 'window_start_datetime'),
             'windowEndDatetime' => data_get($offer, 'window_end_datetime'),
@@ -438,17 +503,19 @@ class AppointmentService extends BaseService
         ]);
 
         if ($bestOfferId !== null) {
-            $newcollect->put('isBestOffer', data_get($offer, 'id') === $bestOfferId);
+            $summary->put('isBestOffer', data_get($offer, 'id') === $bestOfferId);
         }
 
-        return $newcollect;
+        return $summary;
     }
 
     /**
      * @throws JsonException
      */
-    private function createAppointmentRecord(string $runId, array $data, array $payload): void
+    private function createAppointmentRecord(string $runId, array $data, array $payload, string $suffix): void
     {
+        $data = $this->encryptSensitiveEnvironmentFields($data);
+
         // Extract common data from the payload
         $appointmentRequest = data_get($payload, 'Appointment_Request');
 
@@ -459,11 +526,13 @@ class AppointmentService extends BaseService
         // Create the appointment record
         PSOAppointment::create([
             'run_id' => $runId,
+            'short_code' => $suffix,
+            'service_api_input'=> json_encode($data, JSON_THROW_ON_ERROR),
             'appointment_request_id' => data_get($appointmentRequest, 'id'),
             'appointment_request' => json_encode($payload, JSON_THROW_ON_ERROR),
             'input_request' => json_encode($inputRequest, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
             'status' => AppointmentRequestStatus::UNACKNOWLEDGED->value,
-            'activity' => json_encode($activityData, JSON_THROW_ON_ERROR),
+            'activity' => json_encode($activityData, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
             'activity_id' => data_get($data, 'data.activityId'),
             'base_url' => data_get($data, 'environment.baseUrl'),
             'dataset_id' => data_get($data, 'environment.datasetId'),
@@ -475,6 +544,25 @@ class AppointmentService extends BaseService
             'offer_expiry_datetime' => Carbon::now()->addMinutes(5)->toAtomString(),
         ]);
     }
+
+
+    private function encryptSensitiveEnvironmentFields(array $data): array
+    {
+        if (!isset($data['environment'])) {
+            return $data;
+        }
+
+        $sensitiveKeys = ['username', 'password', 'token'];
+
+        foreach ($sensitiveKeys as $key) {
+            if (!empty($data['environment'][$key])) {
+                $data['environment'][$key] = Crypt::encryptString($data['environment'][$key]);
+            }
+        }
+
+        return $data;
+    }
+
 
     /**
      * @throws JsonException
@@ -644,7 +732,7 @@ class AppointmentService extends BaseService
             if (!in_array($appointmentRequestStatus, $validStatuses, true)) {
                 Log::warning('Appointment request is no longer in a valid status', ['status' => $appointmentRequest->status]);
                 return [
-                    'message' => 'Appointment Request ID is no longer valid for check',
+                    'message' => 'Appointment Request ID is no longer valid for ' . ($isAcceptRequest ? 'accepting' : 'check'),
                     'status' => 406
                 ];
             }

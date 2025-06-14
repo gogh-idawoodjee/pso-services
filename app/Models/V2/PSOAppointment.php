@@ -2,7 +2,6 @@
 
 namespace App\Models\V2;
 
-use App\Facades\ShortCode;
 use App\Traits\Uuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $run_id
  * @property string $short_code
  * @property string $appointment_request
+ * @property string $service_api_input
  * @property string $appointment_request_id
  * @property int $status
  * @property string $activity
@@ -84,6 +84,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|PSOAppointment whereOfferExpiryDatetime($value)
  * @method static Builder<static>|PSOAppointment whereRequiredManualCleanup($value)
  * @method static Builder<static>|PSOAppointment whereRunId($value)
+ * @method static Builder<static>|PSOAppointment whereServiceApiInput($value)
  * @method static Builder<static>|PSOAppointment whereShortCode($value)
  * @method static Builder<static>|PSOAppointment whereSlotUsageRuleId($value)
  * @method static Builder<static>|PSOAppointment whereStatus($value)
@@ -162,6 +163,13 @@ class PSOAppointment extends Model
     }
 
     protected function bestOffer(): Attribute
+    {
+        return Attribute::make(
+            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    protected function serviceApiInput(): Attribute
     {
         return Attribute::make(
             get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),

@@ -17,8 +17,17 @@ class AppointmentRequest
 
     // so this badboy needs to make the appt request object plus the activity object and children
     // then send them both to the pso api
-    public static function make(array $appointmentData, int $psoApiVersion = 1): array
+    public static function make(array $appointmentData, string|null $suffix = null, int $psoApiVersion = 1): array
     {
+
+
+        if ($suffix !== null) {
+            $originalActivityId = data_get($appointmentData, 'data.activityId');
+            if ($originalActivityId !== null) {
+                // add a suffix if it's sent
+                Arr::set($appointmentData, 'data.activityId', $originalActivityId . $suffix);
+            }
+        }
 
         $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toAtomString();
         $appointmentRequest = [
