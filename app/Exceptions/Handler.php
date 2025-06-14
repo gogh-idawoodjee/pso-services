@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use App\Models\V2\PSOAppointment;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Psr\Log\LogLevel;
 use Throwable;
@@ -11,7 +13,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of exception types with their corresponding custom log levels.
      *
-     * @var array<class-string<\Throwable>, LogLevel::*>
+     * @var array<class-string<Throwable>, LogLevel::*>
      */
     protected $levels = [
         //
@@ -20,7 +22,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array<int, class-string<\Throwable>>
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -53,6 +55,16 @@ class Handler extends ExceptionHandler
 //                app('sentry')->captureException($e);
 //            }
 //        });
+
+        $this->renderable(function (ModelNotFoundException $e, $request) {
+            if ($request->expectsJson() && $e->getModel() === PSOAppointment::class) {
+                return response()->json([
+                    'message' => 'Appointment not found.',
+                    'status' => 404,
+                ], 404);
+            }
+        });
+
     }
 
 }
