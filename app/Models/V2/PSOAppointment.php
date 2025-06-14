@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $appointment_request
  * @property string $appointment_request_id
  * @property int $status
- * @property json $activity
+ * @property string $activity
  * @property string $activity_id
  * @property string $base_url
  * @property string $dataset_id
@@ -108,6 +108,11 @@ class PSOAppointment extends Model
         'appointed_check_datetime' => 'datetime',
 
     ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'appointment_request_id';
+    }
 
     protected function inputRequest(): Attribute
     {
