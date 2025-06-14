@@ -102,7 +102,7 @@ class TravelService extends BaseService
         ]);
 
         // check the log after 2 minutes
-        TravelLogReview::dispatch($this->travelLogId)->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
+        TravelLogReview::dispatch($travelLog)->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
 
         return $apiResponse;
     }
