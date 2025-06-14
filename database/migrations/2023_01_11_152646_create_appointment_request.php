@@ -31,6 +31,8 @@ return new class extends Migration {
             $table->string('appointment_template_duration')->nullable();
             $table->dateTime('appointment_template_datetime')->nullable();
             $table->dateTime('offer_expiry_datetime');
+            $table->dateTime('cleanup_datetime')->nullable();
+            $table->smallInteger('required_manual_cleanup')->nullable();
 
 
             // fields upon offers returned
@@ -43,7 +45,7 @@ return new class extends Migration {
             $table->smallInteger('total_valid_offers_returned')->nullable();
             $table->smallInteger('total_invalid_offers_returned')->nullable();
 
-            // fields up on check
+            // fields upon check
             $table->smallInteger('appointed_check_offer_id')->nullable();
             $table->smallInteger('appointed_check_complete')->nullable();
             $table->smallInteger('appointed_check_result')->nullable();
