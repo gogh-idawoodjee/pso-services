@@ -2,7 +2,12 @@
 
 namespace App\Facades;
 
-class ShortCode
-{
+use Illuminate\Support\Facades\Facade;
 
+class ShortCode extends Facade
+{
+    protected static function getFacadeAccessor(): string
+    {
+        return 'shortcode';
+    }
 }
