@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 
-use App\Http\Requests\Api\V2\DeleteObjectRequest;
+use App\Classes\AuthenticatedPsoActionService;
 use App\Models\V2\PSOAppointment;
 use App\Services\V2\DeleteService;
 use App\Traits\V2\PSOAssistV2;
@@ -21,11 +21,14 @@ class DeleteTempActivity implements ShouldQueue
 
     public function __construct(public PSOAppointment $appointment)
     {
+        Log::info("delete has been called");
     }
 
     public function handle(): void
     {
         Log::info("Running delayed task for PSO Appointment Temp Activity Delete: {$this->appointment->appointment_request_id}");
+        Log::info('cleanupdatetime: ' . $this->appointment->cleanup_datetime);
+        Log::info('is in the past: ' . $this->appointment->offer_expiry_datetime->isPast());
 
         if (!$this->appointment->cleanup_datetime && $this->appointment->offer_expiry_datetime->isPast()) {
             // Delete the activity
@@ -57,16 +60,19 @@ class DeleteTempActivity implements ShouldQueue
                 ],
             ];
 
-            $response = $this->executeAuthenticatedAction($request, function (DeleteObjectRequest $req) {
-                // so we have the token now in $req->input('environment.token')
-                // we should send that the activity service? // all our services should accept a token
-                $deleteService = new DeleteService(
-                    $req->filled('environment.token') ? $req->input('environment.token') : null,
-                    $req->validated()
-                );
+            $psoAuth = app(AuthenticatedPsoActionService::class);
 
-                return $deleteService->deleteObject();
-            });
+            $response = $psoAuth->run(
+                data_get($deletePayloadToServicesApi, 'environment'),
+                function (string|null $token) use ($deletePayloadToServicesApi) {
+                    // This is where you do what the controller would do after getting a token
+                    return (new DeleteService($token, $deletePayloadToServicesApi))->deleteObject(); // return JsonResponse
+                }
+            );
+
+            // update the record
+            $this->appointment->update(['cleanup_datetime' => now(), 'required_manual_cleanup' => true]);
+
 
             Log::info("PSO Appointment Temp Activity: {$this->appointment->activity_id} offers have expired, not been actioned and is being deleted");
 

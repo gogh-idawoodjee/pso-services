@@ -2,7 +2,8 @@
 
 namespace App\Traits\V2;
 
-use App\Classes\V2\PSOAuthService;
+use App\Classes\AuthenticatedPsoActionService;
+
 use App\Classes\V2\SendOrSimulateBuilder;
 use App\Constants\PSOConstants;
 use App\Enums\InputMode;
@@ -16,8 +17,6 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Exception;
 use JsonException;
 use SensitiveParameter;
 
@@ -257,49 +256,19 @@ trait PSOAssistV2
      */
     protected function executeAuthenticatedAction(Request $request, callable $action): JsonResponse
     {
-        // Get normalized auth details from either request body or headers
         $authDetails = $this->getAuthDetails($request);
 
-        // Check if auth is required (sendToPso must be true)
-        if (!data_get($authDetails, 'sendToPso')) {
-            // No auth needed, just run the action
+        return app(AuthenticatedPsoActionService::class)->run($authDetails, function (array $auth) use ($request, $action) {
+            // Merge the token back into request for the action
+            $request->merge([
+                'environment' => array_merge(
+                    (array)$request->input('environment', []),
+                    ['token' => data_get($auth, 'token')]
+                ),
+            ]);
+
             return $action($request);
-        }
-
-        $authService = app(PSOAuthService::class);
-
-        // If token already present, skip getting token and run action directly
-        if (data_get($authDetails, 'token')) {
-            return $action($request);
-        }
-
-        try {
-            // Attempt to get a fresh token from the auth service
-            $response = $authService->getToken($authDetails);
-
-            if ($response->status() === 200) {
-                // Extract token from response data
-                $token = data_get($response->getData(), 'message.SessionToken');
-
-                // Merge token into request's environment input for downstream consistency
-                $request->merge([
-                    'environment' => array_merge(
-                        (array)$request->input('environment', []),
-                        compact('token')
-                    ),
-                ]);
-
-                // Run the action now that token is present
-                return $action($request);
-            }
-
-
-            return $response;
-
-        } catch (Exception $e) {
-            Log::error('Auth error: ' . $e->getMessage());
-            return $this->error('Authentication failed', 500);
-        }
+        });
     }
 
 

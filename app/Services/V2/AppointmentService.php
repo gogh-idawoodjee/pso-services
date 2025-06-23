@@ -10,6 +10,7 @@ use App\Enums\PsoEndpointSegment;
 use App\Facades\ShortCode;
 use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
+use App\Jobs\DeleteTempActivity;
 use App\Models\V2\PSOAppointment;
 use Carbon\Carbon;
 use DateInterval;
@@ -157,6 +158,9 @@ class AppointmentService extends BaseService
                     $this->sessionToken,
                     PsoEndpointSegment::APPOINTMENT
                 );
+
+                // since it's been sent we need to dispatch the cleanup
+                $this->scheduleCleanup($appointmentRequestLog);
 
                 // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
@@ -527,7 +531,7 @@ class AppointmentService extends BaseService
         PSOAppointment::create([
             'run_id' => $runId,
             'short_code' => $suffix,
-            'service_api_input'=> json_encode($data, JSON_THROW_ON_ERROR),
+            'service_api_input' => json_encode($data, JSON_THROW_ON_ERROR),
             'appointment_request_id' => data_get($appointmentRequest, 'id'),
             'appointment_request' => json_encode($payload, JSON_THROW_ON_ERROR),
             'input_request' => json_encode($inputRequest, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
@@ -760,5 +764,10 @@ class AppointmentService extends BaseService
         }
     }
 
+    private function scheduleCleanup(PSOAppointment $appointmentRequestLog, int $timeout): void
+    {
+        DeleteTempActivity::dispatch($appointmentRequestLog)
+            ->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
+    }
 
 }
