@@ -59,7 +59,7 @@ class DeleteObject
                 ];
             })->all();
 
-        $payload['objectType'] = data_get($registry, 'entity');
+        $payload['object_type_id'] = data_get($registry, 'entity');
 
         if ($isRotaObject) {
             $payload['delete_row'] = true;
