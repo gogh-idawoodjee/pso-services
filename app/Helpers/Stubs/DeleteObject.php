@@ -21,15 +21,11 @@ class DeleteObject
             throw new RuntimeException('Object type is missing from request.');
         }
 
-        $key = collect(PSOObjectRegistry::all())
-            ->filter(static fn($entry) => strcasecmp($entry['label'], $label) === 0)
-            ->keys()
-            ->first();
+        $key = PSOObjectRegistry::resolveKey($label);
 
         if (!$key) {
             Log::error("Object type '{$label}' not found in registry.");
             throw new RuntimeException("Object type '{$label}' not found in registry.");
-
         }
 
         $registry = PSOObjectRegistry::get($key);

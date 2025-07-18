@@ -23,9 +23,11 @@ abstract class BaseService
         $this->data = $data;
     }
 
-    public function LogError(Exception $e, $method, $class): void
+    public function LogError(Exception|string $e, $method, $class): void
     {
-        Log::error('Unexpected error in ' . $method . '. This method is inside ' . $class . ': ' . $e->getMessage());
+        $message = $e instanceof Exception ? $e->getMessage() : $e;
+        Log::error('Unexpected error in ' . $method . '. This method is inside ' . $class . ': ' . $message);
     }
+
 
 }

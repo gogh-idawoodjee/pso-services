@@ -112,4 +112,16 @@ class PSOObjectRegistry
             ->mapWithKeys(static fn($item, $key) => [$key => $item['label']])
             ->toArray();
     }
+
+    public static function resolveKey(string $labelOrEntity): string|null
+    {
+        return collect(self::all())
+            ->filter(static fn($entry) =>
+                strcasecmp($entry['label'], $labelOrEntity) === 0 ||
+                strcasecmp($entry['entity'], $labelOrEntity) === 0
+            )
+            ->keys()
+            ->first();
+    }
+
 }

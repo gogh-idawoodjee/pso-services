@@ -17,7 +17,12 @@ class DeleteObjectRequest extends BaseFormRequest
             'data.objectType' => [
                 'required',
                 'string',
-                Rule::in(array_values(PSOObjectRegistry::forSelect())),
+                Rule::in(
+                    array_merge(
+                        collect(PSOObjectRegistry::all())->pluck('label')->toArray(),
+                        collect(PSOObjectRegistry::all())->pluck('entity')->toArray()
+                    )
+                ),
             ],
         ];
 
@@ -26,7 +31,10 @@ class DeleteObjectRequest extends BaseFormRequest
 
         if ($objectTypeLabel) {
             $key = collect(PSOObjectRegistry::all())
-                ->filter(fn($entry) => strtolower($entry['label']) === strtolower($objectTypeLabel))
+                ->filter(static fn($entry) =>
+                    strtolower($entry['label']) === strtolower($objectTypeLabel)
+                    || strtolower($entry['entity']) === strtolower($objectTypeLabel)
+                )
                 ->keys()
                 ->first();
 
@@ -55,31 +63,30 @@ class DeleteObjectRequest extends BaseFormRequest
     {
         $validator->after(function ($validator) {
             $data = $this->get('data', []);
-            $label = $data['objectType'] ?? null;
+            $rawObjectType = $data['objectType'] ?? null;
 
-            if (!$label) {
+            if (!$rawObjectType) {
                 return;
             }
 
-            // 🔁 Map label back to registry key
-            $key = collect(PSOObjectRegistry::all())
-                ->filter(fn($entry) => strtolower($entry['label']) === strtolower($label))
-                ->keys()
-                ->first();
+            // Use the new resolveKey helper to get the registry key
+            $key = PSOObjectRegistry::resolveKey($rawObjectType);
 
             if (!$key) {
-                $validator->errors()->add('data.objectType', "Unknown object type label '{$label}'");
+                $validator->errors()->add('data.objectType', "Unknown object type label '{$rawObjectType}'");
                 return;
             }
 
             $registry = PSOObjectRegistry::get($key);
-
-            if (!$registry) {
-                $validator->errors()->add('data.objectType', 'Invalid object type provided.');
-                return;
-            }
-
             $expectedLabel = $registry['label'] ?? null;
+
+            // Normalize the label in the request data
+            $this->merge([
+                'data' => array_merge($data, [
+                    'objectType' => $expectedLabel,
+                ]),
+            ]);
+
             $providedLabel = $data['label'] ?? null;
 
             if (
@@ -89,12 +96,12 @@ class DeleteObjectRequest extends BaseFormRequest
             ) {
                 $validator->errors()->add(
                     'data.label',
-                    "The label '{$providedLabel}' does not match the expected label '{$expectedLabel}' for object type '{$label}'."
+                    "The label '{$providedLabel}' does not match the expected label '{$expectedLabel}' for object type '{$rawObjectType}'."
                 );
             }
 
             $attributes = $registry['attributes'] ?? [];
-            $friendlyLabel = $expectedLabel ?? $label;
+            $friendlyLabel = $expectedLabel ?? $rawObjectType;
             $attributeErrors = [];
 
             foreach ($attributes as $index => $attribute) {
@@ -132,6 +139,8 @@ class DeleteObjectRequest extends BaseFormRequest
             }
         });
     }
+
+
 
     protected function matchesExpectedType(mixed $value, string|null $expectedType): bool
     {
