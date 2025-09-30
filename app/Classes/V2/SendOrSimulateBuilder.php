@@ -17,11 +17,19 @@ class SendOrSimulateBuilder
     protected bool $addInputReference = false;
     protected string|null $inputReferenceDescription = null;
 
+    protected string|null $resultsUrl = null;
+
 
     public function __construct(
         protected object $caller // the controller or class using the trait
     )
     {
+    }
+
+    public function resultsUrl(string|null $url): static
+    {
+        $this->resultsUrl = $url;
+        return $this;
     }
 
     public function payload(array $payload): static
@@ -83,8 +91,10 @@ class SendOrSimulateBuilder
             $this->rotaUpdateDescription,
 //            $this->notSentArrayKey,
             $this->additionalDetails,
+
             $this->addInputReference,
-            $this->inputReferenceDescription // <— Add this line
+            $this->inputReferenceDescription, // <— Add this line
+            $this->resultsUrl,  // Add this line
         );
     }
 }

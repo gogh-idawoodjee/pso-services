@@ -160,7 +160,7 @@ class AppointmentService extends BaseService
                 );
 
                 // since it's been sent we need to dispatch the cleanup
-                $this->scheduleCleanup($appointmentRequestLog);
+                $this->scheduleCleanup($appointmentRequestLog, 3);
 
                 // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
@@ -287,7 +287,7 @@ class AppointmentService extends BaseService
 
             // todo delete the old activity
             // once we delete the old activity set cleanup_datetime to now and required_manual_cleanup to false
-
+            $this->scheduleCleanup($appointmentRequestLog, 3);
 
             if ($this->sessionToken) {
                 $psoPayload = $this->buildPayload($payload);
@@ -764,10 +764,14 @@ class AppointmentService extends BaseService
         }
     }
 
-    private function scheduleCleanup(PSOAppointment $appointmentRequestLog, int $timeout): void
+    private function scheduleCleanup(PSOAppointment $appointmentRequestLog, int|null $timeout = null): void
     {
+
+        if (!$timeout) {
+            $timeout = config('pso-services.defaults.travel_broadcast_timeout_minutes');
+        }
         DeleteTempActivity::dispatch($appointmentRequestLog)
-            ->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
+            ->delay(now()->addMinutes($timeout));
     }
 
 }

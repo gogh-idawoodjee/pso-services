@@ -82,12 +82,15 @@ class TravelService extends BaseService
 
         // Step 5: Send payload or simulate
         $additionalDetails = $this->getAdditionalDetails();
+// Step 5: Send payload or simulate
+        $details = $this->getAdditionalDetails();
         $apiResponse = $this->sendOrSimulateBuilder()
             ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
             ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
-            ->additionalDetails($additionalDetails)
+            ->additionalDetails($additionalDetails['message'])  // Pass just the message string
+            ->resultsUrl($details['url'])  // Pass just the URL string
             ->send();
 
 
@@ -129,12 +132,19 @@ class TravelService extends BaseService
         return json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
     }
 
-    protected function getAdditionalDetails(): string
+    protected function getAdditionalDetails(): array
     {
         if ($this->sessionToken) {
-            return "To review results, please send a GET request to " . route('travel.analyzer.show', ['id' => $this->travelLogId]);
+            $url = route('travel.analyzer.show', ['id' => $this->travelLogId]);
+            return [
+                'message' => "To review results, please send a GET request to {$url}",
+                'url' => $url
+            ];
         }
-        return "Please ensure environment.sendToPso is set to true to use the analyzer correctly";
+        return [
+            'message' => "Please ensure environment.sendToPso is set to true to use the analyzer correctly",
+            'url' => null
+        ];
     }
 
     protected function buildBroadcast(): array

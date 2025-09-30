@@ -53,7 +53,7 @@ class DeleteService extends BaseService
 
             // Replace objectType in payload with normalized label
             $this->data['data'] = array_merge($this->data['data'], ['objectType' => $label]);
-            
+
 
             // Now call the DeleteObject helper with normalized data
             $delete_input = DeleteObject::make($this->data['data'], $this->isRotaObject);

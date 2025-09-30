@@ -32,9 +32,12 @@ trait PSOAssistV2
      * @param PsoEndpointSegment $segment PSO API endpoint
      * @return JsonResponse Response from PSO
      */
-    public function sendToPso($payload, array $environmentData, #[SensitiveParameter] string $sessionToken, PsoEndpointSegment $segment): JsonResponse
-    {
-
+    public function sendToPso(
+        $payload,
+        array $environmentData,
+        #[SensitiveParameter] string $sessionToken,
+        PsoEndpointSegment $segment
+    ): JsonResponse {
         try {
             $timeout = config('psott.defaults.timeout', 10);
             $baseUrl = data_get($environmentData, 'baseUrl');
@@ -48,9 +51,7 @@ trait PSOAssistV2
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException) {
-
             return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
-
         }
     }
 
@@ -59,17 +60,16 @@ trait PSOAssistV2
      */
 
     public function getPsoData(
-        string                       $datasetId,
-        string                       $baseUrl,
+        string $datasetId,
+        string $baseUrl,
         #[SensitiveParameter] string $sessionToken,
-        PsoEndpointSegment           $segment,
-        string|null                  $resourceId = null,
-        bool                         $includeInput = false,
-        bool                         $includeOutput = false,
-        string|null                  $minDate = null,
-        string|null                  $maxDate = null
-    ): JsonResponse
-    {
+        PsoEndpointSegment $segment,
+        string|null $resourceId = null,
+        bool $includeInput = false,
+        bool $includeOutput = false,
+        string|null $minDate = null,
+        string|null $maxDate = null
+    ): JsonResponse {
         try {
             $timeout = config('psott.defaults.timeout', 10);
 
@@ -109,9 +109,7 @@ trait PSOAssistV2
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException) {
-
             return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
-
         }
     }
 
@@ -131,8 +129,6 @@ trait PSOAssistV2
             'error' => $this->getErrorMessage($statusCode),
             'details' => $errorDetails,
         ], $statusCode);
-
-
     }
 
     /**
@@ -258,38 +254,39 @@ trait PSOAssistV2
     {
         $authDetails = $this->getAuthDetails($request);
 
-        return app(AuthenticatedPsoActionService::class)->run($authDetails, function (array $auth) use ($request, $action) {
-            // Merge the token back into request for the action
-            $request->merge([
-                'environment' => array_merge(
-                    (array)$request->input('environment', []),
-                    ['token' => data_get($auth, 'token')]
-                ),
-            ]);
+        return app(AuthenticatedPsoActionService::class)->run(
+            $authDetails,
+            function (array $auth) use ($request, $action) {
+                // Merge the token back into request for the action
+                $request->merge([
+                    'environment' => array_merge(
+                        (array)$request->input('environment', []),
+                        ['token' => data_get($auth, 'token')]
+                    ),
+                ]);
 
-            return $action($request);
-        });
+                return $action($request);
+            }
+        );
     }
 
 
     /**
      */
     public function sendOrSimulate(
-        array       $payload,
-        array       $environmentData,
+        array $payload,
+        array $environmentData,
         string|null $sessionToken,
-        bool|null   $requiresRotaUpdate = null,
+        bool|null $requiresRotaUpdate = null,
         string|null $rotaUpdateDescription = null,
 //        string|null $notSentArrayKey = null,
         string|null $additionalDetails = null,
-        bool|null   $addInputReference = null,
-        string|null $inputReferenceDescription = null // ← new param
+        bool|null $addInputReference = null,
+        string|null $inputReferenceDescription = null, // ← new param
+        string|null $resultsUrl = null  // Add at the very end
     ): JsonResponse
     {
-
-
         if ($addInputReference) {
-
             $payload['Input_Reference'] =
                 InputReferenceNew::make(data_get($environmentData, 'datasetId'))
                     ->inputType(InputMode::CHANGE)
@@ -300,8 +297,6 @@ trait PSOAssistV2
         $psoPayload = $this->buildPayload($payload);
         $wrappedPayload = $this->buildPayload($payload, 1, true);
         if ($sessionToken) {
-
-
             $psoResponse = $this->sendToPso(
                 $psoPayload,
                 $environmentData,
@@ -323,11 +318,20 @@ trait PSOAssistV2
                     PSOConstants::SOURCE_DATA_PARAM_VALUE
                 );
 
-                $this->sendToPso($this->buildPayload($rotaUpdatePayload), $environmentData, $sessionToken, PsoEndpointSegment::DATA);
+                $this->sendToPso(
+                    $this->buildPayload($rotaUpdatePayload),
+                    $environmentData,
+                    $sessionToken,
+                    PsoEndpointSegment::DATA
+                );
             }
 
             if ($psoResponse->status() < 400) {
-                return $this->sentToPso(['payloadToPso' => $wrappedPayload['payloadToPso'], 'responseFromPso' => $psoResponse->getData()], $additionalDetails);
+                return $this->sentToPso(
+                    ['payloadToPso' => $wrappedPayload['payloadToPso'], 'responseFromPso' => $psoResponse->getData()],
+                    $additionalDetails,
+                    $resultsUrl
+                );
             }
             return $psoResponse;
         }
