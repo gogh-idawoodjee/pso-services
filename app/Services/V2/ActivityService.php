@@ -73,7 +73,7 @@ class ActivityService extends BaseService
                 ->payload($payload)
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)
-                ->includeInputReference()
+                ->includeInputReference('Delete Activities: ' . implode(', ', $activitiesList))
                 ->send();
 
         } catch (Exception $e) {

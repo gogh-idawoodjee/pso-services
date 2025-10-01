@@ -14,13 +14,14 @@ class DeleteService extends BaseService
     protected array $data;
     protected bool $isRotaObject;
 
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data, bool $isRotaObject = false)
-    {
-
+    public function __construct(
+        #[SensitiveParameter] string|null $sessionToken = null,
+        array $data,
+        bool $isRotaObject = false
+    ) {
         parent::__construct($sessionToken, $data);
         $this->data = $data;
         $this->isRotaObject = $isRotaObject;
-
     }
 
     public function deleteObject(): JsonResponse
@@ -61,10 +62,9 @@ class DeleteService extends BaseService
             return $this->sendOrSimulateBuilder()
                 ->payload(['Object_Deletion' => $delete_input])
                 ->environment(data_get($this->data, 'environment'))
-                ->includeInputReference()
+                ->includeInputReference('Delete Object: ' . $label)
                 ->token($this->sessionToken)
                 ->send();
-
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);

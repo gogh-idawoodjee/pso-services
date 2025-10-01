@@ -13,11 +13,12 @@ use App\Helpers\Stubs\TravelDetailRequest;
 use App\Jobs\TravelLogReview;
 use App\Models\V2\PSOTravelLog;
 use App\Traits\V2\PSOAssistV2;
+use Exception;
 use GuzzleHttp\Client;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use JsonException;
+use Log;
 use Ramsey\Uuid\Uuid;
 use SensitiveParameter;
 use Spatie\Geocoder\Geocoder;
@@ -29,6 +30,9 @@ class TravelService extends BaseService
     protected array $data;
     private string $travelLogId;
     private string|null $datasetId;
+    protected array $warnings = [];
+    protected bool $hasGoogleKey = false;
+    protected bool $hasGeocoderKey = false;
 
     /**
      */
@@ -36,13 +40,26 @@ class TravelService extends BaseService
     {
         parent::__construct($sessionToken, $data);
         $this->travelLogId = Uuid::uuid4()->toString();
+
+        // Check if keys exist (either in config or request data)
+        $this->hasGoogleKey = !empty(config('pso-services.settings.google_key'))
+            || !empty(data_get($this->data, 'data.googleApiKey'));
+        $this->hasGeocoderKey = !empty(config('geocoder.key'));
+
+        // Add warnings if keys are missing
+        if (!$this->hasGoogleKey) {
+            $this->warnings[] = 'Google Maps API key is not configured. Distance calculations may be unavailable.';
+        }
+        if (!$this->hasGeocoderKey) {
+            $this->warnings[] = 'Geocoder API key is not configured. Address resolution may be unavailable.';
+        }
     }
 
     /**
      * Process the travel request and return the response
      *
      * @return JsonResponse Response data
-     * @throws JsonException|ConnectionException
+     * @throws JsonException
      */
     public function process(): JsonResponse
     {
@@ -57,16 +74,28 @@ class TravelService extends BaseService
             data_get($this->data, 'data.startDateTime'),
         );
 
-        // Step 2: Resolve addresses and distance
-        [$startAddress, $endAddress] = $this->getAddresses();
+        // Step 2: Resolve addresses and distance (with error handling)
+        [$startAddress, $endAddress, $addressErrors] = $this->getAddresses();
+        if (!empty($addressErrors)) {
+            $this->warnings = array_merge($this->warnings, $addressErrors);
+        }
+
         $googleResults = $this->getDistanceMatrix(
             data_get($this->data, 'data.latFrom'),
             data_get($this->data, 'data.longFrom'),
             data_get($this->data, 'data.latTo'),
-            data_get($this->data, 'data.longTo')
+            data_get($this->data, 'data.longTo'),
+            data_get($this->data, 'data.googleApiKey')
         );
 
-//        dd($googleResults);
+        // Check if distance matrix failed
+        // Only add this warning if we had a key but it still failed
+        // (the specific error will already be in warnings from getDistanceMatrix)
+        if ($googleResults === null && $this->hasGoogleKey && !$this->hasWarning(
+                'Google Distance Matrix'
+            ) && !$this->hasWarning('Google API')) {
+            $this->warnings[] = 'Google Distance Matrix API request failed. Distance/duration data unavailable.';
+        }
 
         // Step 3: Create travel log
         $travelLog = PSOTravelLog::create([
@@ -80,19 +109,16 @@ class TravelService extends BaseService
         // Step 4: Build broadcast structure
         $broadcast = $this->buildBroadcast();
 
-        // Step 5: Send payload or simulate
+        // Step 5: Send payload
         $additionalDetails = $this->getAdditionalDetails();
-// Step 5: Send payload or simulate
-        $details = $this->getAdditionalDetails();
         $apiResponse = $this->sendOrSimulateBuilder()
             ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
             ->includeInputReference('Travel Detail Request: ' . $this->travelLogId)
-            ->additionalDetails($additionalDetails['message'])  // Pass just the message string
-            ->resultsUrl($details['url'])  // Pass just the URL string
+            ->additionalDetails($additionalDetails['message'])
+            ->resultsUrl($additionalDetails['url'])
             ->send();
-
 
         // Step 6: Update travel log with PSO response
         $responseArray = $apiResponse->getData(true);
@@ -105,11 +131,12 @@ class TravelService extends BaseService
         ]);
 
         // check the log after 2 minutes
-        TravelLogReview::dispatch($travelLog)->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
+        TravelLogReview::dispatch($travelLog)->delay(
+            now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes'))
+        );
 
         return $apiResponse;
     }
-
 
     protected function getAddresses(): array
     {
@@ -118,10 +145,28 @@ class TravelService extends BaseService
         $latTo = data_get($this->data, 'data.latTo');
         $longTo = data_get($this->data, 'data.longTo');
 
-        $start = $this->reverseGeocode($latFrom, $longFrom);
-        $end = $this->reverseGeocode($latTo, $longTo);
+        $errors = [];
 
-        return [$start, $end];
+        // Try to geocode, but handle failures gracefully
+        try {
+            $start = $this->hasGeocoderKey
+                ? $this->reverseGeocode($latFrom, $longFrom)
+                : ['address' => null, 'accuracy' => null, 'error' => 'No geocoder key configured'];
+        } catch (Exception $e) {
+            $start = ['address' => null, 'accuracy' => null, 'error' => $e->getMessage()];
+            $errors[] = 'Failed to geocode start address: ' . $e->getMessage();
+        }
+
+        try {
+            $end = $this->hasGeocoderKey
+                ? $this->reverseGeocode($latTo, $longTo)
+                : ['address' => null, 'accuracy' => null, 'error' => 'No geocoder key configured'];
+        } catch (Exception $e) {
+            $end = ['address' => null, 'accuracy' => null, 'error' => $e->getMessage()];
+            $errors[] = 'Failed to geocode end address: ' . $e->getMessage();
+        }
+
+        return [$start, $end, $errors];
     }
 
     /**
@@ -134,17 +179,23 @@ class TravelService extends BaseService
 
     protected function getAdditionalDetails(): array
     {
+        $message = '';
+        $url = null;
+
         if ($this->sessionToken) {
             $url = route('travel.analyzer.show', ['id' => $this->travelLogId]);
-            return [
-                'message' => "To review results, please send a GET request to {$url}",
-                'url' => $url
-            ];
+            $message = "To review results, please send a GET request to {$url}";
+        } else {
+            $message = "Please ensure environment.sendToPso is set to true to use the analyzer correctly";
         }
-        return [
-            'message' => "Please ensure environment.sendToPso is set to true to use the analyzer correctly",
-            'url' => null
-        ];
+
+        // Append warnings if any exist
+        if (!empty($this->warnings)) {
+            $warningText = implode(' | ', $this->warnings);
+            $message .= " | Warnings: {$warningText}";
+        }
+
+        return compact('message', 'url');
     }
 
     protected function buildBroadcast(): array
@@ -159,7 +210,6 @@ class TravelService extends BaseService
                 BroadcastParameterBuilder::make()
                     ->name(BroadcastParameterType::URL)
                     ->value(route('travelanalyzer.update')),
-//                    ->value('https://webhook.site/fa0e00f3-91df-486d-b20e-fa8cd4309fe0'),
             ])
             ->type('REST')
             ->onceOnly()
@@ -167,14 +217,11 @@ class TravelService extends BaseService
             ->build();
     }
 
-
     /**
      * @throws JsonException
      */
     public function receivePSOBroadcast(): JsonResponse
     {
-
-
         $travelDetails = data_get($this->data, 'Travel_Detail', []);
 
         foreach ($travelDetails as $detail) {
@@ -185,42 +232,85 @@ class TravelService extends BaseService
                 ]);
         }
 
-
         return response()->json([
             'status' => 204,
             'description' => 'all good'
-
         ], 204, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
-
     }
 
     /**
-     * @throws ConnectionException
      */
-    protected function getDistanceMatrix(float $latFrom, float $longFrom, float $latTo, float $longTo, string|null $apiKey = null): array|null
-    {
-        $apiKey = $apiKey ?? (string)config('pso-services.settings.google_key');
+    protected function getDistanceMatrix(
+        float $latFrom,
+        float $longFrom,
+        float $latTo,
+        float $longTo,
+        string|null $apiKey = null
+    ): array|null {
+        // Determine which key to use: provided key, or config key
+        $keyToUse = $apiKey ?? config('pso-services.settings.google_key');
 
+        // If no key is available at all, return null early
+        if (empty($keyToUse)) {
+            return null;
+        }
 
         $query = [
             'origins' => "{$latTo},{$longTo}",
             'destinations' => "{$latFrom},{$longFrom}",
-            'key' => $apiKey,
+            'key' => $keyToUse,
         ];
 
-        $response = Http::timeout(5)
-            ->connectTimeout(5)
-            ->acceptJson()
-            ->get('https://maps.googleapis.com/maps/api/distancematrix/json', $query);
+        try {
+            $response = Http::timeout(5)
+                ->connectTimeout(5)
+                ->acceptJson()
+                ->get('https://maps.googleapis.com/maps/api/distancematrix/json', $query);
 
-        if ($response->failed()) {
-            // Optional: log or throw exception
+            if ($response->failed()) {
+                // Log the failure for debugging
+                Log::warning('Google Distance Matrix API failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                // Add a more specific warning about the failure
+                $this->warnings[] = 'Google Distance Matrix API request failed with status ' . $response->status(
+                    ) . '. Check API key validity.';
+                return null;
+            }
+
+            $result = data_get($response->json(), 'rows.0.elements.0');
+
+            // Check if the result indicates an error (like invalid API key)
+            if (isset($result['status']) && $result['status'] !== 'OK') {
+                Log::warning('Google Distance Matrix returned error status', [
+                    'status' => $result['status'],
+                    'result' => $result,
+                ]);
+
+                // Add specific warning based on the error status
+                $errorMessage = match ($result['status']) {
+                    'REQUEST_DENIED' => 'Google API key is invalid or request was denied. Please check your API key and permissions.',
+                    'OVER_QUERY_LIMIT' => 'Google API query limit exceeded. Please check your quota.',
+                    'ZERO_RESULTS' => 'No route found between the specified locations.',
+                    default => 'Google Distance Matrix API error: ' . $result['status']
+                };
+
+                $this->warnings[] = $errorMessage;
+                return null;
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            Log::error('Exception calling Google Distance Matrix API', [
+                'message' => $e->getMessage(),
+            ]);
+
+            $this->warnings[] = 'Exception calling Google API: ' . $e->getMessage();
             return null;
         }
-
-        return data_get($response->json(), 'rows.0.elements.0');
     }
-
 
     protected function reverseGeocode(float $lat, float $long): array
     {
@@ -236,32 +326,38 @@ class TravelService extends BaseService
     }
 
     /**
+     * Check if a warning message already exists (partial match)
+     */
+    protected function hasWarning(string $search): bool
+    {
+        foreach ($this->warnings as $warning) {
+            if (str_contains($warning, $search)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @throws JsonException
      */
     public function getTravelResults(PSOTravelLog $travelLog): array
     {
-
-//        dd(data_get(json_decode($travelLog->pso_response), 'travel_detail_request_id'));
         if ($travelLog->status === TravelLogStatus::COMPLETED) {
-
-            return
-                [
-                    'travel_detail_request_id' => $travelLog->travel_detail_request_id,
-                    'start_address' => $travelLog->getAddressFromTextAttribute(),
-                    'end_address' => $travelLog->getAddressToTextAttribute(),
-                    'pso' => [
-                        'time' => $travelLog->getPsoTimeFormattedAttribute(),
-                        'distance' => $travelLog->getDistanceInKmAttribute(),
-                    ],
-                    'google' => [
-                        'time' => $travelLog->getGoogleDurationAttribute(),
-                        'distance' => $travelLog->getGoogleDistanceAttribute(),
-                    ]
-                ];
+            return [
+                'travel_detail_request_id' => $travelLog->travel_detail_request_id,
+                'start_address' => $travelLog->getAddressFromTextAttribute(),
+                'end_address' => $travelLog->getAddressToTextAttribute(),
+                'pso' => [
+                    'time' => $travelLog->getPsoTimeFormattedAttribute(),
+                    'distance' => $travelLog->getDistanceInKmAttribute(),
+                ],
+                'google' => [
+                    'time' => $travelLog->getGoogleDurationAttribute(),
+                    'distance' => $travelLog->getGoogleDistanceAttribute(),
+                ]
+            ];
         }
         return [];
-
     }
-
-
 }
