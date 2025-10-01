@@ -10,8 +10,8 @@ use App\Enums\ProcessType;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\SourceData;
 use App\Helpers\Stubs\SourceDataParameter;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use JsonException;
 use SensitiveParameter;
 
 class LoadService extends BaseService
@@ -27,7 +27,7 @@ class LoadService extends BaseService
     }
 
     /**
-     * @throws ConnectionException
+     * @throws JsonException
      */
     public function loadPSO(): JsonResponse
     {
@@ -48,6 +48,7 @@ class LoadService extends BaseService
         $includeArpData = data_get($data, 'includeArpData', false);
         $keepPsoData = data_get($data, 'keepPsoData', false);
         $sendToPso = data_get($data, 'sendToPso', false);
+        $rotaId = data_get($data, 'rotaId');
 
         // Build Input Reference
         $inputRef = InputReferenceBuilder::make($datasetId)
@@ -68,7 +69,7 @@ class LoadService extends BaseService
             $payload['Source_Data'] = SourceData::make();
             $payload['Source_Data_Parameter'] = SourceDataParameter::make(
                 PSOConstants::SOURCE_DATA_PARAM_NAME,
-                PSOConstants::SOURCE_DATA_PARAM_VALUE
+                $rotaId ?? 'master',
             );
         }
 
@@ -79,7 +80,7 @@ class LoadService extends BaseService
         if ($keepPsoData) {
             if ($sendToPso) {
                 $keepPsoDataMessage = 'Keeping Existing PSO Data';
-                $scheduleData = ScheduleService::getScheduleData($baseUrl, $datasetId, $this->sessionToken, true, true);
+                $scheduleData = ScheduleService::getScheduleData($baseUrl, $datasetId, $this->sessionToken);
                 $payload = array_merge($payload, $scheduleData);
             } else {
                 $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';
@@ -99,7 +100,6 @@ class LoadService extends BaseService
      */
     public function updateRota(): JsonResponse
     {
-
         $datasetId = data_get($this->data, 'environment.datasetId');
         $datetime = data_get($this->data, 'data.datetime');
         $id = data_get($this->data, 'data.Id');
@@ -127,7 +127,6 @@ class LoadService extends BaseService
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
             ->send();
-
     }
 
 
