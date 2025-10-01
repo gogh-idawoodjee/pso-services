@@ -9,6 +9,7 @@ use App\Constants\PSOConstants;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
+use App\Helpers\HttpErrorMapper;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\SourceData;
 use App\Helpers\Stubs\SourceDataParameter;
@@ -18,6 +19,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use JsonException;
 use Log;
 use SensitiveParameter;
@@ -43,6 +45,7 @@ trait PSOAssistV2
     ): JsonResponse {
         $totalTimeout = (int)config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1)); // 1–3s connect budget
+        $cid = (string) Str::uuid();
 
         try {
             $baseUrl = UrlHelper::normalizeBaseUrl(data_get($environmentData, 'baseUrl'));
@@ -58,10 +61,7 @@ trait PSOAssistV2
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException $e) {
-            return $this->error([
-                'error' => 'Connection failed. The request timed out or the server could not be reached',
-                'details' => $e->getMessage(),
-            ], 504);
+            return HttpErrorMapper::fromConnectionException($e, $url ?? null, $cid);
         } catch (Throwable $e) {
             // catches InvalidArgumentException (bad URL), JSON errors, etc.
             return $this->error([
@@ -88,6 +88,7 @@ trait PSOAssistV2
     ): JsonResponse {
         $totalTimeout = (int)config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1));
+        $cid = (string) Str::uuid();
 
         try {
             $base = UrlHelper::normalizeBaseUrl($baseUrl);
@@ -123,10 +124,7 @@ trait PSOAssistV2
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException $e) {
-            return $this->error([
-                'error' => 'Connection failed. The request timed out or the server could not be reached',
-                'details' => $e->getMessage(),
-            ], 504);
+            return HttpErrorMapper::fromConnectionException($e, $url ?? null, $cid);
         } catch (Throwable $e) {
             return $this->error([
                 'error' => 'Request could not be dispatched',
