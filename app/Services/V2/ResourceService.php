@@ -46,7 +46,7 @@ class ResourceService extends BaseService
                     ->build();
 
             return $this->sendOrSimulateBuilder()
-                ->payload(['Schedule_event' => $payload])
+                ->payload(['Schedule_Event' => $payload])
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)
                 ->includeInputReference('Created Event')
