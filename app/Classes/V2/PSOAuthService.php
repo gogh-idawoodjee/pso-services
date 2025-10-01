@@ -3,12 +3,14 @@
 namespace App\Classes\V2;
 
 use App\Enums\PsoEndpointSegment;
+use App\Helpers\HttpErrorMapper;
 use App\Helpers\UrlHelper;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use JsonException;
 use App\Traits\V2\ApiResponses;
 use SensitiveParameter;
@@ -33,6 +35,7 @@ class PSOAuthService
 
         $totalTimeout = (int)config('psott.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1)); // 1–3s connect budget
+        $cid = (string) Str::uuid();
 
         try {
             $base = UrlHelper::normalizeBaseUrl(data_get($environment, 'baseUrl'));
@@ -57,10 +60,7 @@ class PSOAuthService
             return $this->handleSessionResponse($response);
         } catch (ConnectionException $e) {
             // Network / DNS / TLS / connect/read timeout → return YOUR 504 JSON
-            return response()->json([
-                'error' => 'Connection failed. The request timed out or the server could not be reached.',
-                'details' => $e->getMessage(),
-            ], 504);
+            return HttpErrorMapper::fromConnectionException($e, $url ?? null, $cid);
         } catch (Throwable $e) {
             // Malformed URL, invalid args, JSON issues, etc. → clean 422 JSON
             return response()->json([
