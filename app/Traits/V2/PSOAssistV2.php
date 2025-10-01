@@ -12,13 +12,16 @@ use App\Classes\V2\EntityBuilders\InputReferenceBuilder as InputReferenceNew;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\SourceData;
 use App\Helpers\Stubs\SourceDataParameter;
+use App\Helpers\UrlHelper;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use JsonException;
+use Log;
 use SensitiveParameter;
+use Throwable;
 
 trait PSOAssistV2
 {
@@ -38,20 +41,33 @@ trait PSOAssistV2
         #[SensitiveParameter] string $sessionToken,
         PsoEndpointSegment $segment
     ): JsonResponse {
+        $totalTimeout = (int)config('pso-services.defaults.timeout', 10);
+        $connectTimeout = min(3, max(1, $totalTimeout - 1)); // 1–3s connect budget
+
         try {
-            $timeout = config('psott.defaults.timeout', 10);
-            $baseUrl = data_get($environmentData, 'baseUrl');
+            $baseUrl = UrlHelper::normalizeBaseUrl(data_get($environmentData, 'baseUrl'));
             $url = "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/{$segment->value}";
 
-            $response = Http::timeout($timeout)
-                ->connectTimeout($timeout)
+            // optional: log target for debug
+            Log::info('PSO POST', ['url' => $url, 'segment' => $segment->value]);
+
+            $response = Http::timeout($totalTimeout)
+                ->connectTimeout($connectTimeout)
                 ->withHeaders(['apiKey' => $sessionToken])
                 ->post($url, $payload);
 
-
             return $this->handleDataResponse($response);
-        } catch (ConnectionException) {
-            return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
+        } catch (ConnectionException $e) {
+            return $this->error([
+                'error' => 'Connection failed. The request timed out or the server could not be reached',
+                'details' => $e->getMessage(),
+            ], 504);
+        } catch (Throwable $e) {
+            // catches InvalidArgumentException (bad URL), JSON errors, etc.
+            return $this->error([
+                'error' => 'Request could not be dispatched',
+                'details' => $e->getMessage(),
+            ], 422);
         }
     }
 
@@ -70,46 +86,52 @@ trait PSOAssistV2
         string|null $minDate = null,
         string|null $maxDate = null
     ): JsonResponse {
+        $totalTimeout = (int)config('pso-services.defaults.timeout', 10);
+        $connectTimeout = min(3, max(1, $totalTimeout - 1));
+
         try {
-            $timeout = config('psott.defaults.timeout', 10);
+            $base = UrlHelper::normalizeBaseUrl($baseUrl);
 
             $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $segment->value;
 
-            $queryParams = [
-                'includeOutput' => 'true',
-                'datasetId' => $datasetId,
-            ];
-
+            // Build query params (pick clear defaults; here we includeOutput only if requested)
+            $queryParams = compact('datasetId');
             if ($includeInput) {
-                $queryParams['includeInput'] = 'true'; // Fixed the typo
+                $queryParams['includeInput'] = 'true';
             }
-
             if ($includeOutput) {
-                $queryParams['includeOutput'] = 'true'; // Fixed the typo
+                $queryParams['includeOutput'] = 'true';
             }
-
             if ($resourceId) {
                 $queryParams['resourceId'] = $resourceId;
             }
-
             if ($minDate) {
                 $queryParams['minimumDateTime'] = PSOHelper::toUrlEncodedIso8601($minDate);
             }
-
             if ($maxDate) {
                 $queryParams['maximumDateTime'] = PSOHelper::toUrlEncodedIso8601($maxDate);
             }
 
-            $url = "{$baseUrl}{$endpoint}?" . http_build_query($queryParams);
+            $url = "{$base}{$endpoint}?" . http_build_query($queryParams);
 
-            $response = Http::timeout($timeout)
-                ->connectTimeout($timeout)
+            Log::info('PSO GET', ['url' => $url, 'segment' => $segment->value]);
+
+            $response = Http::timeout($totalTimeout)
+                ->connectTimeout($connectTimeout)
                 ->withHeaders(['apiKey' => $sessionToken])
                 ->get($url);
 
             return $this->handleDataResponse($response);
-        } catch (ConnectionException) {
-            return $this->error('Connection failed. The request timed out or the server could not be reached', 504);
+        } catch (ConnectionException $e) {
+            return $this->error([
+                'error' => 'Connection failed. The request timed out or the server could not be reached',
+                'details' => $e->getMessage(),
+            ], 504);
+        } catch (Throwable $e) {
+            return $this->error([
+                'error' => 'Request could not be dispatched',
+                'details' => $e->getMessage(),
+            ], 422);
         }
     }
 

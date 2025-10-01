@@ -3,13 +3,16 @@
 namespace App\Classes\V2;
 
 use App\Enums\PsoEndpointSegment;
+use App\Helpers\UrlHelper;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use App\Traits\V2\ApiResponses;
 use SensitiveParameter;
+use Throwable;
 
 class PSOAuthService
 {
@@ -28,41 +31,52 @@ class PSOAuthService
             return $this->ok('valid token', data_get($environment, 'token'));
         }
 
+        $totalTimeout = (int)config('psott.defaults.timeout', 10);
+        $connectTimeout = min(3, max(1, $totalTimeout - 1)); // 1–3s connect budget
+
         try {
-            $timeout = config('psott.defaults.timeout', 10);
-            $url = data_get($environment, 'baseUrl') . "/IFSSchedulingRESTfulGateway/api/v1/scheduling/" . PsoEndpointSegment::SESSION->value;
+            $base = UrlHelper::normalizeBaseUrl(data_get($environment, 'baseUrl'));
+            $url = $base . "/IFSSchedulingRESTfulGateway/api/v1/scheduling/" . PsoEndpointSegment::SESSION->value;
+
+            // (optional) lightweight debug log without leaking secrets
+            Log::info('PSO auth request', [
+                'url' => $url,
+                'accountId' => data_get($environment, 'accountId'),
+                'userName' => data_get($environment, 'username'),
+            ]);
 
             $response = Http::asForm()
-                ->timeout($timeout)
-                ->connectTimeout($timeout)
+                ->timeout($totalTimeout)
+                ->connectTimeout($connectTimeout)
                 ->post($url, [
                     'accountId' => data_get($environment, 'accountId'),
                     'userName' => data_get($environment, 'username'),
                     'password' => data_get($environment, 'password'),
                 ]);
 
-
-
             return $this->handleSessionResponse($response);
-        } catch (ConnectionException) {
-            return $this->connectionFailureResponse();
+        } catch (ConnectionException $e) {
+            // Network / DNS / TLS / connect/read timeout → return YOUR 504 JSON
+            return response()->json([
+                'error' => 'Connection failed. The request timed out or the server could not be reached.',
+                'details' => $e->getMessage(),
+            ], 504);
+        } catch (Throwable $e) {
+            // Malformed URL, invalid args, JSON issues, etc. → clean 422 JSON
+            return response()->json([
+                'error' => 'Request could not be dispatched',
+                'details' => $e->getMessage(),
+            ], 422);
         }
     }
 
     /**
      * Validate if a token is still valid
-     *
-     * @param string $token The token to validate
-     * @param array $environment Environment configuration
-     * @return bool Whether the token is valid
+     * (placeholder – implement per PSO spec)
      */
     public function validateToken(#[SensitiveParameter] string $token, array $environment): bool
     {
-        // Implement token validation logic here
-        // This is a placeholder - you would need to implement actual validation
-        // based on your PSO API specifications
-
-        return true; // Assuming token is valid for now
+        return true;
     }
 
     /**
@@ -75,6 +89,8 @@ class PSOAuthService
     {
         if ($response->successful()) {
             $json = $response->json();
+
+            // Some PSO gateways nest the token; normalize so caller gets the same shape
             $message = data_get($json, 'SessionToken')
                 ? ['SessionToken' => data_get($json, 'SessionToken')]
                 : $json;
@@ -86,20 +102,8 @@ class PSOAuthService
             ]);
         }
 
+        // For non-2xx, preserve your existing mapping logic
         return $this->handleErrorResponse($response);
-    }
-
-    /**
-     * Creates standard connection failure response
-     *
-     * @return JsonResponse
-     */
-    private function connectionFailureResponse(): JsonResponse
-    {
-        return response()->json(
-            ['error' => 'Connection failed. The request timed out or the server could not be reached.'],
-            504
-        );
     }
 
     /**
@@ -111,7 +115,6 @@ class PSOAuthService
     private function handleErrorResponse(Response $response): JsonResponse
     {
         $statusCode = $this->adjustStatusCode($response);
-
         $errorDetails = $this->parseResponseBody($response->body());
 
         return response()->json([
@@ -122,9 +125,6 @@ class PSOAuthService
 
     /**
      * Get appropriate error message for status code
-     *
-     * @param int $statusCode HTTP status code
-     * @return string Error message
      */
     private function getErrorMessage(int $statusCode): string
     {
@@ -139,9 +139,6 @@ class PSOAuthService
 
     /**
      * Parse response body safely
-     *
-     * @param string|null $body Response body
-     * @return mixed Parsed JSON or original string
      */
     private function parseResponseBody(string|null $body): mixed
     {
@@ -158,9 +155,6 @@ class PSOAuthService
 
     /**
      * Adjust the status code based on response content
-     *
-     * @param Response $response
-     * @return int Appropriate status code
      */
     private function adjustStatusCode(Response $response): int
     {
@@ -174,10 +168,11 @@ class PSOAuthService
                     return 401;
                 }
             } catch (JsonException) {
-                // Ignore parsing error, keep original status code
+                // ignore parse errors
             }
         }
 
         return $statusCode;
     }
+
 }
