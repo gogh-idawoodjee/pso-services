@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Helpers\PSOHelper;
 use App\Helpers\ShortCodeGenerator;
-use App\Models\User;
 use App\Models\V2\ExternalSanctumToken;
 use GoogleMaps\Facade\GoogleMapsFacade;
 use Illuminate\Foundation\AliasLoader;
@@ -48,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
         //
         Sanctum::usePersonalAccessTokenModel(ExternalSanctumToken::class);
 
-        Gate::define('viewApiDocs', function (User $user) {
+        Gate::define('viewApiDocs', static function ($user = null) {
             return true;
         });
     }
