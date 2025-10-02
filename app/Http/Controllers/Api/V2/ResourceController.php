@@ -7,7 +7,6 @@ use App\Http\Requests\Api\V2\ResourceRequest;
 use App\Services\V2\ResourceService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
-use JsonException;
 
 class ResourceController extends Controller
 {
@@ -16,7 +15,6 @@ class ResourceController extends Controller
 
     /**
      * Display the specified resource.
-     * @throws JsonException
      */
     public function show(ResourceRequest $request, string $resourceId): JsonResponse
     {
@@ -38,7 +36,7 @@ class ResourceController extends Controller
     }
 
     /**
-     * @throws JsonException
+     * Get All Resources in Dataset.
      */
     public function index(ResourceRequest $request): JsonResponse
     {
