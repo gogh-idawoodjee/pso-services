@@ -25,6 +25,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JsonException;
 use Ramsey\Uuid\Uuid;
+use Throwable;
 
 class ResourceService extends BaseService
 {
@@ -339,62 +340,94 @@ class ResourceService extends BaseService
     }
 
 
-    public function getResourceShiftsFormatted(array $shifts, array $routes): Collection
-    {
-        $groupedRoutes = collect($routes)->groupBy('shift_id');
 
-        $formattedShifts = collect($shifts)->map(function ($shift) use ($groupedRoutes) {
-            $start = Carbon::parse(data_get($shift, 'start_datetime'));
-            $end = Carbon::parse(data_get($shift, 'end_datetime'));
-            $shiftId = data_get($shift, 'id');
+public function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
+{
+    // handle null inputs
+    $shifts = $shifts ?? [];
+    $routes = $routes ?? [];
 
-            $shiftDate = $start->toFormattedDateString();
-            $shiftSpan = $start->format('H:i') . ' - ' . $end->format('H:i');
-            $shiftDuration = $start->diffInHours($end);
+    $groupedRoutes = collect($routes)->groupBy('shift_id');
 
-            $routeData = $groupedRoutes->get($shiftId, collect())->first() ?? [];
+    $safeParse = static function (string|null $dt): Carbon|null {
+        if (!$dt) {
+            return null;
+        }
+        try {
+            return Carbon::parse($dt);
+        } catch (Throwable) {
+            return null;
+        }
+    };
 
-            $parseInterval = static fn($interval) => $interval
-                ? CarbonInterval::fromString($interval)->forHumans(['options' => CarbonInterface::FLOOR])
-                : 'N/A';
+    $parseInterval = static function ($interval): string {
+        if (!$interval) {
+            return 'N/A';
+        }
+        try {
+            return CarbonInterval::fromString($interval)
+                ->forHumans(['options' => CarbonInterface::FLOOR]);
+        } catch (Throwable) {
+            return 'N/A';
+        }
+    };
 
-            $overtimePeriod = Arr::has($shift, 'overtime_period')
-                ? $parseInterval(data_get($shift, 'overtime_period'))
-                : 'no overtime';
+    $formattedShifts = collect($shifts)->map(function ($shift) use ($safeParse, $groupedRoutes, $parseInterval) {
+        $start = $safeParse(data_get($shift, 'start_datetime'));
+        $end   = $safeParse(data_get($shift, 'end_datetime'));
+        $shiftId = data_get($shift, 'id');
 
-            $utilisation = [
-                'percent' => data_get($routeData, 'utilisation', 0),
-                'total_unutilised_time' => $parseInterval(data_get($routeData, 'total_unutilised_time')),
-                'total_private_time' => $parseInterval(data_get($routeData, 'total_private_time')),
-                'total_break_time' => $parseInterval(data_get($routeData, 'total_break_time')),
-                'total_on_site_time' => $parseInterval(data_get($routeData, 'total_on_site_time')),
-                'total_travel_time' => $parseInterval(data_get($routeData, 'total_travel_time')),
-                'average_travel_time' => $parseInterval(data_get($routeData, 'average_travel_time')),
-                'total_allocations' => data_get($routeData, 'total_allocations', 0),
-                'route_margin' => data_get($routeData, 'route_margin', 0),
-            ];
+        // safely compute derived fields
+        $shiftDate = $start ? $start->toFormattedDateString() : null;
+        $shiftSpan = ($start && $end)
+            ? $start->format('H:i') . ' - ' . $end->format('H:i')
+            : 'N/A';
+        $shiftDuration = ($start && $end) ? $start->diffInHours($end) : 0;
 
-            $shiftCollection = collect($shift)
-                ->put('shift_date', $shiftDate)
-                ->put('shift_span', $shiftSpan)
-                ->put('shift_duration', $shiftDuration)
-                ->put('overtime_period', $overtimePeriod)
-                ->put('utilisation', $utilisation);
+        // tolerate missing Plan_Route for this shift
+        $routeData = $groupedRoutes->get($shiftId)?->first() ?? [];
 
-            $keysToRemove = ['start_datetime', 'end_datetime', 'actual', 'split_allowed', 'resource_id'];
-            $shiftCollection = $shiftCollection->except($keysToRemove);
+        $overtimePeriod = Arr::has($shift, 'overtime_period')
+            ? $parseInterval(data_get($shift, 'overtime_period'))
+            : 'no overtime';
 
-            $manualScheduling = data_get($shift, 'manual_scheduling_only', false);
-            $shiftCollection->put('manual_scheduling_only', (bool)$manualScheduling);
+        $utilisation = [
+            'percent'                 => data_get($routeData, 'utilisation', 0),
+            'total_unutilised_time'   => $parseInterval(data_get($routeData, 'total_unutilised_time')),
+            'total_private_time'      => $parseInterval(data_get($routeData, 'total_private_time')),
+            'total_break_time'        => $parseInterval(data_get($routeData, 'total_break_time')),
+            'total_on_site_time'      => $parseInterval(data_get($routeData, 'total_on_site_time')),
+            'total_travel_time'       => $parseInterval(data_get($routeData, 'total_travel_time')),
+            'average_travel_time'     => $parseInterval(data_get($routeData, 'average_travel_time')),
+            'total_allocations'       => data_get($routeData, 'total_allocations', 0),
+            'route_margin'            => data_get($routeData, 'route_margin', 0),
+        ];
 
-            return $shiftCollection;
-        })->sortBy('shift_date')->values();
+        $shiftCollection = collect($shift)
+            ->put('shift_date', $shiftDate)
+            ->put('shift_span', $shiftSpan)
+            ->put('shift_duration', $shiftDuration)
+            ->put('overtime_period', $overtimePeriod)
+            ->put('utilisation', $utilisation);
 
-        return collect([
-            'shifts' => $formattedShifts,
-            'total_shifts' => count($shifts),
-        ]);
-    }
+        $keysToRemove = ['start_datetime', 'end_datetime', 'actual', 'split_allowed', 'resource_id'];
+        $shiftCollection = $shiftCollection->except($keysToRemove);
+
+        $manualScheduling = (bool) data_get($shift, 'manual_scheduling_only', false);
+        $shiftCollection->put('manual_scheduling_only', $manualScheduling);
+
+        return $shiftCollection;
+    })
+        // if date is null, sort places them last
+        ->sortBy(static fn ($s) => $s->get('shift_date') ?? '9999-12-31')
+        ->values();
+
+    return collect([
+        'shifts'       => $formattedShifts,
+        'total_shifts' => count($shifts),
+    ]);
+}
+
 
 
     /**
