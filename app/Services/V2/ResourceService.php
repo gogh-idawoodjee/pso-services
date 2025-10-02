@@ -282,41 +282,38 @@ class ResourceService extends BaseService
 
     }
 
-    private function getRelatedItemsForResource(array $data, string|int $resourceId, $resourceEntity): array
+    private function getRelatedItemsForResource(array $data, string|int $resourceId, string $resourceEntity): array
     {
+        [$relatedEntityKey, $entityKey, $entityListKey] = match ($resourceEntity) {
+            'region' => ['dsScheduleData.Resource_Region', 'region_id', 'dsScheduleData.Region'],
+            'skill'  => ['dsScheduleData.Resource_Skill', 'skill_id', 'dsScheduleData.Skill'],
+            default  => [null, null, null],
+        };
 
-        if ($resourceEntity === 'region') {
-            $relatedEntityKey = 'dsScheduleData.Resource_Region';
-            $entityKey = 'region_id';
-            $entityListKey = 'dsScheduleData.Region';
-        }
-
-        if ($resourceEntity === 'skill') {
-            $relatedEntityKey = 'dsScheduleData.Resource_Skill';
-            $entityKey = 'skill_id';
-            $entityListKey = 'dsScheduleData.Skill';
+        if (!$relatedEntityKey || !$entityKey || !$entityListKey) {
+            return []; // unknown entity type
         }
 
         $entityRelations = collect(data_get($data, $relatedEntityKey, []));
-        $entityList = collect(data_get($data, $entityListKey, []));
+        $entityList      = collect(data_get($data, $entityListKey, []));
 
-        // Get list of region_ids for the resource
         $entityIds = $entityRelations
-            ->where('resource_id', (string)$resourceId)
+            ->where('resource_id', (string) $resourceId)
             ->pluck($entityKey)
             ->unique()
             ->values();
 
         return $entityList
             ->whereIn('id', $entityIds)
-            ->map(static fn($entity) => [
-                'id' => data_get($entity, 'id'),
+            ->map(static fn ($entity) => [
+                'id'          => data_get($entity, 'id'),
                 'description' => data_get($entity, 'description'),
             ])
             ->values()
-            ->tap(static fn($collection) => $collection->push(['total' => $collection->count()]))
+            ->tap(static fn ($collection) => $collection->push(['total' => $collection->count()]))
             ->all();
     }
+
 
     private function getAdditionalAttributes(string $resourceId, array|null $additionalAttributes = null): array
     {
