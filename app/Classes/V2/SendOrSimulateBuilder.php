@@ -12,18 +12,14 @@ class SendOrSimulateBuilder
     protected string|null $sessionToken;
     protected bool|null $requiresRotaUpdate = null;
     protected string|null $rotaUpdateDescription = null;
-//    protected string|null $notSentArrayKey = null;
     protected string|null $additionalDetails = null;
     protected bool $addInputReference = false;
     protected string|null $inputReferenceDescription = null;
-
     protected string|null $resultsUrl = null;
 
-
     public function __construct(
-        protected object $caller // the controller or class using the trait
-    )
-    {
+        protected object $caller
+    ) {
     }
 
     public function resultsUrl(string|null $url): static
@@ -65,12 +61,6 @@ class SendOrSimulateBuilder
         $this->rotaUpdateDescription = $description;
         return $this;
     }
-// no longer required
-//    public function notSentKey(string|null $key): static
-//    {
-//        $this->notSentArrayKey = $key;
-//        return $this;
-//    }
 
     public function additionalDetails(string|null $details): static
     {
@@ -89,12 +79,10 @@ class SendOrSimulateBuilder
             $this->sessionToken,
             $this->requiresRotaUpdate,
             $this->rotaUpdateDescription,
-//            $this->notSentArrayKey,
             $this->additionalDetails,
-
             $this->addInputReference,
-            $this->inputReferenceDescription, // <— Add this line
-            $this->resultsUrl,  // Add this line
+            $this->inputReferenceDescription,
+            $this->resultsUrl,
         );
     }
 }
