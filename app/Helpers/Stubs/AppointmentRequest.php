@@ -29,13 +29,13 @@ class AppointmentRequest
             }
         }
 
-        $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toAtomString();
+        $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone(config('pso-services.defaults.timezone', 'America/Toronto'))->toAtomString();
         $appointmentRequest = [
             'id' => Str::orderedUuid()->getHex()->toString(),
 //            'slot_usage_rule_set_id' => data_get($appointmentData, 'data.slotUsageRuleId'),
             'appointment_template_id' => data_get($appointmentData, 'data.appointmentTemplateId'),
             // todo deal with customer timezones
-            'appointment_base_datetime' => data_get($appointmentData, 'data.appointmentBaseDateTime') ?: Carbon::now()->startOfDay()->setTimezone('America/Toronto')->toIso8601String(),
+            'appointment_base_datetime' => data_get($appointmentData, 'data.appointmentBaseDateTime') ?: Carbon::now()->startOfDay()->setTimezone(config('pso-services.defaults.timezone', 'America/Toronto'))->toIso8601String(),
             'appointment_template_duration' => PSOHelper::setPSODurationDays(data_get($appointmentData, 'data.appointmentTemplateDuration') ?? 21),
             'activity_id' => data_get($appointmentData, 'data.activityId') . config('pso-services.defaults.activity.appointment_booking_suffix'),
             'appointment_template_datetime' => data_get($appointmentData, 'data.appointmentTemplateDateTime') ?? $requestDateTime,

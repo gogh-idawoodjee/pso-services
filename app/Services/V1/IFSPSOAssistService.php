@@ -27,7 +27,7 @@ class IFSPSOAssistService extends IFSService
         // get the schedule
         $schedule = $this->getSchedule($request->base_url, $request->dataset_id, 'true', 'true');
         // get the current time at midnight
-        $midnight = Carbon::now()->setTimezone('America/Toronto')->startOfDay();
+        $midnight = Carbon::now()->setTimezone(config('pso-services.defaults.timezone', 'America/Toronto'))->startOfDay();
 
         // get the allocations
         if (array_key_exists('Allocation', $schedule['dsScheduleData'])) {
