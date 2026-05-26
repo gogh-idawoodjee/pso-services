@@ -12,37 +12,37 @@ use App\Http\Controllers\Api\V2\ResourceUnavailabilityController;
 use App\Http\Controllers\Api\V2\ScheduleExceptionController;
 use App\Http\Controllers\Api\V2\TravelController;
 
-Route::post('/health-check', [HealthCheckController::class, 'check']);
+Route::post('/health-check', [HealthCheckController::class, 'check'])->name('v2.health-check');
 
 // travel routes
-Route::post('/travelanalyzer', [TravelController::class, 'store']); // this is the main service -> send data, returns an ID of some sort
-Route::post('/travelanalyzerservice', [TravelController::class, 'update'])->name('travelanalyzer.update'); // this is the broadcast listener
-Route::get('/travelanalyzer/{id}', [TravelController::class, 'show'])->name('travel.analyzer.show'); // this is the return service that returns your details once ready
+Route::post('/travelanalyzer', [TravelController::class, 'store'])->name('v2.travel.store');
+Route::post('/travelanalyzerservice', [TravelController::class, 'update'])->name('v2.travel.update');
+Route::get('/travelanalyzer/{id}', [TravelController::class, 'show'])->name('v2.travel.show');
 
-//Activity routes
-Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 'update']); // added /status in case someday there is an update to the actual activity object itself
-Route::delete('/activity/', [ActivityController::class, 'destroy']);
+// activity routes
+Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 'update'])->name('v2.activity.status.update');
+Route::delete('/activity/', [ActivityController::class, 'destroy'])->name('v2.activity.destroy');
 
-// Assist routes
-Route::delete('/delete', [AssistController::class, 'destroy']);
-Route::post('/load', [AssistController::class, 'store']);
-Route::patch('/rota', [AssistController::class, 'update']);
-Route::get('/usage', [AssistController::class, 'show']);
+// assist routes
+Route::delete('/delete', [AssistController::class, 'destroy'])->name('v2.assist.destroy');
+Route::post('/load', [AssistController::class, 'store'])->name('v2.assist.load');
+Route::patch('/rota', [AssistController::class, 'update'])->name('v2.assist.rota');
+Route::get('/usage', [AssistController::class, 'show'])->name('v2.assist.usage');
 
 // appointment routes
-Route::post('/appointment', [AppointmentController::class, 'store']);
-Route::post('/appointment/{appointmentRequestId}', [AppointmentController::class, 'check']);
-Route::patch('/appointment/{appointmentRequestId}', [AppointmentController::class, 'update']);
-Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::class, 'destroy']);
-Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show']);
+Route::post('/appointment', [AppointmentController::class, 'store'])->name('v2.appointment.store');
+Route::post('/appointment/{appointmentRequestId}', [AppointmentController::class, 'check'])->name('v2.appointment.check');
+Route::patch('/appointment/{appointmentRequestId}', [AppointmentController::class, 'update'])->name('v2.appointment.update');
+Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::class, 'destroy'])->name('v2.appointment.destroy');
+Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show'])->name('v2.appointment.show');
 
 // resource routes
-Route::get('/resource', [ResourceController::class, 'index']);
-Route::get('/resource/{resourceId}', [ResourceController::class, 'show']);
-Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store']);
-Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update']);
-Route::post('/resource/unavailability', [ResourceUnavailabilityController::class, 'store']);
-Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabilityController::class, 'update']);
+Route::get('/resource', [ResourceController::class, 'index'])->name('v2.resource.index');
+Route::get('/resource/{resourceId}', [ResourceController::class, 'show'])->name('v2.resource.show');
+Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store'])->name('v2.resource.event.store');
+Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update'])->name('v2.resource.shift.update');
+Route::post('/resource/unavailability', [ResourceUnavailabilityController::class, 'store'])->name('v2.resource.unavailability.store');
+Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabilityController::class, 'update'])->name('v2.resource.unavailability.update');
 
-
-Route::post('/exception', [ScheduleExceptionController::class, 'store']);
+// exception
+Route::post('/exception', [ScheduleExceptionController::class, 'store'])->name('v2.exception.store');

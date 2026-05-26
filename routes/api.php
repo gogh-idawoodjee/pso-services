@@ -20,55 +20,55 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-});
+})->name('v1.user');
 
 // commit
-Route::post('/commit', [PSOCommitController::class, 'update']);
-Route::post('/commit/test', [PSOCommitController::class, 'store']);
+Route::post('/commit', [PSOCommitController::class, 'update'])->name('v1.commit.update');
+Route::post('/commit/test', [PSOCommitController::class, 'store'])->name('v1.commit.store');
 
 // travel
-Route::post('/travelanalyzer', [PSOTravelLogController::class, 'store']);
-Route::post('/travelanalyzerservice', [PSOTravelLogController::class, 'update']);
+Route::post('/travelanalyzer', [PSOTravelLogController::class, 'store'])->name('v1.travel.store');
+Route::post('/travelanalyzerservice', [PSOTravelLogController::class, 'update'])->name('v1.travel.update');
 
 // assist
-Route::post('/load', [PSOAssistController::class, 'store']);
-Route::patch('/rotatodse', [PSOAssistController::class, 'update']);
-Route::get('/usage', [PSOAssistController::class, 'index']);
-Route::delete('/delete', [PSOAssistController::class, 'destroy']);
-Route::delete('/cleanup', [PSOAssistController::class, 'cleanup']);
+Route::post('/load', [PSOAssistController::class, 'store'])->name('v1.assist.load');
+Route::patch('/rotatodse', [PSOAssistController::class, 'update'])->name('v1.assist.rota');
+Route::get('/usage', [PSOAssistController::class, 'index'])->name('v1.assist.usage');
+Route::delete('/delete', [PSOAssistController::class, 'destroy'])->name('v1.assist.destroy');
+Route::delete('/cleanup', [PSOAssistController::class, 'cleanup'])->name('v1.assist.cleanup');
 
 // exception
-Route::post('/exception', [PSOExceptionController::class, 'store']);
+Route::post('/exception', [PSOExceptionController::class, 'store'])->name('v1.exception.store');
 
 // activity
-Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy']);
-Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update']);
-Route::post('/activity/', [PSOActivityController::class, 'store']);
-Route::delete('/activity/', [PSOActivityController::class, 'destroyMulti']);
-Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy']);
+Route::delete('/activity/{activity_id}/sla', [PSOActivitySLAController::class, 'destroy'])->name('v1.activity.sla.destroy');
+Route::patch('/activity/{activity_id}/{status}', [PSOActivityStatusController::class, 'update'])->name('v1.activity.status.update');
+Route::post('/activity/', [PSOActivityController::class, 'store'])->name('v1.activity.store');
+Route::delete('/activity/', [PSOActivityController::class, 'destroyMulti'])->name('v1.activity.destroy-multi');
+Route::delete('/activity/{activity_id}', [PSOActivityController::class, 'destroy'])->name('v1.activity.destroy');
 
 // appointment
-Route::post('/appointment', [PSOAppointmentController::class, 'store']);
-Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show']);
-Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'update']);
-Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy']);
-Route::get('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'index']);
+Route::post('/appointment', [PSOAppointmentController::class, 'store'])->name('v1.appointment.store');
+Route::post('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'show'])->name('v1.appointment.check');
+Route::patch('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'update'])->name('v1.appointment.update');
+Route::delete('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'destroy'])->name('v1.appointment.destroy');
+Route::get('/appointment/{appointment_request_id}', [PSOAppointmentController::class, 'index'])->name('v1.appointment.show');
 
 // region
-Route::post('/region', [PSORegionController::class, 'store']);
+Route::post('/region', [PSORegionController::class, 'store'])->name('v1.region.store');
 
 // resource
-Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update']);
-Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store']);
-Route::post('/resource/{resource_id}/relocate', [PSOResourceRelocationController::class, 'store']);
-Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store']);
-Route::post('/resource/', [PSOResourceController::class, 'store']);
-Route::get('/resource/', [PSOResourceController::class, 'index']);
-Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show']);
+Route::patch('/resource/{resource_id}/shift', [PSOResourceShiftController::class, 'update'])->name('v1.resource.shift.update');
+Route::post('/resource/{resource_id}/event', [PSOResourceEventController::class, 'store'])->name('v1.resource.event.store');
+Route::post('/resource/{resource_id}/relocate', [PSOResourceRelocationController::class, 'store'])->name('v1.resource.relocate.store');
+Route::post('/resource/{resource_id}/unavailability', [PSOUnavailabilityController::class, 'store'])->name('v1.resource.unavailability.store');
+Route::post('/resource/', [PSOResourceController::class, 'store'])->name('v1.resource.store');
+Route::get('/resource/', [PSOResourceController::class, 'index'])->name('v1.resource.index');
+Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show'])->name('v1.resource.show');
 
 // unavailability
-Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy']);
-Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update']);
+Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy'])->name('v1.unavailability.destroy');
+Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update'])->name('v1.unavailability.update');
 
 // load test
-Route::post('/loadtest', [PSOSandboxController::class, 'runLoadTestJob']);
+Route::post('/loadtest', [PSOSandboxController::class, 'runLoadTestJob'])->name('v1.loadtest');
