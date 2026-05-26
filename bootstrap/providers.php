@@ -33,5 +33,4 @@ return [
     App\Providers\AuthServiceProvider::class,
     // App\Providers\BroadcastServiceProvider::class, // Uncomment if needed
     App\Providers\EventServiceProvider::class,
-    App\Providers\RouteServiceProvider::class, // Your custom RouteServiceProvider
 ];
