@@ -7,7 +7,7 @@ use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\AppointmentRequestStatus;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
-use App\Facades\ShortCode;
+use GoghIdawoodjee\ShortCode\Facades\ShortCode;
 use App\Helpers\Stubs\AppointmentOfferResponse;
 use App\Helpers\Stubs\AppointmentRequest;
 use App\Jobs\DeleteTempActivity;

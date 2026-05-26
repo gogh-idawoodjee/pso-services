@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Helpers\ShortCodeGenerator;
 use App\Models\V2\ExternalSanctumToken;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -17,9 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('shortcode', function () {
-            return new ShortCodeGenerator();
-        });
+        //
     }
 
     /**

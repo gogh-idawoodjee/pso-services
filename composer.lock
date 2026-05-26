@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "382f2d19b9dd07c75a5cc64bbf22e892",
+    "content-hash": "4d6839a9aa3bd686f3b7a2c5ba7a710e",
     "packages": [
         {
             "name": "alexpechkarev/geometry-library",
@@ -783,6 +783,67 @@
                 }
             ],
             "time": "2025-12-03T09:33:47+00:00"
+        },
+        {
+            "name": "gogh-idawoodjee/shortcode",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/gogh-idawoodjee/shortcode.git",
+                "reference": "11df163e6c34f98dd322b9f19da103a9b92cd357"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/gogh-idawoodjee/shortcode/zipball/11df163e6c34f98dd322b9f19da103a9b92cd357",
+                "reference": "11df163e6c34f98dd322b9f19da103a9b92cd357",
+                "shasum": ""
+            },
+            "require": {
+                "ext-bcmath": "*",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "pestphp/pest": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "ShortCode": "GoghIdawoodjee\\ShortCode\\Facades\\ShortCode"
+                    },
+                    "providers": [
+                        "GoghIdawoodjee\\ShortCode\\ShortCodeServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "GoghIdawoodjee\\ShortCode\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ish Dawoodjee",
+                    "homepage": "https://github.com/gogh-idawoodjee"
+                }
+            ],
+            "description": "Encode integers and UUIDs to short, URL-safe Base62 strings and back.",
+            "keywords": [
+                "base62",
+                "encoder",
+                "short-url",
+                "shortcode",
+                "uuid"
+            ],
+            "support": {
+                "issues": "https://github.com/gogh-idawoodjee/shortcode/issues",
+                "source": "https://github.com/gogh-idawoodjee/shortcode/tree/v1.0.0"
+            },
+            "time": "2026-05-26T21:56:33+00:00"
         },
         {
             "name": "graham-campbell/result-type",
