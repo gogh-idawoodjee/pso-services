@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use SensitiveParameter;
 
+/**
+ * @deprecated Placeholder — uses hardcoded external-api.com URL. Will be removed with V1.
+ * @see \App\Classes\V2\PSOAuthService for actual PSO authentication.
+ */
 class TokenService
 {
     /**
