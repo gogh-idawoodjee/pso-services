@@ -21,7 +21,7 @@ class ScheduleExceptionController extends Controller
         return $this->executeAuthenticatedAction($request, function (ScheduleExceptionRequest $req) {
             // so we have the token now in $req->input('environment.token')
             // we should send that the activity service? // all our services should accept a token
-            $resourceShift = new ScheduleExceptionService(
+            $resourceShift = new \App\Services\V2\ScheduleExceptionService(
                 $req->filled('environment.token') ? $req->input('environment.token') : null,
                 $req->validated(),
             );

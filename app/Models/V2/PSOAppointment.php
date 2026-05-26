@@ -104,7 +104,6 @@ class PSOAppointment extends Model
 
     protected $table = 'appointment_request';
     protected $guarded = [];
-//    protected $dates = ['accept_decline_datetime', 'appointment_template_datetime', 'offer_expiry_datetime', 'appointed_check_datetime'];
     protected $casts = [
         'appointed_check_complete' => 'boolean',
         'appointed_check_result' => 'boolean',

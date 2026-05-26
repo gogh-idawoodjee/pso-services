@@ -50,7 +50,6 @@ class PsoEnvironment extends Model
     use HasUuids;
 
     protected $guarded = ['password'];
-    protected $primaryKey = 'id';
 
     public function token()
     {

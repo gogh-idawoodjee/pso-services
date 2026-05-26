@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V2;
+namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Helpers\Stubs\CustomException;

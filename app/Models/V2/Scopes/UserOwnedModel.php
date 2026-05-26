@@ -13,7 +13,8 @@ class UserOwnedModel implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        //
-        $builder->where('user_id', auth()->id());
+        if (auth()->id()) {
+            $builder->where('user_id', auth()->id());
+        }
     }
 }
