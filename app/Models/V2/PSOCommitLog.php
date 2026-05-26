@@ -51,4 +51,10 @@ class PSOCommitLog extends Model
         'response_time',
         'transfer_stats',
     ];
+
+    protected $casts = [
+        'pso_suggestions' => 'json',
+        'output_payload' => 'json',
+        'transfer_stats' => 'json',
+    ];
 }

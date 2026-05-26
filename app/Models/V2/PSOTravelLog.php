@@ -8,7 +8,6 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JsonException;
 
 /** @mixin Builder */
 
@@ -81,33 +80,28 @@ class PSOTravelLog extends Model
 
     protected $casts = [
         'status' => TravelLogStatus::class,
+        'address_from' => 'json',
+        'address_to' => 'json',
+        'google_response' => 'json',
+        'input_payload' => 'json',
+        'output_payload' => 'json',
+        'pso_response' => 'json',
+        'transfer_stats' => 'json',
     ];
 
-    /**
-     * @throws JsonException
-     */
     public function getTravelDetailRequestIdAttribute(): string|null
     {
-        return data_get(json_decode($this->pso_response, true, 512, JSON_THROW_ON_ERROR), 'travel_detail_request_id');
+        return data_get($this->pso_response, 'travel_detail_request_id');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getPsoTimeAttribute(): string|null
     {
-        return data_get(json_decode($this->pso_response, true, 512, JSON_THROW_ON_ERROR), 'time');
+        return data_get($this->pso_response, 'time');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getPsoTimeFormattedAttribute(): string|null
     {
-        $timeString = data_get(
-            json_decode($this->pso_response, true, 512, JSON_THROW_ON_ERROR),
-            'time'
-        );
+        $timeString = data_get($this->pso_response, 'time');
 
         if (!$timeString) {
             return null;
@@ -139,24 +133,14 @@ class PSOTravelLog extends Model
         return implode(' ', $parts);
     }
 
-
-    /**
-     * @throws JsonException
-     */
     public function getPsoDistanceAttribute(): string|null
     {
-        return data_get(json_decode($this->pso_response, true, 512, JSON_THROW_ON_ERROR), 'distance');
+        return data_get($this->pso_response, 'distance');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getDistanceInKmAttribute(): string|null
     {
-        $distanceInMetres = data_get(
-            json_decode($this->pso_response, true, 512, JSON_THROW_ON_ERROR),
-            'distance'
-        );
+        $distanceInMetres = data_get($this->pso_response, 'distance');
 
         if ($distanceInMetres === null) {
             return null;
@@ -165,40 +149,24 @@ class PSOTravelLog extends Model
         return number_format($distanceInMetres / 1000, 2) . ' km';
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getGoogleDistanceAttribute(): string|null
     {
-        $response = json_decode($this->google_response, true, 512, JSON_THROW_ON_ERROR);
-        return data_get($response, 'distance.text');
+        return data_get($this->google_response, 'distance.text');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getGoogleDurationAttribute(): string|null
     {
-        $response = json_decode($this->google_response, true, 512, JSON_THROW_ON_ERROR);
-        return data_get($response, 'duration.text');
+        return data_get($this->google_response, 'duration.text');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getAddressFromTextAttribute(): string|null
     {
-        $data = json_decode($this->address_from, true, 512, JSON_THROW_ON_ERROR);
-        return data_get($data, 'address');
+        return data_get($this->address_from, 'address');
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getAddressToTextAttribute(): string|null
     {
-        $data = json_decode($this->address_to, true, 512, JSON_THROW_ON_ERROR);
-        return data_get($data, 'address');
+        return data_get($this->address_to, 'address');
     }
 
 

@@ -5,7 +5,6 @@ namespace App\Models\V2;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -150,69 +149,19 @@ class PSOAppointment extends Model
         'appointment_template_datetime' => 'datetime',
         'offer_expiry_datetime' => 'datetime',
         'appointed_check_datetime' => 'datetime',
-
+        'input_request' => 'json',
+        'activity' => 'json',
+        'appointment_request' => 'json',
+        'appointment_response' => 'json',
+        'valid_offers' => 'json',
+        'invalid_offers' => 'json',
+        'best_offer' => 'json',
+        'service_api_input' => 'json',
     ];
 
     public function getRouteKeyName(): string
     {
         return 'appointment_request_id';
     }
-
-    protected function inputRequest(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function activity(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function appointmentRequest(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function appointmentResponse(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function validOffers(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function invalidOffers(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function bestOffer(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    protected function serviceApiInput(): Attribute
-    {
-        return Attribute::make(
-            get: static fn(string $value) => json_decode($value, false, 512, JSON_THROW_ON_ERROR),
-        );
-    }
-
 
 }
