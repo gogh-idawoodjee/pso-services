@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\Uuids;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,7 +47,7 @@ use Illuminate\Database\Eloquent\Builder;
 class PsoEnvironment extends Model
 {
     use HasFactory;
-    use Uuids;
+    use HasUuids;
 
     protected $guarded = ['password'];
     protected $primaryKey = 'id';

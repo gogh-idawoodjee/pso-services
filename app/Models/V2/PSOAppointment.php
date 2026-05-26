@@ -2,7 +2,7 @@
 
 namespace App\Models\V2;
 
-use App\Traits\Uuids;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -100,7 +100,7 @@ use Illuminate\Support\Carbon;
 class PSOAppointment extends Model
 {
 
-    use Uuids;
+    use HasUuids;
 
     protected $table = 'appointment_request';
     protected $guarded = [];

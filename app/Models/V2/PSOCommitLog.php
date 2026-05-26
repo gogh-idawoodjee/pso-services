@@ -2,7 +2,7 @@
 
 namespace App\Models\V2;
 
-use App\Traits\Uuids;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,7 +38,7 @@ use Illuminate\Support\Carbon;
 class PSOCommitLog extends Model
 {
     use HasFactory;
-    use Uuids;
+    use HasUuids;
 
     protected $table='psocommitlog';
     protected $guarded = [];
