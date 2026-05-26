@@ -3,29 +3,25 @@
 namespace App\Traits\V2;
 
 use Illuminate\Http\JsonResponse;
-use SensitiveParameter;
 
 trait ApiResponses
 {
-    protected function ok($data = [], $message = null): JsonResponse
+    protected function ok(mixed $data = [], string|null $message = null): JsonResponse
     {
         return $this->success($data, $message);
     }
 
-    protected function notSentToPso($data = [], $additionalDetails = null): JsonResponse
+    protected function notSentToPso(mixed $data = [], string|null $additionalDetails = null): JsonResponse
     {
-        return $this->success($data, 'Successful. Not sent to PSO by Request', $additionalDetails, null, 202);
-        //                                                                                          ^^^^  ^^^
-        //                                                                                          resultsUrl, statusCode
+        return $this->success($data, message: 'Successful. Not sent to PSO by Request', additionalDetails: $additionalDetails, statusCode: 202);
     }
 
-    protected function sentToPso($data = [], $additionalDetails = null, $resultsUrl = null): JsonResponse
+    protected function sentToPso(mixed $data = [], string|null $additionalDetails = null, string|null $resultsUrl = null): JsonResponse
     {
-        return $this->success($data, 'Successful. Sent to PSO', $additionalDetails, $resultsUrl);
+        return $this->success($data, message: 'Successful. Sent to PSO', additionalDetails: $additionalDetails, resultsUrl: $resultsUrl);
     }
 
-
-    protected function success($data = [], $message = null, $additionalDetails = null, $resultsUrl = null, $statusCode = 200): JsonResponse
+    protected function success(mixed $data = [], string|null $message = null, string|null $additionalDetails = null, string|null $resultsUrl = null, int $statusCode = 200): JsonResponse
     {
         $response = [
             'data' => $data,
@@ -47,7 +43,7 @@ trait ApiResponses
         return response()->json($response, $statusCode);
     }
 
-    protected function error($message, #[SensitiveParameter] $statusCode): JsonResponse
+    protected function error(mixed $message, int $statusCode): JsonResponse
     {
         return response()->json([
             'message' => $message,
