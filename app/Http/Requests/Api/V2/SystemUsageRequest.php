@@ -19,7 +19,8 @@ class SystemUsageRequest extends BaseGetFormRequest
         return array_merge($commonRules, $rules);
     }
 
-    #[Override] public function withValidator(Validator $validator): void
+    #[Override]
+    public function withValidator(Validator $validator): void
     {
         parent::withValidator($validator);
         $validator->after(function ($validator) {

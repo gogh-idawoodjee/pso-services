@@ -26,7 +26,7 @@ class UnavailabilityRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example "Technician is unavailable due to vacation"
              */
-            'data.description' => 'string:2000',
+            'data.description' => 'string|max:2000',
 
             /**
              * The category ID for this unavailability (e.g., vacation, illness).

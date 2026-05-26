@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V2;
 
+use App\Rules\DisallowProdUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -9,13 +10,11 @@ class BaseGetFormRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // or add your auth logic here
+        return true;
     }
 
-    // Make headers available for validation
     public function validationData(): array
     {
-        // Pull headers you want to validate and normalize keys as needed
         return [
             'datasetId' => $this->header('datasetId'),
             'baseUrl' => $this->header('baseUrl'),
@@ -30,11 +29,11 @@ class BaseGetFormRequest extends FormRequest
     {
         return [
             'datasetId' => ['required', 'string'],
-            'baseUrl' => ['required', 'url'],
+            'baseUrl' => ['required', 'url', new DisallowProdUrl],
             'accountId' => ['required', 'string'],
             'username' => ['string', 'nullable'],
             'password' => ['string', 'nullable'],
-            'token' => ['string', 'nullable']
+            'token' => ['string', 'nullable'],
         ];
     }
 
@@ -73,5 +72,4 @@ class BaseGetFormRequest extends FormRequest
             }
         });
     }
-
 }

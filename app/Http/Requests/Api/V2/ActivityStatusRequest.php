@@ -11,7 +11,6 @@ class ActivityStatusRequest extends BaseFormRequest
 {
     private ActivityStatus|null $parsedStatus = null;
 
-
     protected function prepareForValidation(): void
     {
         if ($this->route('activityId')) {
@@ -29,7 +28,6 @@ class ActivityStatusRequest extends BaseFormRequest
                 (string)$status->value => true,
             ];
         });
-
 
         $commonRules = $this->commonRules();
 
@@ -60,7 +58,6 @@ class ActivityStatusRequest extends BaseFormRequest
                     }
                 },
             ],
-
 
             /**
              * The ID of the resource assigned to the activity.
@@ -114,7 +111,6 @@ class ActivityStatusRequest extends BaseFormRequest
                 return;
             }
         }
-
 
         throw new UnexpectedValueException("Unexpected status value '{$statusString}'");
     }

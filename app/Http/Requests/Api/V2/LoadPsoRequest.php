@@ -3,16 +3,10 @@
 namespace App\Http\Requests\Api\V2;
 
 use App\Enums\ProcessType;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rules\Enum;
 
 class LoadPsoRequest extends BaseFormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array|string>
-     */
     public function rules(): array
     {
         $commonRules = $this->commonRules();
@@ -92,7 +86,7 @@ class LoadPsoRequest extends BaseFormRequest
              * @var int
              * @example 1
              */
-            'data.broadcastType' => 'integer|required_if:include_broadcast,true',
+            'data.broadcastType' => 'integer|required_if:data.includeBroadcast,true',
 
             /**
              * Broadcast URL.
@@ -100,7 +94,7 @@ class LoadPsoRequest extends BaseFormRequest
              * @var string
              * @example "https://example.com/broadcast.trl"
              */
-            'data.broadcastUrl' => 'url|required_if:include_broadcast,true',
+            'data.broadcastUrl' => 'url|required_if:data.includeBroadcast,true',
 
             /**
              * The ID associated with the PSO load.

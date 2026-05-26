@@ -140,8 +140,6 @@ class DeleteObjectRequest extends BaseFormRequest
         });
     }
 
-
-
     protected function matchesExpectedType(mixed $value, string|null $expectedType): bool
     {
         if ($expectedType === null) {

@@ -96,11 +96,11 @@ class ResourceShiftRequest extends BaseFormRequest
     public function withValidator(Validator $validator): void
     {
         parent::withValidator($validator);
-        $validator->sometimes('startDateTime', 'required', function () {
+        $validator->sometimes('data.startDateTime', 'required', function () {
             return data_get($this->input('environment'), 'sendToPso') === false;
         });
 
-        $validator->sometimes('endDateTime', 'required', function () {
+        $validator->sometimes('data.endDateTime', 'required', function () {
             return data_get($this->input('environment'), 'sendToPso') === false;
         });
     }

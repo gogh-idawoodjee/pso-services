@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\V2;
 
 class AppointmentSummaryRequest extends BaseFormRequest
 {
-
     public function prepareForValidation(): void
     {
         if ($id = $this->route('appointmentRequestId')) {
