@@ -22,7 +22,15 @@ class Token extends Model
 {
     use HasUuids;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'token',
+        'token_expiry',
+    ];
+
+    protected $casts = [
+        'token_expiry' => 'datetime',
+    ];
 
     protected function tokenExpiry(): Attribute
     {

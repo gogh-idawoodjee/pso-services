@@ -63,7 +63,21 @@ class PSOTravelLog extends Model
 
 
     protected $table = 'psotravellog';
-    protected $guarded = [];
+
+    protected $fillable = [
+        'id',
+        'input_reference',
+        'address_from',
+        'address_to',
+        'google_response',
+        'input_payload',
+        'output_payload',
+        'status',
+        'pso_response',
+        'response_time',
+        'transfer_stats',
+        'warnings',
+    ];
 
     protected $casts = [
         'status' => TravelLogStatus::class,

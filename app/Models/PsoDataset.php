@@ -34,7 +34,13 @@ use Illuminate\Database\Eloquent\Builder;
 class PsoDataset extends Model
 {
     use HasUuids;
-    protected $guarded = [];
+
+    protected $fillable = [
+        'pso_environment_id',
+        'user_id',
+        'rota_id',
+        'dataset_id',
+    ];
     public function environment()
     {
         return $this->belongsTo(PsoEnvironment::class, 'pso_environment_id', 'id');

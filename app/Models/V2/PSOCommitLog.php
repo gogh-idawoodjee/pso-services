@@ -40,6 +40,15 @@ class PSOCommitLog extends Model
     use HasFactory;
     use HasUuids;
 
-    protected $table='psocommitlog';
-    protected $guarded = [];
+    protected $table = 'psocommitlog';
+
+    protected $fillable = [
+        'id',
+        'input_reference',
+        'pso_suggestions',
+        'output_payload',
+        'pso_response',
+        'response_time',
+        'transfer_stats',
+    ];
 }

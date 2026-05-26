@@ -49,6 +49,7 @@ class TokenUsageLog extends Model
     ];
 
     protected $casts = [
+        'token_id' => 'integer',
         'metadata' => 'array',
     ];
 

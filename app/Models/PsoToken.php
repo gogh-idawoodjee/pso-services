@@ -33,7 +33,17 @@ use Illuminate\Database\Eloquent\Builder;
 class PsoToken extends Model
 {
     use HasUuids;
-    protected $guarded = [];
+
+    protected $fillable = [
+        'name',
+        'pso_environment_id',
+        'token',
+        'token_expiry',
+    ];
+
+    protected $casts = [
+        'token_expiry' => 'datetime',
+    ];
     public function SetTokenExpiryAttribute($value)
     {
         $this->attributes['token_expiry'] = $value->addHours(1);
