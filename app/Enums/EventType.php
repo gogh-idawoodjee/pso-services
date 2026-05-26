@@ -2,10 +2,8 @@
 
 namespace App\Enums;
 
-
 enum EventType: string
 {
-
     case ATTENTIONON = 'AO';
     case ATTENTIONOFF = 'AF';
     case BREAKON = 'BO';
@@ -15,7 +13,7 @@ enum EventType: string
     case LOGON = 'RO';
     case LOGOFF = 'RF';
 
-    public function getLabel(): string|null
+    public function label(): string
     {
         return match ($this) {
             self::ATTENTIONON => 'Attention On',

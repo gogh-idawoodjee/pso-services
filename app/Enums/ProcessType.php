@@ -2,7 +2,6 @@
 
 namespace App\Enums;
 
-
 enum ProcessType: string
 {
     case DYNAMIC = 'DYNAMIC';
@@ -10,16 +9,13 @@ enum ProcessType: string
     case REACTIVE = 'REACTIVE';
     case STATIC = 'STATIC';
 
-    public function getLabel(): string|null
+    public function label(): string
     {
-
         return match ($this) {
             self::DYNAMIC => 'Dynamic',
             self::APPOINTMENT => 'Appointment',
             self::REACTIVE => 'Reactive',
             self::STATIC => 'Static',
-
         };
-
     }
 }
