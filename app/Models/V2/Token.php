@@ -6,12 +6,13 @@ use App\Traits\Uuids;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
  *
- * @property-read mixed $is_valid_token
+ *
+ * @property-read bool $is_valid_token
  * @method static Builder<static>|Token newModelQuery()
  * @method static Builder<static>|Token newQuery()
  * @method static Builder<static>|Token query()
@@ -23,13 +24,17 @@ class Token extends Model
 
     protected $guarded = [];
 
-    public function SetTokenExpiryAttribute($value)
+    protected function tokenExpiry(): Attribute
     {
-        $this->attributes['token_expiry'] = $value->addHours(1);
+        return Attribute::make(
+            set: fn ($value) => $value->addHours(1),
+        );
     }
 
-    public function getIsValidTokenAttribute()
+    protected function isValidToken(): Attribute
     {
-        return Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry'])) > 2;
+        return Attribute::make(
+            get: fn () => Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry'])) > 2,
+        );
     }
 }
