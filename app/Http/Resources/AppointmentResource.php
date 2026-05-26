@@ -86,7 +86,6 @@ class AppointmentResource extends JsonResource
             'inputReferenceId' => $this->accept_decline_input_reference_id,
         ];
 
-
         if ($statusEnum === AppointmentRequestStatus::ACCEPTED) {
             $responseArray['acceptedOfferId'] = $this->accepted_offer_id;
 
@@ -107,8 +106,7 @@ class AppointmentResource extends JsonResource
 
     private function getAppointedCheck(): array
     {
-        $checkResult = $this->appointed_check_result ? "available" : "unavailable"; // todo parameterize or enum this
-
+        $checkResult = $this->appointed_check_result ? 'available' : 'unavailable';
 
         return [
             'status' => $this->appointed_check_complete ? 'COMPLETED' : 'NOT COMPLETED',
@@ -121,7 +119,6 @@ class AppointmentResource extends JsonResource
             'checkDelay' => $this->formatDelayFromCreatedAt($this->appointed_check_datetime, 'after appointment check'),
         ];
     }
-
 
     private function formatDateTimeWithHumanDiff(Carbon|null $dateTime): string
     {
@@ -146,5 +143,4 @@ class AppointmentResource extends JsonResource
             ? $this->created_at->diffForHumans($dateTime, ['parts' => 2, 'short' => true, 'syntax' => CarbonInterface::DIFF_ABSOLUTE]) . " $suffix"
             : 'N/A';
     }
-
 }
