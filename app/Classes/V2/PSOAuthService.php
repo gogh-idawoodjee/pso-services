@@ -33,7 +33,7 @@ class PSOAuthService
             return $this->ok('valid token', data_get($environment, 'token'));
         }
 
-        $totalTimeout = (int)config('psott.defaults.timeout', 10);
+        $totalTimeout = (int)config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1)); // 1–3s connect budget
         $cid = (string) Str::uuid();
 
