@@ -2,7 +2,7 @@
 
 namespace App\Models\V2;
 
-use App\Traits\Uuids;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Carbon\Carbon;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Token extends Model
 {
-    use Uuids;
+    use HasUuids;
 
     protected $guarded = [];
 

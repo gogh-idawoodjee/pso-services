@@ -48,8 +48,6 @@ class Environment extends Model
 {
     use HasUuids;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
     protected $connection = 'krang_db';
 
 
