@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOAssistService extends IFSService
 {
 

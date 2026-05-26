@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOExceptionService extends IFSService
 {
 

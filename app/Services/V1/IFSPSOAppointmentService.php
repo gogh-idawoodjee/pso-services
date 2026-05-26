@@ -18,6 +18,9 @@ use Illuminate\Support\Str;
 use JsonException;
 
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOAppointmentService extends IFSService
 {
 

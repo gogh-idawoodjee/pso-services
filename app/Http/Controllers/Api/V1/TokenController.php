@@ -11,6 +11,9 @@ use Illuminate\Http\Response;
 use SensitiveParameter;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class TokenController extends Controller
 {
 

@@ -9,6 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOAssistController extends Controller
 {
 

@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder<static>|PsoToken whereTokenExpiry($value)
  * @method static Builder<static>|PsoToken whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @deprecated V1 — scheduled for removal. Use V2 equivalent.
  */
 class PsoToken extends Model
 {

@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
 use JsonException;
 use Spatie\Geocoder\Geocoder;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOTravelService extends IFSService
 {
     private IFSPSOAssistService $IFSPSOAssistService;

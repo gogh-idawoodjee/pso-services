@@ -43,6 +43,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder<static>|PsoEnvironment whereUserId($value)
  * @method static Builder<static>|PsoEnvironment whereUsername($value)
  * @mixin \Eloquent
+ * @deprecated V1 — scheduled for removal. Use V2 equivalent.
  */
 class PsoEnvironment extends Model
 {

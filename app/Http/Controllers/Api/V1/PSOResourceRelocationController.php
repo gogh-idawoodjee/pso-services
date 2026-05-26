@@ -11,6 +11,9 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use JsonException;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOResourceRelocationController extends Controller
 {
     /**

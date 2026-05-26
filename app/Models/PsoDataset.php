@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static Builder<static>|PsoDataset whereUpdatedAt($value)
  * @method static Builder<static>|PsoDataset whereUserId($value)
  * @mixin \Eloquent
+ * @deprecated V1 — scheduled for removal. Use V2 equivalent.
  */
 class PsoDataset extends Model
 {

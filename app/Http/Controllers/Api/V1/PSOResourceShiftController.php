@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOResourceShiftController extends Controller
 {
     /**

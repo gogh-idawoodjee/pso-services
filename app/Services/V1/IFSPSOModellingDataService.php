@@ -7,6 +7,9 @@ use App\Classes\V1\PSORegionType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOModellingDataService extends IFSService
 {
 

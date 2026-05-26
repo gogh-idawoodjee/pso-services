@@ -7,6 +7,9 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOLoadTestService
 {
 

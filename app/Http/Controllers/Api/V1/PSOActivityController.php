@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use JsonException;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOActivityController extends Controller
 {
 

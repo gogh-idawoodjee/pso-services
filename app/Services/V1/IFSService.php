@@ -7,6 +7,9 @@ use App\Models\PsoEnvironment;
 use Exception;
 use Illuminate\Support\Facades\Http;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSService
 
 {

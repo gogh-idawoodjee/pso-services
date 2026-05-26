@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use JsonException;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class IFSPSOResourceService extends IFSService
 {
 

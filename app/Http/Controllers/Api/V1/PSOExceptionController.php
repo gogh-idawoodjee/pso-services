@@ -8,6 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Services\V1\IFSPSOExceptionService;
 use Illuminate\Http\Request;
 
+/**
+ *  V1 — scheduled for removal. Use V2 equivalent.
+ */
 class PSOExceptionController extends Controller
 {
 
