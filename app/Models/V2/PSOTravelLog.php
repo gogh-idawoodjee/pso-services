@@ -7,54 +7,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
-
-/** @mixin Builder */
-
-// Optional PHPDoc for better IDE support
 
 /**
- * 
+ * @method static Model|static create(array $attributes = [])
+ * @method static Builder|static query()
  *
- * @property string $id
- * @property string|null $input_reference
- * @property string|null $address_from
- * @property string|null $address_to
- * @property string|null $google_response
- * @property string|null $input_payload
- * @property string|null $output_payload
- * @property TravelLogStatus|null $status
- * @property string|null $pso_response
- * @property string|null $response_time
- * @property string|null $transfer_stats
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * @property-read string|null $address_from_text
- * @property-read string|null $address_to_text
- * @property-read string|null $distance_in_km
- * @property-read string|null $google_distance
- * @property-read string|null $google_duration
- * @property-read string|null $pso_distance
- * @property-read string|null $pso_time
- * @property-read string|null $pso_time_formatted
- * @property-read string|null $travel_detail_request_id
- * @method static Builder<static>|PSOTravelLog newModelQuery()
- * @method static Builder<static>|PSOTravelLog newQuery()
- * @method static Builder<static>|PSOTravelLog query()
- * @method static Builder<static>|PSOTravelLog whereAddressFrom($value)
- * @method static Builder<static>|PSOTravelLog whereAddressTo($value)
- * @method static Builder<static>|PSOTravelLog whereCreatedAt($value)
- * @method static Builder<static>|PSOTravelLog whereGoogleResponse($value)
- * @method static Builder<static>|PSOTravelLog whereId($value)
- * @method static Builder<static>|PSOTravelLog whereInputPayload($value)
- * @method static Builder<static>|PSOTravelLog whereInputReference($value)
- * @method static Builder<static>|PSOTravelLog whereOutputPayload($value)
- * @method static Builder<static>|PSOTravelLog wherePsoResponse($value)
- * @method static Builder<static>|PSOTravelLog whereResponseTime($value)
- * @method static Builder<static>|PSOTravelLog whereStatus($value)
- * @method static Builder<static>|PSOTravelLog whereTransferStats($value)
- * @method static Builder<static>|PSOTravelLog whereUpdatedAt($value)
- * @mixin Eloquent
+ * @mixin Builder
  */
 class PSOTravelLog extends Model
 {

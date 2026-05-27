@@ -7,6 +7,12 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use SensitiveParameter;
 
+/**
+ * Base class for all V2 services.
+ *
+ * Provides a shared PsoClient instance for PSO communication and
+ * the ApiResponses trait for consistent response formatting.
+ */
 abstract class BaseService
 {
     use ApiResponses;
