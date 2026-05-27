@@ -4,13 +4,12 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ScheduleExceptionRequest;
+use App\Services\V2\ScheduleExceptionService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
 
-
 class ScheduleExceptionController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -19,16 +18,12 @@ class ScheduleExceptionController extends Controller
     public function store(ScheduleExceptionRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (ScheduleExceptionRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
-            $resourceShift = new \App\Services\V2\ScheduleExceptionService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+            $scheduleException = new ScheduleExceptionService(
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
-            return $resourceShift->createException();
+            return $scheduleException->createException();
         });
     }
-
-
 }

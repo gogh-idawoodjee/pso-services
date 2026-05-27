@@ -8,10 +8,8 @@ use App\Services\V2\ActivityService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
 
-
 class ActivityStatusController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -23,29 +21,19 @@ class ActivityStatusController extends Controller
      *   message: string,
      *   additionalDetails: array|null
      * }
-     *
-     * @param ActivityStatusRequest $request
-     * @return JsonResponse
      */
     public function update(ActivityStatusRequest $request): JsonResponse
     {
-
-//        return $this->getPSOToken($request->environment);
-
         return $this->executeAuthenticatedAction($request, function (ActivityStatusRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $activityService = new ActivityService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
                 $req->input('data.activityId'),
                 $req->activityStatus(),
-                $req->input('data.resourceId')
+                $req->input('data.resourceId'),
             );
 
             return $activityService->updateStatus();
         });
     }
-
-
 }

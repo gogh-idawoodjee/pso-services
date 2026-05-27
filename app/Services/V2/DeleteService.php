@@ -56,7 +56,7 @@ class DeleteService extends BaseService
             // Now call the DeleteObject helper with normalized data
             $delete_input = DeleteObject::make($this->data['data'], $this->isRotaObject);
 
-            return $this->sendOrSimulateBuilder()
+            return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Object_Deletion' => $delete_input])
                 ->environment(data_get($this->data, 'environment'))
                 ->includeInputReference('Delete Object: ' . $label)

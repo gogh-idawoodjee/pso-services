@@ -77,7 +77,7 @@ class LoadService extends BaseService
             }
         }
 
-        return $this->sendOrSimulateBuilder()
+        return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment($environment)
             ->token($this->sessionToken)
@@ -108,7 +108,7 @@ class LoadService extends BaseService
             ),
         ];
 
-        return $this->sendOrSimulateBuilder()
+        return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)

@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 
 class ResourceController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -18,21 +17,17 @@ class ResourceController extends Controller
      */
     public function show(ResourceRequest $request, string $resourceId): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) use ($resourceId) {
-
             $resourceService = new ResourceService(
-                $req->filled('environment.token') ? $req->input('environment.token') : $req->headers->get('token'),
-
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             $datasetId = $req->headers->get('datasetId');
-
             $baseUrl = $req->headers->get('baseUrl');
+
             return $resourceService->getResource($datasetId, $resourceId, $baseUrl);
         });
-
     }
 
     /**
@@ -41,19 +36,15 @@ class ResourceController extends Controller
     public function index(ResourceRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $resourceService = new ResourceService(
-                $req->filled('environment.token') ? $req->input('environment.token') : $req->headers->get('token'),
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             $datasetId = $req->headers->get('datasetId');
-
             $baseUrl = $req->headers->get('baseUrl');
+
             return $this->ok(['resources' => $resourceService->getResourceList($datasetId, $baseUrl)->toSelectOptions()->getSelectOptions()]);
         });
-
     }
-
 }

@@ -18,7 +18,7 @@ class SendOrSimulateBuilder
     protected string|null $resultsUrl = null;
 
     public function __construct(
-        protected object $caller
+        protected PsoClient $caller
     ) {
     }
 

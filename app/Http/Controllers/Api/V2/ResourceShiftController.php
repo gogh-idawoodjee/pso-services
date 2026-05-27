@@ -8,10 +8,8 @@ use App\Services\V2\ResourceService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
 
-
 class ResourceShiftController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -24,16 +22,12 @@ class ResourceShiftController extends Controller
     public function update(ResourceShiftRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (ResourceShiftRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $resourceShift = new ResourceService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             return $resourceShift->updateShift();
         });
     }
-
-
 }

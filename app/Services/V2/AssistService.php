@@ -20,7 +20,7 @@ class AssistService extends BaseService
             $maxDate = Carbon::now()->addDay()->toIso8601String();
         }
 
-        return $this->getPsoData(
+        return $this->psoClient->getPsoData(
             $datasetId,
             $baseUrl,
             $this->sessionToken,

@@ -5,17 +5,14 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
 use App\Http\Requests\Api\V2\AppointmentRequest;
-
 use App\Http\Resources\AppointmentResource;
 use App\Models\V2\PSOAppointment;
 use App\Services\V2\AppointmentService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
 
-
 class AppointmentController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -23,14 +20,9 @@ class AppointmentController extends Controller
      */
     public function check(AppointmentSummaryRequest $request): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            // so we have the token now in data_get($req, 'environment.token')
-
-            // we should send that the activity service? // all our services should accept a token
             $appointmentService = new AppointmentService(
-
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
@@ -38,27 +30,19 @@ class AppointmentController extends Controller
         });
     }
 
-
     /**
      * Get Appointments
      */
     public function store(AppointmentRequest $request): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (AppointmentRequest $req) {
-            // so we have the token now in data_get($req, 'environment.token')
-
-            // we should send that the activity service? // all our services should accept a token
             $appointmentService = new AppointmentService(
-
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             return $appointmentService->getAppointment();
         });
-
-
     }
 
     /**
@@ -69,26 +53,19 @@ class AppointmentController extends Controller
         return $this->ok(new AppointmentResource($appointmentRequestId));
     }
 
-
     /**
      * Accept Appointment
      */
     public function update(AppointmentSummaryRequest $request): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            // so we have the token now in data_get($req, 'environment.token')
-
-            // we should send that the activity service? // all our services should accept a token
             $appointmentService = new AppointmentService(
-
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             return $appointmentService->acceptAppointment();
         });
-
     }
 
     /**
@@ -97,12 +74,8 @@ class AppointmentController extends Controller
     public function destroy(AppointmentSummaryRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            // so we have the token now in data_get($req, 'environment.token')
-
-            // we should send that the activity service? // all our services should accept a token
             $appointmentService = new AppointmentService(
-
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
