@@ -5,6 +5,7 @@ namespace App\Services\V2;
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Constants\PSOConstants;
+use App\DataTransferObjects\PsoContext;
 use App\Enums\InputMode;
 use App\Enums\ProcessType;
 use App\Helpers\PSOHelper;
@@ -12,36 +13,30 @@ use App\Helpers\Stubs\SourceData;
 use App\Helpers\Stubs\SourceDataParameter;
 use Illuminate\Http\JsonResponse;
 use JsonException;
-use SensitiveParameter;
 
 class LoadService extends BaseService
 {
-
     /**
      * @throws JsonException
      */
-    public function loadPSO(): JsonResponse
+    public function loadPSO(PsoContext $context): JsonResponse
     {
-        // Extracting environment block
-        $environment = data_get($this->data, 'environment');
+        $environment = $context->environment();
         $datasetId = data_get($environment, 'datasetId');
         $baseUrl = data_get($environment, 'baseUrl');
 
-        // Extracting data block
-        $data = data_get($this->data, 'data');
-        $datetime = data_get($data, 'datetime');
-        $id = data_get($data, 'Id');
-        $description = data_get($data, 'description');
-        $dseDuration = PSOHelper::setPSODurationDays(data_get($data, 'dseDuration'));
-        $processType = Processtype::from(data_get($data, 'processType'));
-        $appointmentWindowRaw = data_get($data, 'appointmentWindow');
+        $datetime = $context->data('datetime');
+        $id = $context->data('Id');
+        $description = $context->data('description');
+        $dseDuration = PSOHelper::setPSODurationDays($context->data('dseDuration'));
+        $processType = ProcessType::from($context->data('processType'));
+        $appointmentWindowRaw = $context->data('appointmentWindow');
         $appointmentWindow = $appointmentWindowRaw ? PSOHelper::setPSODurationDays($appointmentWindowRaw) : null;
-        $includeArpData = data_get($data, 'includeArpData', false);
-        $keepPsoData = data_get($data, 'keepPsoData', false);
-        $sendToPso = data_get($data, 'sendToPso', false);
-        $rotaId = data_get($data, 'rotaId');
+        $includeArpData = $context->data('includeArpData', false);
+        $keepPsoData = $context->data('keepPsoData', false);
+        $sendToPso = $context->data('sendToPso', false);
+        $rotaId = $context->data('rotaId');
 
-        // Build Input Reference
         $inputRef = InputReferenceBuilder::make($datasetId)
             ->inputType(InputMode::LOAD)
             ->dateTime($datetime)
@@ -52,10 +47,8 @@ class LoadService extends BaseService
             ->description($description)
             ->build();
 
-        // Start payload
         $payload = ['Input_Reference' => $inputRef];
 
-        // Add optional ARP source data
         if ($includeArpData) {
             $payload['Source_Data'] = SourceData::make();
             $payload['Source_Data_Parameter'] = SourceDataParameter::make(
@@ -64,13 +57,12 @@ class LoadService extends BaseService
             );
         }
 
-        // Handle keep/send flags
         $keepPsoDataMessage = null;
 
         if ($keepPsoData) {
             if ($sendToPso) {
                 $keepPsoDataMessage = 'Keeping Existing PSO Data';
-                $scheduleData = ScheduleService::getScheduleData($baseUrl, $datasetId, $this->sessionToken);
+                $scheduleData = ScheduleService::getScheduleData($this->psoClient, $baseUrl, $datasetId, $context->token);
                 $payload = array_merge($payload, $scheduleData);
             } else {
                 $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';
@@ -80,17 +72,17 @@ class LoadService extends BaseService
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment($environment)
-            ->token($this->sessionToken)
+            ->token($context->token)
             ->additionalDetails($keepPsoDataMessage)
             ->send();
     }
 
-    public function updateRota(): JsonResponse
+    public function updateRota(PsoContext $context): JsonResponse
     {
-        $datasetId = data_get($this->data, 'environment.datasetId');
-        $datetime = data_get($this->data, 'data.datetime');
-        $id = data_get($this->data, 'data.Id');
-        $description = data_get($this->data, 'data.description') ?? PSOConstants::UPDATE_ROTA_DESCRIPTION;
+        $datasetId = $context->datasetId();
+        $datetime = $context->data('datetime');
+        $id = $context->data('Id');
+        $description = $context->data('description') ?? PSOConstants::UPDATE_ROTA_DESCRIPTION;
 
         $payload = [
             'Input_Reference' => InputReferenceBuilder::make($datasetId)
@@ -110,8 +102,8 @@ class LoadService extends BaseService
 
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
-            ->environment(data_get($this->data, 'environment'))
-            ->token($this->sessionToken)
+            ->environment($context->environment())
+            ->token($context->token)
             ->send();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
+use App\DataTransferObjects\PsoContext;
 use App\Enums\AppointmentRequestStatus;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
@@ -24,7 +25,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
 use Ramsey\Uuid\Uuid;
-use SensitiveParameter;
 
 class AppointmentService extends BaseService
 {
@@ -33,55 +33,51 @@ class AppointmentService extends BaseService
      *
      * @return JsonResponse
      */
-    public function getAppointment(): JsonResponse
+    public function getAppointment(PsoContext $context): JsonResponse
     {
         $runId = Uuid::uuid4()->toString();
         $activitySuffix = ShortCode::encodeUuid($runId);
 
         try {
-            $payload = AppointmentRequest::make($this->data, $activitySuffix);
+            $payload = AppointmentRequest::make($context->validated, $activitySuffix);
 
-            $environmentData = data_get($this->data, 'environment');
-            $timezone = data_get($this->data, 'timezone');
+            $environmentData = $context->environment();
+            $timezone = data_get($context->validated, 'timezone');
 
-            if ($this->sessionToken) {
-
-                $this->createAppointmentRecord($runId, $this->data, $payload, $activitySuffix);
+            if ($context->token) {
+                $this->createAppointmentRecord($runId, $context->validated, $payload, $activitySuffix);
                 $psoPayload = $this->psoClient->buildPayload($payload);
 
                 $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
-                    $this->sessionToken,
-                    PsoEndpointSegment::APPOINTMENT
+                    $context->token,
+                    PsoEndpointSegment::APPOINTMENT,
                 );
 
-                // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
                     $offers = $this->collectAndFormatAppointmentResponses($psoResponse, $timezone);
-
                     $this->updateAppointmentRequestWithOffers($runId, $offers, $psoResponse);
 
                     return $this->sentToPso($offers);
                 }
 
-                // If there was an error, just return the error response
                 return $psoResponse;
             }
 
             return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
 
-    public function acceptAppointment(): JsonResponse
+    public function acceptAppointment(PsoContext $context): JsonResponse
     {
         try {
-            $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
-            $appointmentOfferId = data_get($this->data, 'data.appointmentOfferId');
-            $environmentData = data_get($this->data, 'environment');
+            $appointmentRequestId = $context->data('appointmentRequestId');
+            $appointmentOfferId = $context->data('appointmentOfferId');
+            $environmentData = $context->environment();
             $appointmentRequestLog = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
             $validOffers = collect(data_get($appointmentRequestLog, 'valid_offers'));
             $selectedOffer = $validOffers->firstWhere('id', $appointmentOfferId);
@@ -91,8 +87,7 @@ class AppointmentService extends BaseService
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId, true);
 
-            $inputReference = InputReferenceBuilder::make(
-                data_get($this->data, 'environment.datasetId'))
+            $inputReference = InputReferenceBuilder::make($context->datasetId())
                 ->inputType(InputMode::CHANGE)
                 ->description('Accept and Book Appointment for ' . $activityId . ' with appointment request ID ' . $appointmentRequestId)
                 ->build();
@@ -137,20 +132,18 @@ class AppointmentService extends BaseService
 
             $payload = array_merge($payload, (array)$bookAppointmentPayload);
 
-            if ($this->sessionToken) {
+            if ($context->token) {
                 $psoPayload = $this->psoClient->buildPayload($payload);
 
                 $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
-                    $this->sessionToken,
-                    PsoEndpointSegment::APPOINTMENT
+                    $context->token,
+                    PsoEndpointSegment::APPOINTMENT,
                 );
 
-                // since it's been sent we need to dispatch the cleanup
                 $this->scheduleCleanup($appointmentRequestLog, 3);
 
-                // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
                     $summary = [
                         'appointmentRequestId' => $appointmentRequestId,
@@ -168,13 +161,12 @@ class AppointmentService extends BaseService
                     ]);
                 }
 
-                // If there was an error, just return the error response
                 return $psoResponse;
             }
 
             return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -227,30 +219,31 @@ class AppointmentService extends BaseService
         return $activity;
     }
 
-    private function deleteActivity(string $activityId, array $environmentData, #[SensitiveParameter] string $sessionToken): void
+    private function deleteActivity(string $activityId, array $environmentData, string $token): void
     {
-        // expected that environment.sendToPso is always true
-        $deleteServicePayload = [
-            'environment' => $environmentData,
-            'data' => [
-                'object_type' => 'activity',
-                'object_pk1' => $activityId,
-            ]
-        ];
+        $context = new PsoContext(
+            token: $token,
+            validated: [
+                'environment' => $environmentData,
+                'data' => [
+                    'objectType' => 'activity',
+                    'objectPk1' => $activityId,
+                ],
+            ],
+        );
 
-        $deleteService = new DeleteService($sessionToken, $deleteServicePayload);
-        $deleteService->deleteObject();
+        app(DeleteService::class)->deleteObject($context);
     }
 
-    public function declineAppointment(): JsonResponse
+    public function declineAppointment(PsoContext $context): JsonResponse
     {
         try {
-            $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
-            $environmentData = data_get($this->data, 'environment');
+            $appointmentRequestId = $context->data('appointmentRequestId');
+            $environmentData = $context->environment();
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId);
 
-            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))->inputType(InputMode::CHANGE)->build();
+            $inputReference = InputReferenceBuilder::make($context->datasetId())->inputType(InputMode::CHANGE)->build();
             // TODO: input reference is created here, not fetched — review naming/flow
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -271,21 +264,18 @@ class AppointmentService extends BaseService
             // Once deleted, set cleanup_datetime to now and required_manual_cleanup to false
             $this->scheduleCleanup($appointmentRequestLog, 3);
 
-            if ($this->sessionToken) {
+            if ($context->token) {
                 $psoPayload = $this->psoClient->buildPayload($payload);
 
-                // send the decline appointment
                 $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
-                    $this->sessionToken,
+                    $context->token,
                     PsoEndpointSegment::APPOINTMENT
                 );
 
-                // Check if response is successful (status code < 400)
                 if ($psoResponse->status() < 400) {
-                    // delete the activity
-                    $this->deleteActivity($activityId, $environmentData, $this->sessionToken);
+                    $this->deleteActivity($activityId, $environmentData, $context->token);
 
                     $summary = [
                         'activityId' => $activityId,
@@ -299,32 +289,28 @@ class AppointmentService extends BaseService
                     ]);
                 }
 
-                // If there was an error, just return the error response
                 return $psoResponse;
             }
 
             return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
 
-    public function checkAppointed(): JsonResponse
+    public function checkAppointed(PsoContext $context): JsonResponse
     {
         try {
-            Log::info('checkAppointed started', [
-                'appointmentRequestId' => data_get($this->data, 'data.appointmentRequestId'),
-                'appointmentOfferId' => data_get($this->data, 'data.appointmentOfferId'),
-            ]);
+            $appointmentRequestId = $context->data('appointmentRequestId');
+            $appointmentOfferId = $context->data('appointmentOfferId');
+            $environmentData = $context->environment();
 
-            $appointmentRequestId = data_get($this->data, 'data.appointmentRequestId');
-            $appointmentOfferId = data_get($this->data, 'data.appointmentOfferId');
-            $environmentData = data_get($this->data, 'environment');
+            Log::info('checkAppointed started', compact('appointmentRequestId', 'appointmentOfferId'));
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId, $appointmentOfferId);
 
-            $inputReference = InputReferenceBuilder::make(data_get($this->data, 'environment.datasetId'))
+            $inputReference = InputReferenceBuilder::make($context->datasetId())
                 ->inputType(InputMode::CHANGE)
                 ->build();
             $inputReferenceId = data_get($inputReference, 'id');
@@ -338,7 +324,7 @@ class AppointmentService extends BaseService
                 $appointmentRequestId,
                 $appointmentOfferId,
                 $inputReferenceId,
-                (bool)$this->sessionToken
+                (bool)$context->token
             );
 
             if (data_get($checkAppointed, 'status') !== 200 && data_get($checkAppointed, 'status')) {
@@ -349,13 +335,13 @@ class AppointmentService extends BaseService
                 return $this->error(data_get($checkAppointed, 'message'), data_get($checkAppointed, 'status'));
             }
 
-            if ($this->sessionToken) {
+            if ($context->token) {
                 $psoPayload = $this->psoClient->buildPayload($payload);
 
                 $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
-                    $this->sessionToken,
+                    $context->token,
                     PsoEndpointSegment::APPOINTMENT
                 );
 

@@ -6,6 +6,24 @@ use App\Classes\AuthenticatedPsoActionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controller-level auth orchestration for V2 endpoints.
+ *
+ * Provides executeAuthenticatedAction() which:
+ *  1. Extracts auth details from the request (body environment block or headers)
+ *  2. Delegates to AuthenticatedPsoActionService to obtain a PSO token if needed
+ *  3. Merges the resolved token back into the request's environment block
+ *  4. Invokes the given callback with the enriched request
+ *
+ * Controllers use this with method-injected services:
+ *
+ *   public function store(SomeRequest $request, SomeService $service): JsonResponse
+ *   {
+ *       return $this->executeAuthenticatedAction($request, fn($req) =>
+ *           $service->doSomething(PsoContext::fromRequest($req))
+ *       );
+ *   }
+ */
 trait PSOAssistV2
 {
     use ApiResponses;

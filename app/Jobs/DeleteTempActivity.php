@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 
 use App\Classes\AuthenticatedPsoActionService;
+use App\DataTransferObjects\PsoContext;
 use App\Models\V2\PSOAppointment;
 use App\Services\V2\DeleteService;
 use App\Traits\V2\PSOAssistV2;
@@ -64,9 +65,14 @@ class DeleteTempActivity implements ShouldQueue
 
             $response = $psoAuth->run(
                 data_get($deletePayloadToServicesApi, 'environment'),
-                function (string|null $token) use ($deletePayloadToServicesApi) {
-                    // This is where you do what the controller would do after getting a token
-                    return (new DeleteService($token, $deletePayloadToServicesApi))->deleteObject(); // return JsonResponse
+                function (array $auth) use ($deletePayloadToServicesApi) {
+                    $deletePayloadToServicesApi['environment']['token'] = data_get($auth, 'token');
+                    $context = new PsoContext(
+                        token: data_get($auth, 'token'),
+                        validated: $deletePayloadToServicesApi,
+                    );
+
+                    return app(DeleteService::class)->deleteObject($context);
                 }
             );
 

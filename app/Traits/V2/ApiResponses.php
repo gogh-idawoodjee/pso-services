@@ -4,6 +4,16 @@ namespace App\Traits\V2;
 
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Standard JSON response helpers used by services, controllers, and PsoClient.
+ *
+ * Response envelope: { data, status, message?, additionalDetails?, resultsUrl? }
+ *
+ *  - ok()           → 200, generic success
+ *  - sentToPso()    → 200, payload was sent to PSO
+ *  - notSentToPso() → 202, dry-run (no token / sendToPso=false)
+ *  - error()        → 4xx/5xx error
+ */
 trait ApiResponses
 {
     protected function ok(mixed $data = [], string|null $message = null): JsonResponse

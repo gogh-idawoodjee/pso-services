@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\DeleteObjectRequest;
 use App\Http\Requests\Api\V2\LoadPsoRequest;
@@ -20,63 +21,40 @@ class AssistController extends Controller
     /**
      * Get System Usage
      */
-    public function show(SystemUsageRequest $request): JsonResponse
+    public function show(SystemUsageRequest $request, AssistService $assistService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (SystemUsageRequest $req) {
-            $assistService = new AssistService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            $datasetId = $req->headers->get('datasetId');
-            $baseUrl = $req->headers->get('baseUrl');
-
-            return $assistService->getSystemusage($datasetId, $baseUrl);
-        });
+        return $this->executeAuthenticatedAction($request, fn(SystemUsageRequest $req) =>
+            $assistService->getSystemUsage(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Generic Delete Service
      */
-    public function destroy(DeleteObjectRequest $request): JsonResponse
+    public function destroy(DeleteObjectRequest $request, DeleteService $deleteService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (DeleteObjectRequest $req) {
-            $deleteService = new DeleteService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $deleteService->deleteObject();
-        });
+        return $this->executeAuthenticatedAction($request, fn(DeleteObjectRequest $req) =>
+            $deleteService->deleteObject(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Initialize PSO
      */
-    public function store(LoadPsoRequest $request): JsonResponse
+    public function store(LoadPsoRequest $request, LoadService $loadService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (LoadPsoRequest $req) {
-            $loadService = new LoadService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $loadService->loadPSO();
-        });
+        return $this->executeAuthenticatedAction($request, fn(LoadPsoRequest $req) =>
+            $loadService->loadPSO(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Send Rota to DSE
      */
-    public function update(UpdateRotaRequest $request): JsonResponse
+    public function update(UpdateRotaRequest $request, LoadService $loadService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (UpdateRotaRequest $req) {
-            $loadService = new LoadService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $loadService->updateRota();
-        });
+        return $this->executeAuthenticatedAction($request, fn(UpdateRotaRequest $req) =>
+            $loadService->updateRota(PsoContext::fromRequest($req))
+        );
     }
 }

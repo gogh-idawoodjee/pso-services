@@ -3,6 +3,7 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\DataTransferObjects\PsoContext;
 use App\Helpers\Stubs\CustomException;
 use App\Helpers\Stubs\CustomExceptionData;
 use Exception;
@@ -11,42 +12,41 @@ use Illuminate\Support\Str;
 
 class ScheduleExceptionService extends BaseService
 {
-    public function createException(): JsonResponse
+    public function createException(PsoContext $context): JsonResponse
     {
         try {
             $entityIsActivity = false;
 
-            if (data_get($this->data, 'data.activityId')) {
+            if ($context->data('activityId')) {
                 $entityIsActivity = true;
-                $entityId = data_get($this->data, 'data.activityId');
+                $entityId = $context->data('activityId');
             } else {
-                $entityId = data_get($this->data, 'data.resourceId');
+                $entityId = $context->data('resourceId');
             }
 
             $customExceptionId = Str::orderedUuid()->getHex()->toString();
 
             $customException = CustomException::make(
                 $customExceptionId,
-                data_get($this->data, 'data.exceptionTypeId'),
+                $context->data('exceptionTypeId'),
                 $entityId,
-                $entityIsActivity
+                $entityIsActivity,
             );
 
             $customExceptionData = CustomExceptionData::make(
                 $customExceptionId,
-                data_get($this->data, 'data.label'),
-                data_get($this->data, 'data.value'),
+                $context->data('label'),
+                $context->data('value'),
             );
 
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Custom_Exception' => $customException, 'Custom_Exception_Data' => $customExceptionData])
-                ->environment(data_get($this->data, 'environment'))
-                ->token($this->sessionToken)
+                ->environment($context->environment())
+                ->token($context->token)
                 ->includeInputReference()
                 ->send();
-
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
