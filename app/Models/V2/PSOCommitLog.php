@@ -7,33 +7,12 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
- * 
+ * @method static Model|static create(array $attributes = [])
+ * @method static Builder|static query()
  *
- * @property string $id
- * @property string|null $input_reference
- * @property string|null $pso_suggestions
- * @property string|null $output_payload
- * @property string|null $pso_response
- * @property string|null $response_time
- * @property string|null $transfer_stats
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * @method static Builder<static>|PSOCommitLog newModelQuery()
- * @method static Builder<static>|PSOCommitLog newQuery()
- * @method static Builder<static>|PSOCommitLog query()
- * @method static Builder<static>|PSOCommitLog whereCreatedAt($value)
- * @method static Builder<static>|PSOCommitLog whereId($value)
- * @method static Builder<static>|PSOCommitLog whereInputReference($value)
- * @method static Builder<static>|PSOCommitLog whereOutputPayload($value)
- * @method static Builder<static>|PSOCommitLog wherePsoResponse($value)
- * @method static Builder<static>|PSOCommitLog wherePsoSuggestions($value)
- * @method static Builder<static>|PSOCommitLog whereResponseTime($value)
- * @method static Builder<static>|PSOCommitLog whereTransferStats($value)
- * @method static Builder<static>|PSOCommitLog whereUpdatedAt($value)
- * @mixin Eloquent
+ * @mixin Builder
  */
 class PSOCommitLog extends Model
 {

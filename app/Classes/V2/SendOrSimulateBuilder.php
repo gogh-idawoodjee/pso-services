@@ -5,6 +5,17 @@ namespace App\Classes\V2;
 use Illuminate\Http\JsonResponse;
 
 
+/**
+ * Fluent builder for PsoClient::sendOrSimulate().
+ *
+ * Usage:
+ *   $this->psoClient->sendOrSimulateBuilder()
+ *       ->payload([...])
+ *       ->environment($env)
+ *       ->token($token)
+ *       ->includeInputReference('description')
+ *       ->send();
+ */
 class SendOrSimulateBuilder
 {
     protected array $payload;
@@ -69,7 +80,7 @@ class SendOrSimulateBuilder
     }
 
     /**
-     * Executes the call to sendOrSimulate from the trait.
+     * Execute the built request via PsoClient::sendOrSimulate().
      */
     public function send(): JsonResponse
     {

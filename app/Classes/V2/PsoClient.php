@@ -22,10 +22,21 @@ use Log;
 use SensitiveParameter;
 use Throwable;
 
+/**
+ * Handles all HTTP communication with the IFS/PSO Scheduling API.
+ *
+ * Extracted from the PSOAssistV2 trait so that services compose
+ * this client rather than inheriting HTTP concerns via a trait.
+ *
+ * @see SendOrSimulateBuilder for the fluent builder interface
+ */
 class PsoClient
 {
     use ApiResponses;
 
+    /**
+     * POST a payload to a PSO scheduling endpoint.
+     */
     public function sendToPso(
         array $payload,
         array $environmentData,
@@ -58,6 +69,9 @@ class PsoClient
         }
     }
 
+    /**
+     * GET schedule data from a PSO endpoint with optional query filters.
+     */
     public function getPsoData(
         string $datasetId,
         string $baseUrl,
@@ -114,6 +128,12 @@ class PsoClient
         }
     }
 
+    /**
+     * Wrap payload items in the dsScheduleData XML namespace structure.
+     *
+     * When $useWrapper is true, the payload is additionally wrapped in
+     * a 'payloadToPso' envelope used for response echoing.
+     */
     public function buildPayload(array $payloadItems, int $psoApiVersion = 1, bool $useWrapper = false): array
     {
         if ($psoApiVersion === 1) {
@@ -139,6 +159,13 @@ class PsoClient
         return $payloadItems;
     }
 
+    /**
+     * Conditionally send a payload to PSO or return a dry-run response.
+     *
+     * If a session token is present the payload is sent to PSO and,
+     * optionally, a rota update is dispatched afterwards.
+     * Without a token the built payload is returned unsent (HTTP 202).
+     */
     public function sendOrSimulate(
         array $payload,
         array $environmentData,
@@ -203,6 +230,9 @@ class PsoClient
         return $this->notSentToPso($wrappedPayload, $additionalDetails);
     }
 
+    /**
+     * Fluent builder for sendOrSimulate — preferred over calling sendOrSimulate() directly.
+     */
     public function sendOrSimulateBuilder(): SendOrSimulateBuilder
     {
         return new SendOrSimulateBuilder($this);
@@ -252,6 +282,9 @@ class PsoClient
         }
     }
 
+    /**
+     * PSO returns 400 for auth failures — remap to 401 when the body says AUTHENTICATION_FAILED.
+     */
     private function adjustStatusCode(Response $response): int
     {
         $statusCode = $response->status();

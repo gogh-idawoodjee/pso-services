@@ -10,13 +10,10 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * @method static Model|static create(array $attributes = [])
+ * @method static Builder|static query()
  *
- *
- * @property-read bool $is_valid_token
- * @method static Builder<static>|Token newModelQuery()
- * @method static Builder<static>|Token newQuery()
- * @method static Builder<static>|Token query()
- * @mixin Eloquent
+ * @mixin Builder
  */
 class Token extends Model
 {
@@ -35,7 +32,7 @@ class Token extends Model
     protected function tokenExpiry(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value->addHours(1),
+            set: static fn ($value) => $value->addHours(1),
         );
     }
 

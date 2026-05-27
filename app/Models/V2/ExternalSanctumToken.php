@@ -2,16 +2,15 @@
 
 namespace App\Models\V2;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\PersonalAccessToken as SanctumToken;
 
 /**
- * 
+ * @method static Model|static create(array $attributes = [])
+ * @method static Builder|static query()
  *
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $tokenable
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ExternalSanctumToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ExternalSanctumToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ExternalSanctumToken query()
- * @mixin \Eloquent
+ * @mixin Builder
  */
 class ExternalSanctumToken extends SanctumToken
 {
