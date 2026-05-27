@@ -18,7 +18,7 @@ class ScheduleService extends BaseService
 
         $instance = new static(null, []);
 
-        $response = $instance->getPsoData(
+        $response = $instance->psoClient->getPsoData(
             $datasetId,
             $baseUrl,
             $token,

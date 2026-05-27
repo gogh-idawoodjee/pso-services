@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 
 class ResourceEventController extends Controller
 {
-
     use PSOAssistV2;
 
     /**
@@ -19,15 +18,12 @@ class ResourceEventController extends Controller
     public function store(ResourceEventRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (ResourceEventRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $resourceService = new ResourceService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
             return $resourceService->createEvent();
         });
     }
-
 }

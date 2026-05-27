@@ -39,7 +39,7 @@ class ActivityService extends BaseService
                 ->fixed((bool)$this->resourceId)
                 ->build();
 
-            return $this->sendOrSimulateBuilder()
+            return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Activity_Status' => $payload])
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)
@@ -64,7 +64,7 @@ class ActivityService extends BaseService
                 ]))->all(),
             ];
 
-            return $this->sendOrSimulateBuilder()
+            return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)

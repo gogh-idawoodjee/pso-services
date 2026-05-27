@@ -47,9 +47,9 @@ class AppointmentService extends BaseService
             if ($this->sessionToken) {
 
                 $this->createAppointmentRecord($runId, $this->data, $payload, $activitySuffix);
-                $psoPayload = $this->buildPayload($payload);
+                $psoPayload = $this->psoClient->buildPayload($payload);
 
-                $psoResponse = $this->sendToPso(
+                $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
                     $this->sessionToken,
@@ -69,7 +69,7 @@ class AppointmentService extends BaseService
                 return $psoResponse;
             }
 
-            return $this->notSentToPso($this->buildPayload($payload, 1, true));
+            return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -138,9 +138,9 @@ class AppointmentService extends BaseService
             $payload = array_merge($payload, (array)$bookAppointmentPayload);
 
             if ($this->sessionToken) {
-                $psoPayload = $this->buildPayload($payload);
+                $psoPayload = $this->psoClient->buildPayload($payload);
 
-                $psoResponse = $this->sendToPso(
+                $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
                     $this->sessionToken,
@@ -164,7 +164,7 @@ class AppointmentService extends BaseService
                     ];
                     return $this->sentToPso([
                         'acceptedAppointmentSummary' => $summary,
-                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                        'payloadToPso' => $this->psoClient->buildPayload($payload, 1, true),
                     ]);
                 }
 
@@ -172,7 +172,7 @@ class AppointmentService extends BaseService
                 return $psoResponse;
             }
 
-            return $this->notSentToPso($this->buildPayload($payload, 1, true));
+            return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -272,10 +272,10 @@ class AppointmentService extends BaseService
             $this->scheduleCleanup($appointmentRequestLog, 3);
 
             if ($this->sessionToken) {
-                $psoPayload = $this->buildPayload($payload);
+                $psoPayload = $this->psoClient->buildPayload($payload);
 
                 // send the decline appointment
-                $psoResponse = $this->sendToPso(
+                $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
                     $this->sessionToken,
@@ -295,7 +295,7 @@ class AppointmentService extends BaseService
                     ];
                     return $this->sentToPso([
                         'declineAppointmentSummary' => $summary,
-                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                        'payloadToPso' => $this->psoClient->buildPayload($payload, 1, true),
                     ]);
                 }
 
@@ -303,7 +303,7 @@ class AppointmentService extends BaseService
                 return $psoResponse;
             }
 
-            return $this->notSentToPso($this->buildPayload($payload, 1, true));
+            return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -350,9 +350,9 @@ class AppointmentService extends BaseService
             }
 
             if ($this->sessionToken) {
-                $psoPayload = $this->buildPayload($payload);
+                $psoPayload = $this->psoClient->buildPayload($payload);
 
-                $psoResponse = $this->sendToPso(
+                $psoResponse = $this->psoClient->sendToPso(
                     $psoPayload,
                     $environmentData,
                     $this->sessionToken,
@@ -373,7 +373,7 @@ class AppointmentService extends BaseService
 
                     Log::info('checkAppointed successful', compact('appointmentRequestId'));
                     return $this->sentToPso(array_merge($data, [
-                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                        'payloadToPso' => $this->psoClient->buildPayload($payload, 1, true),
                     ]));
                 }
 
@@ -382,7 +382,7 @@ class AppointmentService extends BaseService
             }
 
             Log::info('checkAppointed skipped PSO send (no session token)', compact('appointmentRequestId'));
-            return $this->notSentToPso($this->buildPayload($payload, 1, true));
+            return $this->notSentToPso($this->psoClient->buildPayload($payload, 1, true));
         } catch (Exception $e) {
             Log::error('Exception caught in checkAppointed()', [
                 'message' => $e->getMessage(),

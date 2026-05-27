@@ -2,27 +2,24 @@
 
 namespace App\Http\Controllers\Api\V2;
 
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\HealthCheckRequest;
-use App\Traits\V2\ApiResponses;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
-use JsonException;
 
 class HealthCheckController extends Controller
-
 {
-
-    use ApiResponses, PSOAssistV2;
+    use PSOAssistV2;
 
     /**
-     * @throws JsonException
+     * Health Check.
+     *
+     * Validates that authentication credentials are valid by attempting to obtain a PSO token.
      */
-    public function check(HealthCheckRequest $request): JsonResponse|null
+    public function check(HealthCheckRequest $request): JsonResponse
     {
-
-        return $this->getPSOToken($request->environment);
-
+        return $this->executeAuthenticatedAction($request, function () {
+            return $this->ok(['status' => 'healthy']);
+        });
     }
 }

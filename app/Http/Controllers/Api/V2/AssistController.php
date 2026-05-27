@@ -12,26 +12,19 @@ use App\Services\V2\DeleteService;
 use App\Services\V2\LoadService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
-use JsonException;
 
 class AssistController extends Controller
 {
-    //
     use PSOAssistV2;
-
 
     /**
      * Get System Usage
-     * @throws JsonException
      */
     public function show(SystemUsageRequest $request): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (SystemUsageRequest $req) {
-
             $assistService = new AssistService(
-                $req->filled('environment.token') ? $req->input('environment.token') : $req->headers->get('token'),
-
+                $req->input('environment.token'),
                 $req->validated(),
             );
 
@@ -47,14 +40,10 @@ class AssistController extends Controller
      */
     public function destroy(DeleteObjectRequest $request): JsonResponse
     {
-
-
         return $this->executeAuthenticatedAction($request, function (DeleteObjectRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $deleteService = new DeleteService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
-                $req->validated()
+                $req->input('environment.token'),
+                $req->validated(),
             );
 
             return $deleteService->deleteObject();
@@ -64,33 +53,27 @@ class AssistController extends Controller
     /**
      * Initialize PSO
      */
-    public function store(LoadPsoRequest $request): JsonResponse// initialize PSO
+    public function store(LoadPsoRequest $request): JsonResponse
     {
-
         return $this->executeAuthenticatedAction($request, function (LoadPsoRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $loadService = new LoadService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
-                $req->validated()
+                $req->input('environment.token'),
+                $req->validated(),
             );
 
             return $loadService->loadPSO();
         });
-
     }
 
     /**
      * Send Rota to DSE
      */
-    public function update(UpdateRotaRequest $request): JsonResponse// update rota
+    public function update(UpdateRotaRequest $request): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, function (UpdateRotaRequest $req) {
-            // so we have the token now in $req->input('environment.token')
-            // we should send that the activity service? // all our services should accept a token
             $loadService = new LoadService(
-                $req->filled('environment.token') ? $req->input('environment.token') : null,
-                $req->validated()
+                $req->input('environment.token'),
+                $req->validated(),
             );
 
             return $loadService->updateRota();

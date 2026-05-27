@@ -43,7 +43,7 @@ class ResourceService extends BaseService
                     ->longitude(data_get($this->data, 'data.long'))
                     ->build();
 
-            return $this->sendOrSimulateBuilder()
+            return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Schedule_Event' => $payload])
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)
@@ -73,7 +73,7 @@ class ResourceService extends BaseService
 
             $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
-            return $this->sendOrSimulate(
+            return $this->psoClient->sendOrSimulate(
                 [$entity => $payload],
                 data_get($this->data, 'environment'),
                 $this->sessionToken,
@@ -109,7 +109,7 @@ class ResourceService extends BaseService
 
                 $payload = $this->buildArpUnavailability($this->data);
 
-                return $this->sendOrSimulateBuilder()
+                return $this->psoClient->sendOrSimulateBuilder()
                     ->payload($payload)
                     ->environment(data_get($this->data, 'environment'))
                     ->token($this->sessionToken)
@@ -134,7 +134,7 @@ class ResourceService extends BaseService
                 )
                 ->build();
 
-            return $this->sendOrSimulateBuilder()
+            return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment(data_get($this->data, 'environment'))
                 ->token($this->sessionToken)
@@ -169,7 +169,7 @@ class ResourceService extends BaseService
      */
     public function getResource(string $datasetId, string $resourceId, string $baseUrl): JsonResponse
     {
-        $resource = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE, $resourceId)->getData(true);
+        $resource = $this->psoClient->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE, $resourceId)->getData(true);
         $resourceData = data_get($resource, 'dsScheduleData.Resources');
         $resourceTypeId = data_get($resource, 'dsScheduleData.Resources.resource_type_id');
         $resourceType = collect(data_get($resource, 'dsScheduleData.Resource_Type', []))
@@ -405,7 +405,7 @@ class ResourceService extends BaseService
     public function getResourceList(string $datasetId, string $baseUrl): self
     {
 
-        $this->rawScheduleData = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::DATA, null, true)->getData(true);
+        $this->rawScheduleData = $this->psoClient->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::DATA, null, true)->getData(true);
         $this->resources = data_get($this->rawScheduleData, 'dsScheduleData.Resources');
         return $this;
 

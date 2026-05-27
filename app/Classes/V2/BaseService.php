@@ -2,20 +2,22 @@
 
 namespace App\Classes\V2;
 
-use App\Traits\V2\PSOAssistV2;
+use App\Traits\V2\ApiResponses;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use SensitiveParameter;
 
 abstract class BaseService
 {
-    use PSOAssistV2;
+    use ApiResponses;
 
+    protected PsoClient $psoClient;
     protected string|null $sessionToken;
     protected array $data;
 
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data = [])
     {
+        $this->psoClient = new PsoClient();
         $this->sessionToken = $sessionToken;
         $this->data = $data;
     }

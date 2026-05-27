@@ -104,7 +104,7 @@ class TravelService extends BaseService
 
         // Step 5: Send payload
         $additionalDetails = $this->getAdditionalDetails();
-        $apiResponse = $this->sendOrSimulateBuilder()
+        $apiResponse = $this->psoClient->sendOrSimulateBuilder()
             ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
