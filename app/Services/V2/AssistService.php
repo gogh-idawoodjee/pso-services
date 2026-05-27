@@ -10,14 +10,11 @@ use JsonException;
 
 class AssistService extends BaseService
 {
-
-
     /**
      * @throws JsonException
      */
     public function getSystemusage(string|null $datasetId, string|null $baseUrl, string|null $minDate = null, string|null $maxDate = null): JsonResponse
     {
-
         if ($minDate === null) {
             $minDate = Carbon::now()->toIso8601String();
             $maxDate = Carbon::now()->addDay()->toIso8601String();
@@ -34,6 +31,5 @@ class AssistService extends BaseService
             $minDate,
             $maxDate
         );
-
     }
 }

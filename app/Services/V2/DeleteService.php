@@ -11,16 +11,14 @@ use SensitiveParameter;
 
 class DeleteService extends BaseService
 {
-    protected array $data;
     protected bool $isRotaObject;
 
     public function __construct(
         #[SensitiveParameter] string|null $sessionToken = null,
-        array $data,
-        bool $isRotaObject = false
+        array $data = [],
+        bool $isRotaObject = false,
     ) {
         parent::__construct($sessionToken, $data);
-        $this->data = $data;
         $this->isRotaObject = $isRotaObject;
     }
 
@@ -54,7 +52,6 @@ class DeleteService extends BaseService
 
             // Replace objectType in payload with normalized label
             $this->data['data'] = array_merge($this->data['data'], ['objectType' => $label]);
-
 
             // Now call the DeleteObject helper with normalized data
             $delete_input = DeleteObject::make($this->data['data'], $this->isRotaObject);

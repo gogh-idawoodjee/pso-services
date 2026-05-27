@@ -17,15 +17,6 @@ use SensitiveParameter;
 class LoadService extends BaseService
 {
 
-
-    protected array $data;
-
-    public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data)
-    {
-        parent::__construct($sessionToken, $data);
-        $this->data = $data;
-    }
-
     /**
      * @throws JsonException
      */
@@ -76,7 +67,6 @@ class LoadService extends BaseService
         // Handle keep/send flags
         $keepPsoDataMessage = null;
 
-
         if ($keepPsoData) {
             if ($sendToPso) {
                 $keepPsoDataMessage = 'Keeping Existing PSO Data';
@@ -95,9 +85,6 @@ class LoadService extends BaseService
             ->send();
     }
 
-
-    /**
-     */
     public function updateRota(): JsonResponse
     {
         $datasetId = data_get($this->data, 'environment.datasetId');
@@ -121,13 +108,10 @@ class LoadService extends BaseService
             ),
         ];
 
-
         return $this->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment(data_get($this->data, 'environment'))
             ->token($this->sessionToken)
             ->send();
     }
-
-
 }

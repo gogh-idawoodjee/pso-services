@@ -4,14 +4,12 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Enums\PsoEndpointSegment;
-
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use JsonException;
 
 class ScheduleService extends BaseService
 {
-
     /**
      * @throws JsonException
      */
@@ -36,28 +34,7 @@ class ScheduleService extends BaseService
 
         // Extract the actual data from JsonResponse
         $responseData = $response->getData(true); // true = return as array
-        $fullSchedule = $responseData; // or $responseData[0] if it's wrapped
-
-        // the old way below
-//        try {
-//            $response = Http::withHeaders([
-//                'apiKey' => $token,
-//            ])
-//                ->timeout(self::TIMEOUT)
-//                ->connectTimeout(self::TIMEOUT)
-//                ->get(
-//                    "{$baseUrl}/IFSSchedulingRESTfulGateway/api/v1/scheduling/data",
-//                    compact('includeInput', 'includeOutput', 'datasetId')
-//                );
-//        } catch (ConnectionException|Throwable) {
-//            return false;
-//        }
-//
-//        if (!$response->ok()) {
-//            return false;
-//        }
-//
-//        $fullSchedule = $response->collect()->first();
+        $fullSchedule = $responseData;
 
         $activities = self::normalizeCollection($fullSchedule, 'Activity');
         $activityKeys = $activities->pluck('id');

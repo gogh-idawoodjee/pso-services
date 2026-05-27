@@ -11,12 +11,9 @@ use Illuminate\Support\Str;
 
 class ScheduleExceptionService extends BaseService
 {
-
     public function createException(): JsonResponse
     {
-
         try {
-
             $entityIsActivity = false;
 
             if (data_get($this->data, 'data.activityId')) {
@@ -52,7 +49,5 @@ class ScheduleExceptionService extends BaseService
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
-
     }
-
 }

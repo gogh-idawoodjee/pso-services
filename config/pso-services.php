@@ -111,6 +111,10 @@ return [
 
         'use_region_as_locality' => true,
         'google_key' => env('GOOGLE_MAPS_API_KEY'),
+
+        // Passthrough keyword: when sent as the Google API key in a request,
+        // the server's configured google_key is used instead
+        'google_api_passthrough' => env('GOOGLE_API_PASSTHROUGH'),
         'shared_encryption_key' => env('SHREDDER_KEY'),
     ],
 

@@ -10,8 +10,6 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use SensitiveParameter;
 
-// careful your two ActivityStatus classes don't clash
-
 class ActivityService extends BaseService
 {
     private string|null $activityId;
@@ -35,8 +33,6 @@ class ActivityService extends BaseService
     public function updateStatus(): JsonResponse
     {
         try {
-
-
             $payload = ActivityStatusBuilder::make($this->activityId, $this->activityStatus)
                 ->resourceId($this->resourceId)
                 ->duration(data_get($this->data, 'data.duration'))
@@ -68,7 +64,6 @@ class ActivityService extends BaseService
                 ]))->all(),
             ];
 
-
             return $this->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment(data_get($this->data, 'environment'))
@@ -81,5 +76,4 @@ class ActivityService extends BaseService
             return $this->error('An unexpected error occurred', 500);
         }
     }
-
 }

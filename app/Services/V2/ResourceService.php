@@ -29,16 +29,13 @@ use Throwable;
 
 class ResourceService extends BaseService
 {
-
     protected array $resources;
     protected array $rawScheduleData;
     protected array $selectOptions = [];
 
-
     public function createEvent(): JsonResponse|null
     {
         try {
-
             $payload =
                 ResourceEventBuilder::make(data_get($this->data, 'data.resourceId'), EventType::from(data_get($this->data, 'data.eventType')))
                     ->eventDateTime(data_get($this->data, 'data.eventDateTime'))
@@ -62,7 +59,6 @@ class ResourceService extends BaseService
     public function updateShift(): JsonResponse|null
     {
         try {
-
             $payload = ShiftBuilder::make()
                 ->shiftId(data_get($this->data, 'data.shiftId'))
                 ->shiftType(data_get($this->data, 'data.shiftType'))
@@ -84,13 +80,10 @@ class ResourceService extends BaseService
                 true, // sends rota update
                 'Updated Rota After Shift Update'
             );
-
-
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
-
     }
 
     public function updateUnavailablity(): JsonResponse|null
@@ -109,7 +102,6 @@ class ResourceService extends BaseService
     public function createUnavailability(): JsonResponse|null
     {
         try {
-
             // starting with just schedule unavail which is just a private activity
 
             if (data_get($this->data, 'data.isArpObject')) {
@@ -131,7 +123,6 @@ class ResourceService extends BaseService
             $activityId = Uuid::uuid4()->toString();
             data_set($this->data, 'data.activityId', $activityId);
 
-
             $payload = ActivityBuilder::make($this->data)
                 ->withActivityClass(ActivityClass::PRIVATE)
                 ->withActivityStatusBuilder(
@@ -149,8 +140,6 @@ class ResourceService extends BaseService
                 ->token($this->sessionToken)
                 ->includeInputReference('Created Unavailability')
                 ->send();
-
-
         } catch (Exception $e) {
             $this->LogError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -175,22 +164,18 @@ class ResourceService extends BaseService
         return ['Ram_Time_Pattern' => $timepattern, 'RAM_Unavailability' => $unavailability];
     }
 
-
     /**
      * @throws JsonException
      */
     public function getResource(string $datasetId, string $resourceId, string $baseUrl): JsonResponse
     {
-
         $resource = $this->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE, $resourceId)->getData(true);
         $resourceData = data_get($resource, 'dsScheduleData.Resources');
         $resourceTypeId = data_get($resource, 'dsScheduleData.Resources.resource_type_id');
         $resourceType = collect(data_get($resource, 'dsScheduleData.Resource_Type', []))
             ->firstWhere('id', $resourceTypeId);
 
-
         if ($resourceData) {
-
             $sameStartAndEndLocation = data_get($resourceData, 'location_id_start') === data_get($resourceData, 'location_id_end');
 
             $locationStart = LocationHelper::findLocationById($resource, data_get($resourceData, 'location_id_start'));
@@ -215,9 +200,7 @@ class ResourceService extends BaseService
                     'resource_type' => [
                         'type_id' => data_get($resourceData, 'resource_type_id'),
                         'description' => data_get($resourceType, 'description'),
-
                     ],
-
                     'note' => data_get($resource, 'dsScheduleData.Resources.memo'),
                     'max_travel' => $this->resourceMaxTravel($resourceData, $resourceType, 'max_travel'),
                     'max_travel_outside_shift_to_first_activity' => $this->resourceMaxTravel($resourceData, $resourceType, 'travel_from'),
@@ -231,26 +214,21 @@ class ResourceService extends BaseService
                         'pso' => [
                             'start' => LocationHelper::formatPsoAddress($locationStart),
                             'end' => LocationHelper::formatPsoAddress($locationEnd),
-
                         ]
                     ],
                     'regions' => $this->getRelatedItemsForResource($resource, $resourceId, 'region'),
                     'skills' => $this->getRelatedItemsForResource($resource, $resourceId, 'skill'),
-                    'shifts' => $this->getResourceShiftsFormatted(data_get($resource, 'dsScheduleData.Shift'), data_get($resource, 'dsScheduleData.Plan_Route'))
-
+                    'shifts' => $this->getResourceShiftsFormatted(data_get($resource, 'dsScheduleData.Shift'), data_get($resource, 'dsScheduleData.Plan_Route')),
                 ]
             ];
 
-
             return $this->ok($formatted_resource);
-
         }
         return $this->error('Resource not found', 404);
     }
 
     private function resourceMaxTravel(array|null $resourceData, array|null $resourceType, string $key): array
     {
-
         $maxTravelRaw = data_get($resourceData, $key);
         $maxTravelFallback = data_get($resourceType, $key);
 
@@ -279,7 +257,6 @@ class ResourceService extends BaseService
             'source' => $maxTravelSource,
             'formatted' => $maxTravelFormatted,
         ];
-
     }
 
     private function getRelatedItemsForResource(array $data, string|int $resourceId, string $resourceEntity): array
@@ -314,7 +291,6 @@ class ResourceService extends BaseService
             ->all();
     }
 
-
     private function getAdditionalAttributes(string $resourceId, array|null $additionalAttributes = null): array
     {
         $attributeList = [];
@@ -330,15 +306,12 @@ class ResourceService extends BaseService
             $label = data_get($attribute, 'label');
             $value = data_get($attribute, 'label_value');
             $attributeList[$label] = $value;
-
         }
 
         return $attributeList;
     }
 
-
-
-public function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
+    public function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
 {
     // handle null inputs
     $shifts = $shifts ?? [];
@@ -491,6 +464,4 @@ public function getResourceShiftsFormatted(array|null $shifts, array|null $route
     {
         return $this->selectOptions ?? [];
     }
-
-
 }

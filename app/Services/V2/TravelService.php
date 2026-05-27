@@ -12,7 +12,6 @@ use App\Enums\TravelLogStatus;
 use App\Helpers\Stubs\TravelDetailRequest;
 use App\Jobs\TravelLogReview;
 use App\Models\V2\PSOTravelLog;
-use App\Traits\V2\PSOAssistV2;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -25,17 +24,12 @@ use Spatie\Geocoder\Geocoder;
 
 class TravelService extends BaseService
 {
-    use PSOAssistV2;
-
-    protected array $data;
     private string $travelLogId;
     private string|null $datasetId;
     protected array $warnings = [];
     protected bool $hasGoogleKey = false;
     protected bool $hasGeocoderKey = false;
 
-    /**
-     */
     public function __construct(#[SensitiveParameter] string|null $sessionToken = null, array $data)
     {
         parent::__construct($sessionToken, $data);
@@ -235,12 +229,11 @@ class TravelService extends BaseService
         ], 204, ['Content-Type', 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 
-    /**
-     */
     protected function getDistanceMatrix(float $latFrom, float $longFrom, float $latTo, float $longTo, string|null $apiKey = null): array|null
     {
-        // Check if the magic keyword is used
-        if ($apiKey === 'ishrocks') {
+        // Check if the passthrough keyword is used
+        $passthrough = config('pso-services.settings.google_api_passthrough');
+        if ($passthrough && $apiKey === $passthrough) {
             $apiKey = config('pso-services.settings.google_key');
         }
 
