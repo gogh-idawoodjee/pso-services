@@ -9,17 +9,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Authenticates with PSO and runs a callback with the resolved auth details.
+ * Ensures a valid PSO session token exists before running the given callback.
  *
- * Used by both controllers (via PSOAssistV2 trait) and background jobs
- * (e.g. DeleteTempActivity) that need to obtain a PSO session token
- * before performing an action.
- *
- * Flow:
- *  1. If sendToPso is false or a token already exists → run callback immediately
- *  2. Otherwise → call PSOAuthService to obtain a session token, then run callback
- *
- * The callback receives an array with the resolved 'token' key set.
+ * Skips authentication when sending to PSO is disabled or a token is already present.
+ * Used by controllers (via PSOAssistV2 trait) and jobs (e.g. DeleteTempActivity).
  */
 class AuthenticatedPsoActionService
 {
