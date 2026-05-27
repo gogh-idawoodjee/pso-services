@@ -8,15 +8,25 @@ use Spatie\Geocoder\Geocoder;
 
 class LocationHelper
 {
+    private static ?Geocoder $geocoder = null;
+
+    private static function geocoder(): Geocoder
+    {
+        if (self::$geocoder === null) {
+            self::$geocoder = (new Geocoder(new Client()))
+                ->setApiKey(config('geocoder.key'));
+        }
+
+        return self::$geocoder;
+    }
 
     public static function formatAddress($latitude, $longitude): array
     {
+        if (empty(config('geocoder.key'))) {
+            return self::emptyAddress();
+        }
 
-        $geocoder = (new Geocoder(new Client()))
-            ->setApiKey(config('geocoder.key'));
-
-
-        $result = $geocoder->getAddressForCoordinates($latitude, $longitude);
+        $result = self::geocoder()->getAddressForCoordinates($latitude, $longitude);
         $arrayResult = json_decode(json_encode($result, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
 
         $components = collect($arrayResult['address_components'] ?? []);
@@ -50,8 +60,18 @@ class LocationHelper
             $postalKey => $postalCode,
             'country' => $country,
         ];
+    }
 
-
+    private static function emptyAddress(): array
+    {
+        return [
+            'street_number' => '',
+            'street_name' => '',
+            'city' => '',
+            'province' => '',
+            'postal_code' => '',
+            'country' => '',
+        ];
     }
 
     public static function findLocationById(mixed $resource, string $locationId): object|null
@@ -92,7 +112,6 @@ class LocationHelper
 
     public static function formatPsoAddress($location): array
     {
-
         $country = data_get($location, 'country', 'CA');
 
         $postalKey = ($country === 'United States' || $country === 'US') ? 'zip_code' : 'postal_code';
@@ -108,7 +127,5 @@ class LocationHelper
             $region_key => data_get($location, 'state'),
             $postalKey => data_get($location, 'post_code_zip'),
         ];
-
     }
-
 }
