@@ -162,7 +162,10 @@ class AppointmentService extends BaseService
                         'selectedDate' => data_get($selectedOffer, 'windowDayEnglish'),
                         'selectedWindow' => data_get($selectedOffer, 'windowStartTime') . ' - ' . data_get($selectedOffer, 'windowEndTime'),
                     ];
-                    return $this->sentToPso(['acceptedAppointmentSummary' => $summary], $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso([
+                        'acceptedAppointmentSummary' => $summary,
+                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                    ]);
                 }
 
                 // If there was an error, just return the error response
@@ -290,7 +293,10 @@ class AppointmentService extends BaseService
                         'declinedOffers' => $validOffers,
                         'totalAppointmentsOffered' => $validOffers + $invalidOffers,
                     ];
-                    return $this->sentToPso(['declineAppointmentSummary' => $summary], $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso([
+                        'declineAppointmentSummary' => $summary,
+                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                    ]);
                 }
 
                 // If there was an error, just return the error response
@@ -366,7 +372,9 @@ class AppointmentService extends BaseService
                     ];
 
                     Log::info('checkAppointed successful', compact('appointmentRequestId'));
-                    return $this->sentToPso($data, $this->buildPayload($payload, 1, true));
+                    return $this->sentToPso(array_merge($data, [
+                        'payloadToPso' => $this->buildPayload($payload, 1, true),
+                    ]));
                 }
 
                 Log::warning('checkAppointed: PSO responded with an error', ['status' => $psoResponse->status()]);
