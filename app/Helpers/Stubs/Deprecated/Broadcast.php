@@ -5,6 +5,7 @@ namespace App\Helpers\Stubs\Deprecated;
 use App\Enums\BroadcastAllocationType;
 use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
+use App\Helpers\Stubs\BroadcastParameter;
 use Illuminate\Support\Str;
 
 /**

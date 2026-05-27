@@ -9,7 +9,6 @@ class BroadcastParameterBuilder
 {
     protected BroadcastParameterType|null $name = null;
     protected string|null $value = null;
-    protected string|null $broadcastId = null;
 
     public static function make(): static
     {
@@ -28,12 +27,12 @@ class BroadcastParameterBuilder
         return $this;
     }
 
-    public function finalize(string $broadcastId): BroadcastParameter
+    public function finalize(string $broadcastId): array
     {
-        return new BroadcastParameter(
+        return BroadcastParameter::make(
             $broadcastId,
             $this->name,
-            $this->value
+            $this->value,
         );
     }
 }

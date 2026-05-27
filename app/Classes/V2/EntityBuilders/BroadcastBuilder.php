@@ -3,8 +3,8 @@
 namespace App\Classes\V2\EntityBuilders;
 
 use App\Enums\BroadcastAllocationType;
-use App\Enums\BroadcastPlanType;
 use App\Enums\BroadcastParameterType;
+use App\Enums\BroadcastPlanType;
 use App\Helpers\Stubs\BroadcastParameter;
 use Illuminate\Support\Str;
 
@@ -57,19 +57,15 @@ class BroadcastBuilder
 
         $parameters = array_map(static function ($param) use ($broadcast_id) {
             if ($param instanceof BroadcastParameterBuilder) {
-                return $param->finalize($broadcast_id)->toArray();
-            }
-
-            if ($param instanceof BroadcastParameter) {
-                return $param->toArray();
+                return $param->finalize($broadcast_id);
             }
 
             // Raw array fallback
-            return (new BroadcastParameter(
+            return BroadcastParameter::make(
                 $broadcast_id,
                 BroadcastParameterType::from($param['parameter_name']),
-                $param['parameter_value']
-            ))->toArray();
+                $param['parameter_value'],
+            );
         }, $this->broadcastParameters);
 
         return [
