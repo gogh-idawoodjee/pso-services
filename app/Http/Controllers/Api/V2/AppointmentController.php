@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
 use App\Http\Requests\Api\V2\AppointmentRequest;
@@ -18,31 +19,21 @@ class AppointmentController extends Controller
     /**
      * Check Appointed.
      */
-    public function check(AppointmentSummaryRequest $request): JsonResponse
+    public function check(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            $appointmentService = new AppointmentService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $appointmentService->checkAppointed();
-        });
+        return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>
+            $appointmentService->checkAppointed(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Get Appointments
      */
-    public function store(AppointmentRequest $request): JsonResponse
+    public function store(AppointmentRequest $request, AppointmentService $appointmentService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (AppointmentRequest $req) {
-            $appointmentService = new AppointmentService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $appointmentService->getAppointment();
-        });
+        return $this->executeAuthenticatedAction($request, fn(AppointmentRequest $req) =>
+            $appointmentService->getAppointment(PsoContext::fromRequest($req))
+        );
     }
 
     /**
@@ -56,30 +47,20 @@ class AppointmentController extends Controller
     /**
      * Accept Appointment
      */
-    public function update(AppointmentSummaryRequest $request): JsonResponse
+    public function update(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            $appointmentService = new AppointmentService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $appointmentService->acceptAppointment();
-        });
+        return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>
+            $appointmentService->acceptAppointment(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Decline Appointment
      */
-    public function destroy(AppointmentSummaryRequest $request): JsonResponse
+    public function destroy(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (AppointmentSummaryRequest $req) {
-            $appointmentService = new AppointmentService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $appointmentService->declineAppointment();
-        });
+        return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>
+            $appointmentService->declineAppointment(PsoContext::fromRequest($req))
+        );
     }
 }

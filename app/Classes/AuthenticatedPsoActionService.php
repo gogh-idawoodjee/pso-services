@@ -8,9 +8,21 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Authenticates with PSO and runs a callback with the resolved auth details.
+ *
+ * Used by both controllers (via PSOAssistV2 trait) and background jobs
+ * (e.g. DeleteTempActivity) that need to obtain a PSO session token
+ * before performing an action.
+ *
+ * Flow:
+ *  1. If sendToPso is false or a token already exists → run callback immediately
+ *  2. Otherwise → call PSOAuthService to obtain a session token, then run callback
+ *
+ * The callback receives an array with the resolved 'token' key set.
+ */
 class AuthenticatedPsoActionService
 {
-    // extract this method into standalone service as jobs like DeleteTempActivity can't use PSOAssist executeAuthenticatedAction
     public function run(array $authDetails, callable $callback): JsonResponse|null
     {
         if (!data_get($authDetails, 'sendToPso') || data_get($authDetails, 'token')) {

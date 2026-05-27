@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ResourceRequest;
 use App\Services\V2\ResourceService;
@@ -15,36 +16,20 @@ class ResourceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ResourceRequest $request, string $resourceId): JsonResponse
+    public function show(ResourceRequest $request, string $resourceId, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) use ($resourceId) {
-            $resourceService = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            $datasetId = $req->headers->get('datasetId');
-            $baseUrl = $req->headers->get('baseUrl');
-
-            return $resourceService->getResource($datasetId, $resourceId, $baseUrl);
-        });
+        return $this->executeAuthenticatedAction($request, fn(ResourceRequest $req) =>
+            $resourceService->getResource(PsoContext::fromRequest($req), $resourceId)
+        );
     }
 
     /**
      * Get All Resources in Dataset.
      */
-    public function index(ResourceRequest $request): JsonResponse
+    public function index(ResourceRequest $request, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ResourceRequest $req) {
-            $resourceService = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            $datasetId = $req->headers->get('datasetId');
-            $baseUrl = $req->headers->get('baseUrl');
-
-            return $this->ok(['resources' => $resourceService->getResourceList($datasetId, $baseUrl)->toSelectOptions()->getSelectOptions()]);
-        });
+        return $this->executeAuthenticatedAction($request, fn(ResourceRequest $req) =>
+            $this->ok(['resources' => $resourceService->getResourceSelectOptions(PsoContext::fromRequest($req))])
+        );
     }
 }

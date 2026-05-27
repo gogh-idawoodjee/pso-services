@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\UnavailabilityRequest;
 use App\Http\Requests\Api\V2\UnavailabilityUpdateRequest;
@@ -16,30 +17,20 @@ class ResourceUnavailabilityController extends Controller
     /**
      * Create a new resource unavailability.
      */
-    public function store(UnavailabilityRequest $request): JsonResponse
+    public function store(UnavailabilityRequest $request, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (UnavailabilityRequest $req) {
-            $resourceUnavail = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $resourceUnavail->createUnavailability();
-        });
+        return $this->executeAuthenticatedAction($request, fn(UnavailabilityRequest $req) =>
+            $resourceService->createUnavailability(PsoContext::fromRequest($req))
+        );
     }
 
     /**
      * Update one or more existing unavailabilities.
      */
-    public function update(UnavailabilityUpdateRequest $request): JsonResponse
+    public function update(UnavailabilityUpdateRequest $request, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (UnavailabilityUpdateRequest $req) {
-            $resourceUnavail = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $resourceUnavail->updateUnavailablity();
-        });
+        return $this->executeAuthenticatedAction($request, fn(UnavailabilityUpdateRequest $req) =>
+            $resourceService->updateUnavailability(PsoContext::fromRequest($req))
+        );
     }
 }

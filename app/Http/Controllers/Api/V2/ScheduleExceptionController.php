@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ScheduleExceptionRequest;
 use App\Services\V2\ScheduleExceptionService;
@@ -15,15 +16,10 @@ class ScheduleExceptionController extends Controller
     /**
      * Create a new custom Exception.
      */
-    public function store(ScheduleExceptionRequest $request): JsonResponse
+    public function store(ScheduleExceptionRequest $request, ScheduleExceptionService $scheduleExceptionService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ScheduleExceptionRequest $req) {
-            $scheduleException = new ScheduleExceptionService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $scheduleException->createException();
-        });
+        return $this->executeAuthenticatedAction($request, fn(ScheduleExceptionRequest $req) =>
+            $scheduleExceptionService->createException(PsoContext::fromRequest($req))
+        );
     }
 }

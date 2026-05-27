@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ResourceEventRequest;
 use App\Services\V2\ResourceService;
@@ -15,15 +16,10 @@ class ResourceEventController extends Controller
     /**
      * Create a new resource event.
      */
-    public function store(ResourceEventRequest $request): JsonResponse
+    public function store(ResourceEventRequest $request, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ResourceEventRequest $req) {
-            $resourceService = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $resourceService->createEvent();
-        });
+        return $this->executeAuthenticatedAction($request, fn(ResourceEventRequest $req) =>
+            $resourceService->createEvent(PsoContext::fromRequest($req))
+        );
     }
 }

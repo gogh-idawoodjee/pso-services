@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ActivityDeleteRequest;
 use App\Services\V2\ActivityService;
@@ -40,15 +41,10 @@ class ActivityController extends Controller
      *   additionalDetails: array|null
      * }
      */
-    public function destroy(ActivityDeleteRequest $request): JsonResponse
+    public function destroy(ActivityDeleteRequest $request, ActivityService $activityService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ActivityDeleteRequest $req) {
-            $activityService = new ActivityService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $activityService->deleteActivities();
-        });
+        return $this->executeAuthenticatedAction($request, fn(ActivityDeleteRequest $req) =>
+            $activityService->deleteActivities(PsoContext::fromRequest($req))
+        );
     }
 }

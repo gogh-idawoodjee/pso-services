@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ActivityStatusRequest;
 use App\Services\V2\ActivityService;
@@ -22,18 +23,14 @@ class ActivityStatusController extends Controller
      *   additionalDetails: array|null
      * }
      */
-    public function update(ActivityStatusRequest $request): JsonResponse
+    public function update(ActivityStatusRequest $request, ActivityService $activityService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ActivityStatusRequest $req) {
-            $activityService = new ActivityService(
-                $req->input('environment.token'),
-                $req->validated(),
-                $req->input('data.activityId'),
+        return $this->executeAuthenticatedAction($request, fn(ActivityStatusRequest $req) =>
+            $activityService->updateStatus(
+                PsoContext::fromRequest($req),
                 $req->activityStatus(),
                 $req->input('data.resourceId'),
-            );
-
-            return $activityService->updateStatus();
-        });
+            )
+        );
     }
 }

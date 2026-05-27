@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ResourceShiftRequest;
 use App\Services\V2\ResourceService;
@@ -19,15 +20,10 @@ class ResourceShiftController extends Controller
      * the API will update the resource's shift and send the updated rota to the DSE
      * (Rota Update) so the change is immediately recognized by the optimization process.
      */
-    public function update(ResourceShiftRequest $request): JsonResponse
+    public function update(ResourceShiftRequest $request, ResourceService $resourceService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, function (ResourceShiftRequest $req) {
-            $resourceShift = new ResourceService(
-                $req->input('environment.token'),
-                $req->validated(),
-            );
-
-            return $resourceShift->updateShift();
-        });
+        return $this->executeAuthenticatedAction($request, fn(ResourceShiftRequest $req) =>
+            $resourceService->updateShift(PsoContext::fromRequest($req))
+        );
     }
 }

@@ -7,6 +7,7 @@ use App\Classes\V2\EntityBuilders\ActivityBuilder;
 use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
 use App\Classes\V2\EntityBuilders\ShiftBuilder;
+use App\DataTransferObjects\PsoContext;
 use App\Enums\ActivityClass;
 use App\Enums\ActivityStatus;
 use App\Enums\EventType;
@@ -23,125 +24,115 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use JsonException;
 use Ramsey\Uuid\Uuid;
 use Throwable;
 
 class ResourceService extends BaseService
 {
-    protected array $resources;
-    protected array $rawScheduleData;
-    protected array $selectOptions = [];
-
-    public function createEvent(): JsonResponse|null
+    public function createEvent(PsoContext $context): JsonResponse
     {
         try {
-            $payload =
-                ResourceEventBuilder::make(data_get($this->data, 'data.resourceId'), EventType::from(data_get($this->data, 'data.eventType')))
-                    ->eventDateTime(data_get($this->data, 'data.eventDateTime'))
-                    ->latitude(data_get($this->data, 'data.lat'))
-                    ->longitude(data_get($this->data, 'data.long'))
-                    ->build();
+            $payload = ResourceEventBuilder::make($context->data('resourceId'), EventType::from($context->data('eventType')))
+                ->eventDateTime($context->data('eventDateTime'))
+                ->latitude($context->data('lat'))
+                ->longitude($context->data('long'))
+                ->build();
 
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Schedule_Event' => $payload])
-                ->environment(data_get($this->data, 'environment'))
-                ->token($this->sessionToken)
+                ->environment($context->environment())
+                ->token($context->token)
                 ->includeInputReference('Created Event')
                 ->send();
-
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
 
-    public function updateShift(): JsonResponse|null
+    public function updateShift(PsoContext $context): JsonResponse
     {
         try {
             $payload = ShiftBuilder::make()
-                ->shiftId(data_get($this->data, 'data.shiftId'))
-                ->shiftType(data_get($this->data, 'data.shiftType'))
-                ->startDateTime(data_get($this->data, 'data.startDateTime'))
-                ->endDateTime(data_get($this->data, 'data.endDateTime'))
-                ->arpObject(data_get($this->data, 'data.isArpObject'))
-                ->description(data_get($this->data, 'data.description'))
-                ->manualSchedulingOnly(data_get($this->data, 'data.isManualSchedulingOnly'))
-                ->rotaId(data_get($this->data, 'data.rotaId'))
-                ->resourceId(data_get($this->data, 'data.resourceId'))
+                ->shiftId($context->data('shiftId'))
+                ->shiftType($context->data('shiftType'))
+                ->startDateTime($context->data('startDateTime'))
+                ->endDateTime($context->data('endDateTime'))
+                ->arpObject($context->data('isArpObject'))
+                ->description($context->data('description'))
+                ->manualSchedulingOnly($context->data('isManualSchedulingOnly'))
+                ->rotaId($context->data('rotaId'))
+                ->resourceId($context->data('resourceId'))
                 ->build();
 
-            $entity = data_get($this->data, 'data.isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
+            $entity = $context->data('isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
             return $this->psoClient->sendOrSimulate(
                 [$entity => $payload],
-                data_get($this->data, 'environment'),
-                $this->sessionToken,
-                true, // sends rota update
-                'Updated Rota After Shift Update'
+                $context->environment(),
+                $context->token,
+                true,
+                'Updated Rota After Shift Update',
             );
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
 
-    public function updateUnavailablity(): JsonResponse|null
+    public function updateUnavailability(PsoContext $context): JsonResponse|null
     {
         try {
-            // assume we have unavailabilities provided
-            $unavailabilties = data_get($this->data, 'data.unavailability_id');
-            // get the current schedule
-
+            // TODO: implement unavailability update
+            $unavailabilities = $context->data('unavailability_id');
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
+
+        return null;
     }
 
-    public function createUnavailability(): JsonResponse|null
+    public function createUnavailability(PsoContext $context): JsonResponse
     {
         try {
-            // starting with just schedule unavail which is just a private activity
-
-            if (data_get($this->data, 'data.isArpObject')) {
-                // to ARP first
-
-                $payload = $this->buildArpUnavailability($this->data);
+            if ($context->data('isArpObject')) {
+                $payload = $this->buildArpUnavailability($context->data());
 
                 return $this->psoClient->sendOrSimulateBuilder()
                     ->payload($payload)
-                    ->environment(data_get($this->data, 'environment'))
-                    ->token($this->sessionToken)
+                    ->environment($context->environment())
+                    ->token($context->token)
                     ->includeInputReference('send unavailability to ARP')
                     ->requiresRotaUpdate(true)
                     ->send();
-
             }
 
-            // straight to DSE
             $activityId = Uuid::uuid4()->toString();
-            data_set($this->data, 'data.activityId', $activityId);
 
-            $payload = ActivityBuilder::make($this->data)
+            // Build the full data array for ActivityBuilder (it expects the nested structure)
+            $builderData = $context->validated;
+            data_set($builderData, 'data.activityId', $activityId);
+
+            $payload = ActivityBuilder::make($builderData)
                 ->withActivityClass(ActivityClass::PRIVATE)
                 ->withActivityStatusBuilder(
                     ActivityStatusBuilder::make($activityId, ActivityStatus::COMMITTED)
-                        ->resourceId(data_get($this->data, 'data.resourceId'))
+                        ->resourceId($context->data('resourceId'))
                         ->fixed(true)
-                        ->dateTimeFixed(data_get($this->data, 'data.baseDateTime'))
-                        ->duration(data_get($this->data, 'data.duration'))
+                        ->dateTimeFixed($context->data('baseDateTime'))
+                        ->duration($context->data('duration'))
                 )
                 ->build();
 
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
-                ->environment(data_get($this->data, 'environment'))
-                ->token($this->sessionToken)
+                ->environment($context->environment())
+                ->token($context->token)
                 ->includeInputReference('Created Unavailability')
                 ->send();
         } catch (Exception $e) {
-            $this->LogError($e, __METHOD__, __CLASS__);
+            $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -164,12 +155,16 @@ class ResourceService extends BaseService
         return ['Ram_Time_Pattern' => $timepattern, 'RAM_Unavailability' => $unavailability];
     }
 
-    /**
-     * @throws JsonException
-     */
-    public function getResource(string $datasetId, string $resourceId, string $baseUrl): JsonResponse
+    public function getResource(PsoContext $context, string $resourceId): JsonResponse
     {
-        $resource = $this->psoClient->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::RESOURCE, $resourceId)->getData(true);
+        $resource = $this->psoClient->getPsoData(
+            $context->datasetId(),
+            $context->baseUrl(),
+            $context->token,
+            PsoEndpointSegment::RESOURCE,
+            $resourceId,
+        )->getData(true);
+
         $resourceData = data_get($resource, 'dsScheduleData.Resources');
         $resourceTypeId = data_get($resource, 'dsScheduleData.Resources.resource_type_id');
         $resourceType = collect(data_get($resource, 'dsScheduleData.Resource_Type', []))
@@ -186,7 +181,6 @@ class ResourceService extends BaseService
             } else {
                 $googleLocationEnd = LocationHelper::formatAddress(data_get($locationEnd, 'latitude'), data_get($locationEnd, 'longitude'));
             }
-
 
             $formatted_resource = [
                 'resource' => [
@@ -214,16 +208,17 @@ class ResourceService extends BaseService
                         'pso' => [
                             'start' => LocationHelper::formatPsoAddress($locationStart),
                             'end' => LocationHelper::formatPsoAddress($locationEnd),
-                        ]
+                        ],
                     ],
                     'regions' => $this->getRelatedItemsForResource($resource, $resourceId, 'region'),
                     'skills' => $this->getRelatedItemsForResource($resource, $resourceId, 'skill'),
                     'shifts' => $this->getResourceShiftsFormatted(data_get($resource, 'dsScheduleData.Shift'), data_get($resource, 'dsScheduleData.Plan_Route')),
-                ]
+                ],
             ];
 
             return $this->ok($formatted_resource);
         }
+
         return $this->error('Resource not found', 404);
     }
 
@@ -248,7 +243,6 @@ class ResourceService extends BaseService
             try {
                 $maxTravelFormatted = CarbonInterval::fromString($maxTravelValue)->forHumans(['options' => CarbonInterface::FLOOR]);
             } catch (Exception) {
-                // handle invalid format gracefully
             }
         }
 
@@ -268,7 +262,7 @@ class ResourceService extends BaseService
         };
 
         if (!$relatedEntityKey || !$entityKey || !$entityListKey) {
-            return []; // unknown entity type
+            return [];
         }
 
         $entityRelations = collect(data_get($data, $relatedEntityKey, []));
@@ -282,12 +276,12 @@ class ResourceService extends BaseService
 
         return $entityList
             ->whereIn('id', $entityIds)
-            ->map(static fn ($entity) => [
+            ->map(static fn($entity) => [
                 'id'          => data_get($entity, 'id'),
                 'description' => data_get($entity, 'description'),
             ])
             ->values()
-            ->tap(static fn ($collection) => $collection->push(['total' => $collection->count()]))
+            ->tap(static fn($collection) => $collection->push(['total' => $collection->count()]))
             ->all();
     }
 
@@ -312,137 +306,106 @@ class ResourceService extends BaseService
     }
 
     public function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
-{
-    // handle null inputs
-    $shifts = $shifts ?? [];
-    $routes = $routes ?? [];
-
-    $groupedRoutes = collect($routes)->groupBy('shift_id');
-
-    $safeParse = static function (string|null $dt): Carbon|null {
-        if (!$dt) {
-            return null;
-        }
-        try {
-            return Carbon::parse($dt);
-        } catch (Throwable) {
-            return null;
-        }
-    };
-
-    $parseInterval = static function ($interval): string {
-        if (!$interval) {
-            return 'N/A';
-        }
-        try {
-            return CarbonInterval::fromString($interval)
-                ->forHumans(['options' => CarbonInterface::FLOOR]);
-        } catch (Throwable) {
-            return 'N/A';
-        }
-    };
-
-    $formattedShifts = collect($shifts)->map(function ($shift) use ($safeParse, $groupedRoutes, $parseInterval) {
-        $start = $safeParse(data_get($shift, 'start_datetime'));
-        $end   = $safeParse(data_get($shift, 'end_datetime'));
-        $shiftId = data_get($shift, 'id');
-
-        // safely compute derived fields
-        $shiftDate = $start ? $start->toFormattedDateString() : null;
-        $shiftSpan = ($start && $end)
-            ? $start->format('H:i') . ' - ' . $end->format('H:i')
-            : 'N/A';
-        $shiftDuration = ($start && $end) ? $start->diffInHours($end) : 0;
-
-        // tolerate missing Plan_Route for this shift
-        $routeData = $groupedRoutes->get($shiftId)?->first() ?? [];
-
-        $overtimePeriod = Arr::has($shift, 'overtime_period')
-            ? $parseInterval(data_get($shift, 'overtime_period'))
-            : 'no overtime';
-
-        $utilisation = [
-            'percent'                 => data_get($routeData, 'utilisation', 0),
-            'total_unutilised_time'   => $parseInterval(data_get($routeData, 'total_unutilised_time')),
-            'total_private_time'      => $parseInterval(data_get($routeData, 'total_private_time')),
-            'total_break_time'        => $parseInterval(data_get($routeData, 'total_break_time')),
-            'total_on_site_time'      => $parseInterval(data_get($routeData, 'total_on_site_time')),
-            'total_travel_time'       => $parseInterval(data_get($routeData, 'total_travel_time')),
-            'average_travel_time'     => $parseInterval(data_get($routeData, 'average_travel_time')),
-            'total_allocations'       => data_get($routeData, 'total_allocations', 0),
-            'route_margin'            => data_get($routeData, 'route_margin', 0),
-        ];
-
-        $shiftCollection = collect($shift)
-            ->put('shift_date', $shiftDate)
-            ->put('shift_span', $shiftSpan)
-            ->put('shift_duration', $shiftDuration)
-            ->put('overtime_period', $overtimePeriod)
-            ->put('utilisation', $utilisation);
-
-        $keysToRemove = ['start_datetime', 'end_datetime', 'actual', 'split_allowed', 'resource_id'];
-        $shiftCollection = $shiftCollection->except($keysToRemove);
-
-        $manualScheduling = (bool) data_get($shift, 'manual_scheduling_only', false);
-        $shiftCollection->put('manual_scheduling_only', $manualScheduling);
-
-        return $shiftCollection;
-    })
-        // if date is null, sort places them last
-        ->sortBy(static fn ($s) => $s->get('shift_date') ?? '9999-12-31')
-        ->values();
-
-    return collect([
-        'shifts'       => $formattedShifts,
-        'total_shifts' => count($shifts),
-    ]);
-}
-
-
-
-    /**
-     */
-    public function getResourceList(string $datasetId, string $baseUrl): self
     {
+        $shifts = $shifts ?? [];
+        $routes = $routes ?? [];
 
-        $this->rawScheduleData = $this->psoClient->getPsoData($datasetId, $baseUrl, $this->sessionToken, PsoEndpointSegment::DATA, null, true)->getData(true);
-        $this->resources = data_get($this->rawScheduleData, 'dsScheduleData.Resources');
-        return $this;
+        $groupedRoutes = collect($routes)->groupBy('shift_id');
 
+        $safeParse = static function (string|null $dt): Carbon|null {
+            if (!$dt) {
+                return null;
+            }
+            try {
+                return Carbon::parse($dt);
+            } catch (Throwable) {
+                return null;
+            }
+        };
+
+        $parseInterval = static function ($interval): string {
+            if (!$interval) {
+                return 'N/A';
+            }
+            try {
+                return CarbonInterval::fromString($interval)
+                    ->forHumans(['options' => CarbonInterface::FLOOR]);
+            } catch (Throwable) {
+                return 'N/A';
+            }
+        };
+
+        $formattedShifts = collect($shifts)->map(function ($shift) use ($safeParse, $groupedRoutes, $parseInterval) {
+            $start = $safeParse(data_get($shift, 'start_datetime'));
+            $end   = $safeParse(data_get($shift, 'end_datetime'));
+            $shiftId = data_get($shift, 'id');
+
+            $shiftDate = $start ? $start->toFormattedDateString() : null;
+            $shiftSpan = ($start && $end)
+                ? $start->format('H:i') . ' - ' . $end->format('H:i')
+                : 'N/A';
+            $shiftDuration = ($start && $end) ? $start->diffInHours($end) : 0;
+
+            $routeData = $groupedRoutes->get($shiftId)?->first() ?? [];
+
+            $overtimePeriod = Arr::has($shift, 'overtime_period')
+                ? $parseInterval(data_get($shift, 'overtime_period'))
+                : 'no overtime';
+
+            $utilisation = [
+                'percent'                 => data_get($routeData, 'utilisation', 0),
+                'total_unutilised_time'   => $parseInterval(data_get($routeData, 'total_unutilised_time')),
+                'total_private_time'      => $parseInterval(data_get($routeData, 'total_private_time')),
+                'total_break_time'        => $parseInterval(data_get($routeData, 'total_break_time')),
+                'total_on_site_time'      => $parseInterval(data_get($routeData, 'total_on_site_time')),
+                'total_travel_time'       => $parseInterval(data_get($routeData, 'total_travel_time')),
+                'average_travel_time'     => $parseInterval(data_get($routeData, 'average_travel_time')),
+                'total_allocations'       => data_get($routeData, 'total_allocations', 0),
+                'route_margin'            => data_get($routeData, 'route_margin', 0),
+            ];
+
+            $shiftCollection = collect($shift)
+                ->put('shift_date', $shiftDate)
+                ->put('shift_span', $shiftSpan)
+                ->put('shift_duration', $shiftDuration)
+                ->put('overtime_period', $overtimePeriod)
+                ->put('utilisation', $utilisation);
+
+            $keysToRemove = ['start_datetime', 'end_datetime', 'actual', 'split_allowed', 'resource_id'];
+            $shiftCollection = $shiftCollection->except($keysToRemove);
+
+            $manualScheduling = (bool) data_get($shift, 'manual_scheduling_only', false);
+            $shiftCollection->put('manual_scheduling_only', $manualScheduling);
+
+            return $shiftCollection;
+        })
+            ->sortBy(static fn($s) => $s->get('shift_date') ?? '9999-12-31')
+            ->values();
+
+        return collect([
+            'shifts'       => $formattedShifts,
+            'total_shifts' => count($shifts),
+        ]);
     }
 
-    public function getResources(): array
+    public function getResourceSelectOptions(PsoContext $context): array
     {
-        return $this->resources;
-    }
+        $rawData = $this->psoClient->getPsoData(
+            $context->datasetId(),
+            $context->baseUrl(),
+            $context->token,
+            PsoEndpointSegment::DATA,
+            null,
+            true,
+        )->getData(true);
 
-    public function getRawScheduleData(): array
-    {
-        return $this->rawScheduleData;
-    }
-
-    public function toResponse(): JsonResponse
-    {
-        return $this->ok($this->resources);
-    }
-
-    public function toSelectOptions(): self
-    {
-        if (!$this->resources) {
-            return $this;
-        }
+        $resources = data_get($rawData, 'dsScheduleData.Resources', []);
 
         $selectOptions = [];
-
-        foreach ($this->resources as $resource) {
+        foreach ($resources as $resource) {
             $id = data_get($resource, 'id');
-            $firstName = data_get($resource, 'first_name', '');
-            $surname = data_get($resource, 'surname', '');
+            $displayName = trim(data_get($resource, 'first_name', '') . ' ' . data_get($resource, 'surname', ''));
 
-            // Handle cases where surname might be missing
-            $displayName = trim($firstName . ' ' . $surname);
-
-            // If after trimming the display name is empty, use the ID or some fallback
             if (empty($displayName)) {
                 $displayName = $id ?? 'Unknown Resource';
             }
@@ -450,18 +413,6 @@ class ResourceService extends BaseService
             $selectOptions[$id] = $displayName;
         }
 
-        $this->selectOptions = $selectOptions;
-
-        return $this;
-    }
-
-    /**
-     * Get the select options array
-     *
-     * @return array
-     */
-    public function getSelectOptions(): array
-    {
-        return $this->selectOptions ?? [];
+        return $selectOptions;
     }
 }
