@@ -78,7 +78,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required false
              * @scramble example "2025-05-05T16:00:00Z"
              */
-            'data.endDateTime' => 'date|after:startDateTime',
+            'data.endDateTime' => 'date|after:data.startDateTime',
 
             /**
              * Whether this shift should be forced into manual scheduling mode.

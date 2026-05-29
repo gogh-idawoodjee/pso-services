@@ -162,7 +162,7 @@ class TravelService extends BaseService
         $url = null;
 
         if ($token) {
-            $url = route('travel.analyzer.show', ['id' => $travelLogId]);
+            $url = route('v2.travel.show', ['id' => $travelLogId]);
             $message = "To review results, please send a GET request to {$url}";
         } else {
             $message = 'Please ensure environment.sendToPso is set to true to use the analyzer correctly';
@@ -187,7 +187,7 @@ class TravelService extends BaseService
 
                 BroadcastParameterBuilder::make()
                     ->name(BroadcastParameterType::URL)
-                    ->value(route('travelanalyzer.update')),
+                    ->value(route('v2.travel.update')),
             ])
             ->type('REST')
             ->onceOnly()
