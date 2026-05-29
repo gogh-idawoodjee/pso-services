@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Classes\V2\PsoClient;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Spatie\Geocoder\Geocoder;
@@ -76,7 +77,8 @@ class LocationHelper
 
     public static function findLocationById(mixed $resource, string $locationId): object|null
     {
-        $locations = data_get($resource, 'dsScheduleData.Location');
+        $rootKey = PsoClient::resolveScheduleDataKey((array) $resource);
+        $locations = data_get($resource, "{$rootKey}.Location");
 
         if ($locations === null) {
             return null;

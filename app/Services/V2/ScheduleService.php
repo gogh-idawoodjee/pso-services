@@ -31,7 +31,9 @@ class ScheduleService
             return false;
         }
 
-        $fullSchedule = $response->getData(true);
+        $rawData = $response->getData(true);
+        $rootKey = PsoClient::resolveScheduleDataKey($rawData);
+        $fullSchedule = data_get($rawData, $rootKey, []);
 
         $activities = self::normalizeCollection($fullSchedule, 'Activity');
         $activityKeys = $activities->pluck('id');

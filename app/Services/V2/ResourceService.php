@@ -3,6 +3,7 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\PsoClient;
 use App\Classes\V2\EntityBuilders\ActivityBuilder;
 use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
@@ -169,9 +170,11 @@ class ResourceService extends BaseService
             $resourceId,
         )->getData(true);
 
-        $resourceData = data_get($resource, 'dsScheduleData.Resources');
-        $resourceTypeId = data_get($resource, 'dsScheduleData.Resources.resource_type_id');
-        $resourceType = collect(data_get($resource, 'dsScheduleData.Resource_Type', []))
+        $rootKey = PsoClient::resolveScheduleDataKey($resource);
+
+        $resourceData = data_get($resource, "{$rootKey}.Resources");
+        $resourceTypeId = data_get($resource, "{$rootKey}.Resources.resource_type_id");
+        $resourceType = collect(data_get($resource, "{$rootKey}.Resource_Type", []))
             ->firstWhere('id', $resourceTypeId);
 
         if ($resourceData) {
@@ -189,17 +192,17 @@ class ResourceService extends BaseService
             $formatted_resource = [
                 'resource' => [
                     'personal' => [
-                        'full_name' => data_get($resource, 'dsScheduleData.Resources.first_name') . ' ' . data_get($resource, 'dsScheduleData.Resources.surname'),
-                        'first_name' => data_get($resource, 'dsScheduleData.Resources.first_name'),
-                        'surname' => data_get($resource, 'dsScheduleData.Resources.surname'),
+                        'full_name' => data_get($resource, "{$rootKey}.Resources.first_name") . ' ' . data_get($resource, "{$rootKey}.Resources.surname"),
+                        'first_name' => data_get($resource, "{$rootKey}.Resources.first_name"),
+                        'surname' => data_get($resource, "{$rootKey}.Resources.surname"),
                     ],
-                    'additional_attributes' => $this->getAdditionalAttributes($resourceId, data_get($resource, 'dsScheduleData.Additional_Attribute')),
-                    'resource_id' => data_get($resource, 'dsScheduleData.Resources.id'),
+                    'additional_attributes' => $this->getAdditionalAttributes($resourceId, data_get($resource, "{$rootKey}.Additional_Attribute")),
+                    'resource_id' => data_get($resource, "{$rootKey}.Resources.id"),
                     'resource_type' => [
                         'type_id' => data_get($resourceData, 'resource_type_id'),
                         'description' => data_get($resourceType, 'description'),
                     ],
-                    'note' => data_get($resource, 'dsScheduleData.Resources.memo'),
+                    'note' => data_get($resource, "{$rootKey}.Resources.memo"),
                     'max_travel' => $this->resourceMaxTravel($resourceData, $resourceType, 'max_travel'),
                     'max_travel_outside_shift_to_first_activity' => $this->resourceMaxTravel($resourceData, $resourceType, 'travel_from'),
                     'max_travel_outside_shift_to_home' => $this->resourceMaxTravel($resourceData, $resourceType, 'travel_to'),
@@ -214,9 +217,9 @@ class ResourceService extends BaseService
                             'end' => LocationHelper::formatPsoAddress($locationEnd),
                         ],
                     ],
-                    'regions' => $this->getRelatedItemsForResource($resource, $resourceId, 'region'),
-                    'skills' => $this->getRelatedItemsForResource($resource, $resourceId, 'skill'),
-                    'shifts' => $this->getResourceShiftsFormatted(data_get($resource, 'dsScheduleData.Shift'), data_get($resource, 'dsScheduleData.Plan_Route')),
+                    'regions' => $this->getRelatedItemsForResource($resource, $resourceId, 'region', $rootKey),
+                    'skills' => $this->getRelatedItemsForResource($resource, $resourceId, 'skill', $rootKey),
+                    'shifts' => $this->getResourceShiftsFormatted(data_get($resource, "{$rootKey}.Shift"), data_get($resource, "{$rootKey}.Plan_Route")),
                 ],
             ];
 
@@ -257,11 +260,11 @@ class ResourceService extends BaseService
         ];
     }
 
-    private function getRelatedItemsForResource(array $data, string|int $resourceId, string $resourceEntity): array
+    private function getRelatedItemsForResource(array $data, string|int $resourceId, string $resourceEntity, string $rootKey = 'dsScheduleData'): array
     {
         [$relatedEntityKey, $entityKey, $entityListKey] = match ($resourceEntity) {
-            'region' => ['dsScheduleData.Resource_Region', 'region_id', 'dsScheduleData.Region'],
-            'skill'  => ['dsScheduleData.Resource_Skill', 'skill_id', 'dsScheduleData.Skill'],
+            'region' => ["{$rootKey}.Resource_Region", 'region_id', "{$rootKey}.Region"],
+            'skill'  => ["{$rootKey}.Resource_Skill", 'skill_id', "{$rootKey}.Skill"],
             default  => [null, null, null],
         };
 
@@ -403,7 +406,8 @@ class ResourceService extends BaseService
             true,
         )->getData(true);
 
-        $resources = data_get($rawData, 'dsScheduleData.Resources', []);
+        $rootKey = PsoClient::resolveScheduleDataKey($rawData);
+        $resources = data_get($rawData, "{$rootKey}.Resources", []);
 
         $selectOptions = [];
         foreach ($resources as $resource) {

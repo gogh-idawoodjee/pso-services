@@ -129,6 +129,21 @@ class PsoClient
     }
 
     /**
+     * Resolve the schedule data wrapper key from a PSO response.
+     *
+     * V1 responses use 'dsScheduleData', V2 uses 'ScheduleData'.
+     * Returns whichever key exists in the data, defaulting to V1.
+     */
+    public static function resolveScheduleDataKey(array $data): string
+    {
+        if (array_key_exists('ScheduleData', $data)) {
+            return 'ScheduleData';
+        }
+
+        return 'dsScheduleData';
+    }
+
+    /**
      * Wrap payload items in the dsScheduleData XML namespace structure.
      *
      * When $useWrapper is true, the payload is additionally wrapped in
