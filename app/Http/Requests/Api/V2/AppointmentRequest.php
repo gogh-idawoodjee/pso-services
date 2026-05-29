@@ -77,14 +77,14 @@ class AppointmentRequest extends BaseFormRequest
              * @var string
              * @example "2024-05-01T08:00:00"
              */
-            'data.slaStart' => 'date_format:Y-m-d\TH:i:s|before:sla_end|required',
+            'data.slaStart' => 'date_format:Y-m-d\TH:i:s|before:data.slaEnd|required',
 
             /**
              * SLA end datetime in ISO 8601 format.
              * @var string
              * @example "2024-05-01T12:00:00"
              */
-            'data.slaEnd' => 'date_format:Y-m-d\TH:i:s|after:sla_start|required',
+            'data.slaEnd' => 'date_format:Y-m-d\TH:i:s|after:data.slaStart|required',
 
             /**
              * The SLA type ID.

@@ -14,7 +14,6 @@ class RamUnavailability
         string $timePatternId,
         string $baseDateTime,
         int    $duration,
-        int    $psoApiVersion = 1
     ): array
     {
 

@@ -17,7 +17,6 @@ class InputReferenceBuilder
     protected string|null $appointmentWindow = null;
     protected string|null $id = null;
     protected string|null $description = null;
-    protected int $psoApiVersion = 1;
 
     public function __construct(string $datasetId)
     {
@@ -68,12 +67,6 @@ class InputReferenceBuilder
     public function description(string|null $description): self
     {
         $this->description = $description;
-        return $this;
-    }
-
-    public function psoApiVersion(int $version): self
-    {
-        $this->psoApiVersion = $version;
         return $this;
     }
 

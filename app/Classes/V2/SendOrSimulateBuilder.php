@@ -27,10 +27,17 @@ class SendOrSimulateBuilder
     protected bool $addInputReference = false;
     protected string|null $inputReferenceDescription = null;
     protected string|null $resultsUrl = null;
+    protected int $psoApiVersion = 1;
 
     public function __construct(
         protected PsoClient $caller
     ) {
+    }
+
+    public function psoApiVersion(int $version): static
+    {
+        $this->psoApiVersion = $version;
+        return $this;
     }
 
     public function resultsUrl(string|null $url): static
@@ -94,6 +101,7 @@ class SendOrSimulateBuilder
             $this->addInputReference,
             $this->inputReferenceDescription,
             $this->resultsUrl,
+            $this->psoApiVersion,
         );
     }
 }

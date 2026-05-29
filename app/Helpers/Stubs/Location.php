@@ -9,7 +9,6 @@ class Location
         float $latitude,
         float $longitude,
         string|null $locality = null,
-        int         $psoApiVersion = 1
     ): array {
         $location = compact('id', 'latitude', 'longitude');
 

@@ -14,35 +14,10 @@ use Override;
 
 
 /**
- * 
+ * @method static Model|static create(array $attributes = [])
+ * @method static Builder|static query()
  *
- * @property string $id
- * @property string $account_id
- * @property string $base_url
- * @property string|null $description
- * @property string $name
- * @property string $slug
- * @property string $password
- * @property string $username
- * @property int $user_id
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * @property-read User $user
- * @method static Builder<static>|Environment newModelQuery()
- * @method static Builder<static>|Environment newQuery()
- * @method static Builder<static>|Environment query()
- * @method static Builder<static>|Environment whereAccountId($value)
- * @method static Builder<static>|Environment whereBaseUrl($value)
- * @method static Builder<static>|Environment whereCreatedAt($value)
- * @method static Builder<static>|Environment whereDescription($value)
- * @method static Builder<static>|Environment whereId($value)
- * @method static Builder<static>|Environment whereName($value)
- * @method static Builder<static>|Environment wherePassword($value)
- * @method static Builder<static>|Environment whereSlug($value)
- * @method static Builder<static>|Environment whereUpdatedAt($value)
- * @method static Builder<static>|Environment whereUserId($value)
- * @method static Builder<static>|Environment whereUsername($value)
- * @mixin Eloquent
+ * @mixin Builder
  */
 class Environment extends Model
 {

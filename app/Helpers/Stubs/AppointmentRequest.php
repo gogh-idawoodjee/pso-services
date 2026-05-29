@@ -17,7 +17,7 @@ class AppointmentRequest
 
     // so this badboy needs to make the appt request object plus the activity object and children
     // then send them both to the pso api
-    public static function make(array $appointmentData, string|null $suffix = null, int $psoApiVersion = 1): array
+    public static function make(array $appointmentData, string|null $suffix = null): array
     {
 
 

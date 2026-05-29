@@ -30,6 +30,7 @@ class PSOTravelLog extends Model
         'input_payload',
         'output_payload',
         'status',
+        'callback_url',
         'pso_response',
         'response_time',
         'transfer_stats',

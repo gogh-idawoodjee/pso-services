@@ -9,6 +9,9 @@ use App\Services\V2\ResourceService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * @group Resources
+ */
 class ResourceShiftController extends Controller
 {
     use PSOAssistV2;
@@ -19,6 +22,9 @@ class ResourceShiftController extends Controller
      * If this is a change to a shift in the ARP, after a successful transaction,
      * the API will update the resource's shift and send the updated rota to the DSE
      * (Rota Update) so the change is immediately recognized by the optimization process.
+     *
+     * @response 200 scenario="Sent to PSO" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Shift": {"id": "SHIFT-001", "resource_id": "RES-001", "start_datetime": "2025-05-29T08:00:00", "end_datetime": "2025-05-29T17:00:00"}}}, "responseFromPso": {}}, "status": 200, "message": "Successful. Sent to PSO"}
+     * @response 202 scenario="Dry run" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Shift": {"id": "SHIFT-001", "resource_id": "RES-001", "start_datetime": "2025-05-29T08:00:00", "end_datetime": "2025-05-29T17:00:00"}}}}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
      */
     public function update(ResourceShiftRequest $request, ResourceService $resourceService): JsonResponse
     {

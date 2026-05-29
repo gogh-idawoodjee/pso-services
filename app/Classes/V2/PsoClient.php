@@ -136,27 +136,23 @@ class PsoClient
      */
     public function buildPayload(array $payloadItems, int $psoApiVersion = 1, bool $useWrapper = false): array
     {
-        if ($psoApiVersion === 1) {
-            $data = [
-                '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
-            ];
+        if ($psoApiVersion === 2) {
+            $data = $payloadItems;
+            $wrapperKey = 'ScheduleData';
+        } else {
+            $data = ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd'] + $payloadItems;
+            $wrapperKey = 'dsScheduleData';
+        }
 
-            foreach ($payloadItems as $itemKey => $itemValues) {
-                $data[$itemKey] = $itemValues;
-            }
-
-            if ($useWrapper) {
-                return [
-                    'payloadToPso' => ['dsScheduleData' => $data],
-                ];
-            }
-
+        if ($useWrapper) {
             return [
-                'dsScheduleData' => $data,
+                'payloadToPso' => [$wrapperKey => $data],
             ];
         }
 
-        return $payloadItems;
+        return [
+            $wrapperKey => $data,
+        ];
     }
 
     /**
@@ -176,6 +172,7 @@ class PsoClient
         bool|null $addInputReference = null,
         string|null $inputReferenceDescription = null,
         string|null $resultsUrl = null,
+        int $psoApiVersion = 1,
     ): JsonResponse {
         if ($addInputReference) {
             $payload['Input_Reference'] =
@@ -185,8 +182,8 @@ class PsoClient
                     ->build();
         }
 
-        $psoPayload = $this->buildPayload($payload);
-        $wrappedPayload = $this->buildPayload($payload, 1, true);
+        $psoPayload = $this->buildPayload($payload, $psoApiVersion);
+        $wrappedPayload = $this->buildPayload($payload, $psoApiVersion, true);
 
         if ($sessionToken) {
             $psoResponse = $this->sendToPso(
@@ -209,7 +206,7 @@ class PsoClient
                 );
 
                 $this->sendToPso(
-                    $this->buildPayload($rotaUpdatePayload),
+                    $this->buildPayload($rotaUpdatePayload, $psoApiVersion),
                     $environmentData,
                     $sessionToken,
                     PsoEndpointSegment::DATA,

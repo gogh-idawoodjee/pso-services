@@ -41,6 +41,7 @@ class ResourceService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Schedule_Event' => $payload])
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference('Created Event')
                 ->send();
@@ -73,6 +74,7 @@ class ResourceService extends BaseService
                 $context->token,
                 true,
                 'Updated Rota After Shift Update',
+                psoApiVersion: $context->psoApiVersion(),
             );
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
@@ -102,6 +104,7 @@ class ResourceService extends BaseService
                 return $this->psoClient->sendOrSimulateBuilder()
                     ->payload($payload)
                     ->environment($context->environment())
+                    ->psoApiVersion($context->psoApiVersion())
                     ->token($context->token)
                     ->includeInputReference('send unavailability to ARP')
                     ->requiresRotaUpdate(true)
@@ -128,6 +131,7 @@ class ResourceService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference('Created Unavailability')
                 ->send();
@@ -340,7 +344,7 @@ class ResourceService extends BaseService
             $end   = $safeParse(data_get($shift, 'end_datetime'));
             $shiftId = data_get($shift, 'id');
 
-            $shiftDate = $start ? $start->toFormattedDateString() : null;
+            $shiftDate = $start?->toFormattedDateString();
             $shiftSpan = ($start && $end)
                 ? $start->format('H:i') . ' - ' . $end->format('H:i')
                 : 'N/A';

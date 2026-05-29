@@ -97,6 +97,18 @@ class BaseFormRequest extends FormRequest
                 'required_if:environment.sendToPso,true',
                 'string',
             ],
+
+            /**
+             * The PSO JSON format version (1 or 2).
+             * Version 1: dsScheduleData wrapper with xmlns (pre-6.15 format).
+             * Version 2: ScheduleData wrapper, proper JSON types, no nulls (6.15+).
+             * @var int
+             * @example 1
+             */
+            'environment.psoApiVersion' => [
+                'integer',
+                'in:1,2',
+            ],
         ];
     }
 

@@ -46,6 +46,14 @@ class TravelRequest extends BaseFormRequest
              * @example "AIzaSyD4Gv..."
              */
             'data.googleApiKey' => 'string|required',
+
+            /**
+             * Optional webhook URL. When provided, results will be POSTed here
+             * once PSO broadcasts back the travel analysis.
+             * @var string|null
+             * @example "https://your-app.com/api/travel-results"
+             */
+            'data.callbackUrl' => 'nullable|url',
         ];
 
         return array_merge($commonRules, $additionalRules);

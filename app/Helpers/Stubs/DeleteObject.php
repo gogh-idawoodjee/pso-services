@@ -11,7 +11,6 @@ class DeleteObject
     public static function make(
         array $data,
         bool  $isRotaObject = false,
-        int   $psoApiVersion = 1
     ): array
     {
         $label = data_get($data, 'objectType');

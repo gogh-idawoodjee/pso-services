@@ -28,6 +28,7 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.0",
         "fakerphp/faker": "^1.23",
+        "knuckleswtf/scribe": "^5.10",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.0",
         "mockery/mockery": "^1.5",

@@ -11,7 +11,6 @@ class Sla
         string $datetimeEnd,
         int    $priority = 2,
         bool   $startBased = true,
-        int    $psoApiVersion = 1
     ): array
     {
         return [

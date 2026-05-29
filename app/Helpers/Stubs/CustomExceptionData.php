@@ -8,7 +8,6 @@ class CustomExceptionData
         string $exceptionId,
         string $label,
         string $value,
-        int    $psoApiVersion = 1
     ): array
     {
         return [

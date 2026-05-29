@@ -9,7 +9,6 @@ class SourceDataParameter
     public static function make(
         string $parameterName,
         string $parameterValue,
-        int    $psoApiVersion = 1
     ): array
     {
         return [

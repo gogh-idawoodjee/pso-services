@@ -24,6 +24,7 @@ class ActivityService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Activity_Status' => $payload])
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference()
                 ->send();
@@ -48,6 +49,7 @@ class ActivityService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference('Delete Activities: ' . implode(', ', $activitiesList))
                 ->send();

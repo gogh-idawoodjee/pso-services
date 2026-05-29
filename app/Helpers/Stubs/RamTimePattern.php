@@ -12,7 +12,6 @@ class RamTimePattern
         string      $timePatternId,
         string      $category_id,
         string|null $description = null,
-        int         $psoApiVersion = 1
     ): array
     {
 

@@ -14,7 +14,6 @@ class ActivityBuilder
 {
     protected array $data = [];
     protected bool $isAbRequest = false;
-    protected int $psoApiVersion = 1;
 
     protected array $skills = [];
     protected array $regions = [];
@@ -41,12 +40,6 @@ class ActivityBuilder
     public function asAbRequest(bool $flag = true): self
     {
         $this->isAbRequest = $flag;
-        return $this;
-    }
-
-    public function withPsoApiVersion(int $version): self
-    {
-        $this->psoApiVersion = $version;
         return $this;
     }
 

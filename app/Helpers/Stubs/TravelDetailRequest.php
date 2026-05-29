@@ -14,7 +14,6 @@ class TravelDetailRequest
         float         $longTo,
         string|null   $travelProfileId = null,
         DateTime|null $startDateTime = null,
-        int           $psoApiVersion = 1
     ): array
     {
         return array_filter([

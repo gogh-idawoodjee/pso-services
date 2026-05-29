@@ -14,7 +14,6 @@ class ResourceEventBuilder
     protected DateTimeInterface|null $eventDateTime = null;
     protected float|null $latitude = null;
     protected float|null $longitude = null;
-    protected int $psoApiVersion = 1;
 
     public static function make(string $resourceId, EventType $eventType): self
     {
@@ -60,12 +59,6 @@ class ResourceEventBuilder
     public function longitude(float|int|string|null $longitude): self
     {
         $this->longitude = $longitude === null || $longitude === '' ? null : (float)$longitude;
-        return $this;
-    }
-
-    public function psoApiVersion(int $version): self
-    {
-        $this->psoApiVersion = $version;
         return $this;
     }
 

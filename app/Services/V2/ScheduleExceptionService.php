@@ -42,6 +42,7 @@ class ScheduleExceptionService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Custom_Exception' => $customException, 'Custom_Exception_Data' => $customExceptionData])
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference()
                 ->send();

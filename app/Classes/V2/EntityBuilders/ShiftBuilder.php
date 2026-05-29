@@ -15,7 +15,6 @@ class ShiftBuilder
     protected string|null $shiftType = null;
     protected string|null $description = null;
     protected bool $isArpObject = false;
-    protected int $psoApiVersion = 1;
 
     public static function make(): self
     {
@@ -73,12 +72,6 @@ class ShiftBuilder
     public function arpObject(bool $isArpObject = true): self
     {
         $this->isArpObject = $isArpObject;
-        return $this;
-    }
-
-    public function psoApiVersion(int $version): self
-    {
-        $this->psoApiVersion = $version;
         return $this;
     }
 

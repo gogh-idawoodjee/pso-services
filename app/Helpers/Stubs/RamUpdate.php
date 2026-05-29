@@ -9,7 +9,6 @@ class RamUpdate
 {
     public static function make(
         string $datasetId,
-        int    $psoApiVersion = 1
     ): array
     {
         return [

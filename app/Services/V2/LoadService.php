@@ -72,6 +72,7 @@ class LoadService extends BaseService
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment($environment)
+            ->psoApiVersion($context->psoApiVersion())
             ->token($context->token)
             ->additionalDetails($keepPsoDataMessage)
             ->send();
@@ -103,6 +104,7 @@ class LoadService extends BaseService
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment($context->environment())
+            ->psoApiVersion($context->psoApiVersion())
             ->token($context->token)
             ->send();
     }

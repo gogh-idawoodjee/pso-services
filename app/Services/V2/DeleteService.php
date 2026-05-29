@@ -43,6 +43,7 @@ class DeleteService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Object_Deletion' => $delete_input])
                 ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
                 ->includeInputReference('Delete Object: ' . $label)
                 ->token($context->token)
                 ->send();

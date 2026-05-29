@@ -54,6 +54,14 @@ readonly class PsoContext
     }
 
     /**
+     * The IFS/PSO JSON format version (1 or 2). Defaults to 1.
+     */
+    public function psoApiVersion(): int
+    {
+        return (int) data_get($this->validated, 'environment.psoApiVersion', 1);
+    }
+
+    /**
      * Access a value from the data block (e.g. 'activityId', 'resourceId').
      */
     public function data(string|null $key = null, mixed $default = null): mixed

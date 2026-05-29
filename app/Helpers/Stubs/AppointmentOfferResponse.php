@@ -5,7 +5,7 @@ namespace App\Helpers\Stubs;
 
 class AppointmentOfferResponse
 {
-    public static function make(string|null $appointmentRequestId, int|null $appointmentOfferId = -1, bool $accepted = false, int $psoApiVersion = 1): array
+    public static function make(string|null $appointmentRequestId, int|null $appointmentOfferId = -1, bool $accepted = false): array
     {
 
         return  [

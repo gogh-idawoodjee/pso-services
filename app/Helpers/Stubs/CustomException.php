@@ -10,7 +10,6 @@ class CustomException
         int    $exceptionTypeId,
         string $entityId,
         bool   $entityIsActivity = false,
-        int    $psoApiVersion = 1
     ): array
     {
 

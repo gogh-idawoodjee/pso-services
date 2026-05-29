@@ -5,7 +5,7 @@ namespace App\Helpers\Stubs;
 
 class Skill
 {
-    public static function make(string $skillId, string $entityId, string $entityType = 'activity', int $psoApiVersion = 1): array
+    public static function make(string $skillId, string $entityId, string $entityType = 'activity'): array
     {
         return match ($entityType) {
             'activity' => ['skill_id' => $skillId, 'activity_id' => $entityId],

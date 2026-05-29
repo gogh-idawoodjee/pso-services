@@ -11,6 +11,7 @@ use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
 use App\Enums\TravelLogStatus;
 use App\Helpers\Stubs\TravelDetailRequest;
+use App\Jobs\DispatchTravelCallback;
 use App\Jobs\TravelLogReview;
 use App\Models\V2\PSOTravelLog;
 use Exception;
@@ -84,6 +85,7 @@ class TravelService extends BaseService
             'address_to' => $this->encodeJson($endAddress),
             'google_response' => $this->encodeJson($googleResults),
             'warnings' => !empty($this->warnings) ? $this->encodeJson($this->warnings) : null,
+            'callback_url' => $context->data('callbackUrl'),
         ]);
 
         // Step 4: Build broadcast structure
@@ -94,6 +96,7 @@ class TravelService extends BaseService
         $apiResponse = $this->psoClient->sendOrSimulateBuilder()
             ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
             ->environment($context->environment())
+            ->psoApiVersion($context->psoApiVersion())
             ->token($context->token)
             ->includeInputReference('Travel Detail Request: ' . $travelLogId)
             ->additionalDetails($additionalDetails['message'])
@@ -200,11 +203,20 @@ class TravelService extends BaseService
         $travelDetails = data_get($data, 'Travel_Detail', []);
 
         foreach ($travelDetails as $detail) {
-            PSOTravelLog::where('id', data_get($detail, 'travel_detail_request_id'))
-                ->update([
-                    'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
-                    'status' => TravelLogStatus::COMPLETED,
-                ]);
+            $travelLog = PSOTravelLog::find(data_get($detail, 'travel_detail_request_id'));
+
+            if (!$travelLog) {
+                continue;
+            }
+
+            $travelLog->update([
+                'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
+                'status' => TravelLogStatus::COMPLETED,
+            ]);
+
+            if ($travelLog->callback_url) {
+                DispatchTravelCallback::dispatch($travelLog);
+            }
         }
 
         return response()->json([
