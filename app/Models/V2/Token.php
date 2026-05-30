@@ -39,7 +39,7 @@ class Token extends Model
     protected function isValidToken(): Attribute
     {
         return Attribute::make(
-            get: fn () => Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry'])) > 2,
+            get: fn () => Carbon::now()->diffInMinutes(Carbon::create($this->attributes['token_expiry']), false) > 2,
         );
     }
 }
