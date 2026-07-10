@@ -12,6 +12,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use JsonException;
+use Log;
 use Spatie\Geocoder\Geocoder;
 
 /**
@@ -64,25 +65,40 @@ class IFSPSOTravelService extends IFSService
         $payload = $this->travelPayload($request, $id);
         $travellog = $this->createTravelLog($payload, $id);
 
+        Log::withContext(['travelLogId' => $id, 'endpoint' => 'v1.travelanalyzer']);
+        Log::info('V1 travel analyzer request received', [
+            'latFrom' => $request->lat_from,
+            'longFrom' => $request->long_from,
+            'latTo' => $request->lat_to,
+            'longTo' => $request->long_to,
+            'sendToPso' => $request->send_to_pso,
+        ]);
 
         // reverse geocode
         $start_address = $this->reverseGeocode($request->lat_from, $request->long_from);
         $end_address = $this->reverseGeocode($request->lat_to, $request->long_to);
 
         $formatted_google = $this->formatGoogle($request);
+        Log::info('Address resolution and Google distance matrix complete', [
+            'startAddress' => $start_address['address'] ?? null,
+            'endAddress' => $end_address['address'] ?? null,
+            'google' => $formatted_google,
+        ]);
 
-
+        Log::info('Sending payload to PSO', ['payload' => $payload]);
         $this->IFSPSOAssistService->processPayload($request->send_to_pso, $payload, $this->token, $request->base_url);
         // wait a moment?
         sleep(5);
         // now go back and get the stuff
         $travellog->refresh();
+        Log::info('Checked travel log after wait', ['psoResponse' => $travellog->pso_response]);
 
         if ($travellog->pso_response) {
             // why are we diong this? // because after we refresh, we expect a broadcast back to our receiving service which populates pso_response
             $pso_result = json_decode($travellog->pso_response, false, 512, JSON_THROW_ON_ERROR);
             $dateformat = str_contains($pso_result->time, '.') ? 'd.H:i:s' : 'H:i:s';
             $formatted_pso_duration = CarbonInterval::createFromFormat($dateformat, $pso_result->time)->forHumans();
+            Log::info('V1 travel analysis completed', ['distance' => $pso_result->distance, 'time' => $pso_result->time]);
 
             return [
                 'travel_detail_request' => [
@@ -104,6 +120,8 @@ class IFSPSOTravelService extends IFSService
                 ]
             ];
         }
+        Log::warning('V1 travel analysis timed out waiting for PSO broadcast', ['travelLogId' => $id]);
+
         return response()->json([
             'status' => 500,
             'description' => 'something looks off, double check everything'
@@ -189,6 +207,8 @@ class IFSPSOTravelService extends IFSService
         $detail = $request->Travel_Detail;
         $input_ref = $request->Plan[0]['input_reference_id'];
 
+        Log::info('V1 travel PSO broadcast received', ['inputReference' => $input_ref, 'count' => count($detail)]);
+
         $mapped = Arr::mapWithKeys($detail, static function (array $item) {
             return [
                 $item['travel_detail_request_id'] => [
@@ -200,13 +220,20 @@ class IFSPSOTravelService extends IFSService
             ];
         });
 
+        $matched = false;
         foreach ($mapped as $travel_detail) {
             if ($input_ref === $travel_detail['travel_detail_request_id']) {
+                $matched = true;
                 PSOTravelLog::updateOrCreate(
                     ['id' => $travel_detail['travel_detail_request_id']],
                     ['pso_response' => json_encode($travel_detail, JSON_THROW_ON_ERROR)]
                 );
+                Log::info('V1 travel log updated from PSO broadcast', ['travelLogId' => $travel_detail['travel_detail_request_id']]);
             }
+        }
+
+        if (!$matched) {
+            Log::warning('V1 travel PSO broadcast did not match input reference', ['inputReference' => $input_ref]);
         }
 
 
