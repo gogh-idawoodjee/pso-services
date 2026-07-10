@@ -31,6 +31,7 @@ class AppointmentService extends BaseService
     /**
      * Get appointment offers from PSO
      *
+     * @param PsoContext $context
      * @return JsonResponse
      */
     public function getAppointment(PsoContext $context): JsonResponse

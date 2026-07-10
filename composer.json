@@ -23,6 +23,7 @@
         "laravel/nightwatch": "^1.10",
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^3.0",
+        "opcodesio/log-viewer": "^3.24",
         "spatie/geocoder": "^4.0"
     },
     "require-dev": {

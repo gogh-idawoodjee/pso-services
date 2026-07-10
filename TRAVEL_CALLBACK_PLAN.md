@@ -144,14 +144,14 @@ Option A is totally fine for this use case since results come back in seconds.
 
 Once results arrive, show them in a structured way instead of raw JSON:
 
-| Field | Source | Value |
-|-------|--------|-------|
-| From | Geocoder | 123 Queen St W, Toronto, ON |
-| To | Geocoder | 456 King St E, Toronto, ON |
-| Travel Time | PSO | 25 minutes |
-| Distance | PSO | 12.5 km |
-| Travel Time | Google | 22 mins |
-| Distance | Google | 11.8 km |
+| Field       | Source   | Value                       |
+|-------------|----------|-----------------------------|
+| From        | Geocoder | 123 Queen St W, Toronto, ON |
+| To          | Geocoder | 456 King St E, Toronto, ON  |
+| Travel Time | PSO      | 25 minutes                  |
+| Distance    | PSO      | 12.5 km                     |
+| Travel Time | Google   | 22 mins                     |
+| Distance    | Google   | 11.8 km                     |
 
 You could use a Filament `Section` with `ViewEntry` or `TextEntry` components, or a simple Blade partial.
 
