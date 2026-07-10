@@ -111,11 +111,12 @@ class TravelService extends BaseService
         // Step 5: Send payload
         $additionalDetails = $this->getAdditionalDetails($context->token, $travelLogId);
 
-        Log::info('Sending payload to PSO', ['baseUrl' => $context->baseUrl()]);
+        $psoPayload = ['Travel_Detail_Request' => $payload] + $broadcast;
+        Log::info('Sending payload to PSO', ['baseUrl' => $context->baseUrl(), 'payload' => $psoPayload]);
 
         try {
             $apiResponse = $this->psoClient->sendOrSimulateBuilder()
-                ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
+                ->payload($psoPayload)
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
@@ -244,7 +245,7 @@ class TravelService extends BaseService
     public function receivePSOBroadcast(array $data): JsonResponse
     {
         $travelDetails = data_get($data, 'Travel_Detail', []);
-        Log::info('Travel PSO broadcast received', ['count' => count($travelDetails)]);
+        Log::info('Travel PSO broadcast received', ['count' => count($travelDetails), 'travelDetails' => $travelDetails]);
 
         foreach ($travelDetails as $detail) {
             $travelLogId = data_get($detail, 'travel_detail_request_id');
@@ -253,7 +254,7 @@ class TravelService extends BaseService
             $travelLog = PSOTravelLog::find($travelLogId);
 
             if (!$travelLog) {
-                Log::warning('Travel PSO broadcast referenced unknown travelLogId');
+                Log::warning('Travel PSO broadcast referenced unknown travelLogId', ['detail' => $detail]);
                 continue;
             }
 
@@ -261,7 +262,7 @@ class TravelService extends BaseService
                 'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
                 'status' => TravelLogStatus::COMPLETED,
             ]);
-            Log::info('Travel log marked COMPLETED from PSO broadcast');
+            Log::info('Travel log marked COMPLETED from PSO broadcast', ['detail' => $detail]);
 
             if ($travelLog->callback_url) {
                 DispatchTravelCallback::dispatch($travelLog);
