@@ -21,13 +21,14 @@ class TravelLogReview implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info("Running delayed task for travelLogId: {$this->travelLog->id}");
+        Log::withContext(['travelLogId' => $this->travelLog->id, 'endpoint' => 'travelanalyzer.review']);
+        Log::info('Running delayed TravelLogReview task', ['currentStatus' => $this->travelLog->status->value]);
 
         if ($this->travelLog->status !== TravelLogStatus::COMPLETED) {
-            Log::info("travelLogId: {$this->travelLog->id} is not completed, updating status to TIMEOUT");
+            Log::info('Travel log not completed within timeout window; marking TIMEOUT');
             $this->travelLog->update(['status' => TravelLogStatus::TIMEOUT]);
         }
 
-        Log::info("travelLogId: {$this->travelLog->id} handled");
+        Log::info('TravelLogReview task handled');
     }
 }

@@ -36,6 +36,15 @@ class TravelService extends BaseService
     {
         $travelLogId = Uuid::uuid4()->toString();
 
+        Log::withContext(['travelLogId' => $travelLogId, 'endpoint' => 'travelanalyzer']);
+        Log::info('Travel analyzer request received', [
+            'hasCallbackUrl' => !empty($context->data('callbackUrl')),
+            'hasGoogleApiKey' => !empty($context->data('googleApiKey')),
+            'travelProfileId' => $context->data('travelProfileId'),
+            'sendToPso' => $context->environment()['sendToPso'] ?? null,
+            'psoApiVersion' => $context->psoApiVersion(),
+        ]);
+
         // Check API key availability
         $this->hasGoogleKey = !empty(config('pso-services.settings.google_key'))
             || !empty($context->data('googleApiKey'));
@@ -58,12 +67,18 @@ class TravelService extends BaseService
             $context->data('travelProfileId'),
             $context->data('startDateTime'),
         );
+        Log::info('Travel detail payload built', ['payload' => $payload]);
 
         // Step 2: Resolve addresses and distance
         [$startAddress, $endAddress, $addressErrors] = $this->getAddresses($context);
         if (!empty($addressErrors)) {
             $this->warnings = array_merge($this->warnings, $addressErrors);
         }
+        Log::info('Address resolution complete', [
+            'startAddress' => $startAddress['address'] ?? null,
+            'endAddress' => $endAddress['address'] ?? null,
+            'addressErrors' => $addressErrors,
+        ]);
 
         $googleResults = $this->getDistanceMatrix(
             $context->data('latFrom'),
@@ -76,6 +91,7 @@ class TravelService extends BaseService
         if ($googleResults === null && $this->hasGoogleKey && !$this->hasWarning('Google Distance Matrix') && !$this->hasWarning('Google API')) {
             $this->warnings[] = 'Google Distance Matrix API request failed. Distance/duration data unavailable.';
         }
+        Log::info('Google distance matrix complete', ['result' => $googleResults]);
 
         // Step 3: Create travel log
         $travelLog = PSOTravelLog::create([
@@ -87,24 +103,37 @@ class TravelService extends BaseService
             'warnings' => !empty($this->warnings) ? $this->encodeJson($this->warnings) : null,
             'callback_url' => $context->data('callbackUrl'),
         ]);
+        Log::info('Travel log record created', ['status' => $travelLog->status->value]);
 
         // Step 4: Build broadcast structure
         $broadcast = $this->buildBroadcast();
 
         // Step 5: Send payload
         $additionalDetails = $this->getAdditionalDetails($context->token, $travelLogId);
-        $apiResponse = $this->psoClient->sendOrSimulateBuilder()
-            ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
-            ->environment($context->environment())
-            ->psoApiVersion($context->psoApiVersion())
-            ->token($context->token)
-            ->includeInputReference('Travel Detail Request: ' . $travelLogId)
-            ->additionalDetails($additionalDetails['message'])
-            ->resultsUrl($additionalDetails['url'])
-            ->send();
+
+        Log::info('Sending payload to PSO', ['baseUrl' => $context->baseUrl()]);
+
+        try {
+            $apiResponse = $this->psoClient->sendOrSimulateBuilder()
+                ->payload(['Travel_Detail_Request' => $payload] + $broadcast)
+                ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
+                ->token($context->token)
+                ->includeInputReference('Travel Detail Request: ' . $travelLogId)
+                ->additionalDetails($additionalDetails['message'])
+                ->resultsUrl($additionalDetails['url'])
+                ->send();
+        } catch (\Throwable $e) {
+            Log::error('Sending travel payload to PSO failed', [
+                'exceptionClass' => get_class($e),
+                'exceptionMessage' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         // Step 6: Update travel log with PSO response
         $responseArray = $apiResponse->getData(true);
+        Log::info('PSO response received', ['response' => $responseArray]);
 
         $travelLog->update([
             'input_reference' => $travelLogId,
@@ -113,7 +142,9 @@ class TravelService extends BaseService
             'status' => TravelLogStatus::SENT,
         ]);
 
-        TravelLogReview::dispatch($travelLog)->delay(now()->addMinutes(config('pso-services.defaults.travel_broadcast_timeout_minutes')));
+        $timeoutMinutes = config('pso-services.defaults.travel_broadcast_timeout_minutes');
+        TravelLogReview::dispatch($travelLog)->delay(now()->addMinutes($timeoutMinutes));
+        Log::info('Travel log sent; TravelLogReview job scheduled', ['delayMinutes' => $timeoutMinutes]);
 
         return $apiResponse;
     }
@@ -134,6 +165,12 @@ class TravelService extends BaseService
         } catch (Exception $e) {
             $start = ['address' => null, 'accuracy' => null, 'error' => $e->getMessage()];
             $errors[] = 'Failed to geocode start address: ' . $e->getMessage();
+            Log::error('Failed to geocode start address', [
+                'latFrom' => $latFrom,
+                'longFrom' => $longFrom,
+                'exceptionClass' => get_class($e),
+                'exceptionMessage' => $e->getMessage(),
+            ]);
         }
 
         try {
@@ -143,6 +180,12 @@ class TravelService extends BaseService
         } catch (Exception $e) {
             $end = ['address' => null, 'accuracy' => null, 'error' => $e->getMessage()];
             $errors[] = 'Failed to geocode end address: ' . $e->getMessage();
+            Log::error('Failed to geocode end address', [
+                'latTo' => $latTo,
+                'longTo' => $longTo,
+                'exceptionClass' => get_class($e),
+                'exceptionMessage' => $e->getMessage(),
+            ]);
         }
 
         return [$start, $end, $errors];
@@ -201,11 +244,16 @@ class TravelService extends BaseService
     public function receivePSOBroadcast(array $data): JsonResponse
     {
         $travelDetails = data_get($data, 'Travel_Detail', []);
+        Log::info('Travel PSO broadcast received', ['count' => count($travelDetails)]);
 
         foreach ($travelDetails as $detail) {
-            $travelLog = PSOTravelLog::find(data_get($detail, 'travel_detail_request_id'));
+            $travelLogId = data_get($detail, 'travel_detail_request_id');
+            Log::withContext(['travelLogId' => $travelLogId, 'endpoint' => 'travelanalyzerservice']);
+
+            $travelLog = PSOTravelLog::find($travelLogId);
 
             if (!$travelLog) {
+                Log::warning('Travel PSO broadcast referenced unknown travelLogId');
                 continue;
             }
 
@@ -213,9 +261,11 @@ class TravelService extends BaseService
                 'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
                 'status' => TravelLogStatus::COMPLETED,
             ]);
+            Log::info('Travel log marked COMPLETED from PSO broadcast');
 
             if ($travelLog->callback_url) {
                 DispatchTravelCallback::dispatch($travelLog);
+                Log::info('DispatchTravelCallback job queued', ['callbackUrl' => $travelLog->callback_url]);
             }
         }
 
