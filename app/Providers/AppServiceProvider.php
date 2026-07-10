@@ -31,5 +31,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('viewApiDocs', static function ($user = null) {
             return true;
         });
+
+        // TEMPORARY — opened for prod log debugging on 2026-07-10, no auth check.
+        // REVERT after troubleshooting the /api/v2/travelanalyzer 500.
+        Gate::define('viewLogViewer', static function ($user = null) {
+            return true;
+        });
     }
 }
