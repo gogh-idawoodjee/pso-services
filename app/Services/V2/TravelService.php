@@ -18,7 +18,6 @@ use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
-use JsonException;
 use Log;
 use Ramsey\Uuid\Uuid;
 use Spatie\Geocoder\Geocoder;
@@ -29,9 +28,6 @@ class TravelService extends BaseService
     protected bool $hasGoogleKey = false;
     protected bool $hasGeocoderKey = false;
 
-    /**
-     * @throws JsonException
-     */
     public function process(PsoContext $context): JsonResponse
     {
         $travelLogId = Uuid::uuid4()->toString();
@@ -97,10 +93,10 @@ class TravelService extends BaseService
         $travelLog = PSOTravelLog::create([
             'id' => $travelLogId,
             'status' => TravelLogStatus::CREATED,
-            'address_from' => $this->encodeJson($startAddress),
-            'address_to' => $this->encodeJson($endAddress),
-            'google_response' => $this->encodeJson($googleResults),
-            'warnings' => !empty($this->warnings) ? $this->encodeJson($this->warnings) : null,
+            'address_from' => $startAddress,
+            'address_to' => $endAddress,
+            'google_response' => $googleResults,
+            'warnings' => !empty($this->warnings) ? $this->warnings : null,
             'callback_url' => $context->data('callbackUrl'),
         ]);
         Log::info('Travel log record created', ['status' => $travelLog->status->value]);
@@ -138,8 +134,8 @@ class TravelService extends BaseService
 
         $travelLog->update([
             'input_reference' => $travelLogId,
-            'input_payload' => $this->encodeJson(data_get($responseArray, 'data.payloadToPso')),
-            'output_payload' => $this->encodeJson(data_get($responseArray, 'data.responseFromPso')),
+            'input_payload' => data_get($responseArray, 'data.payloadToPso'),
+            'output_payload' => data_get($responseArray, 'data.responseFromPso'),
             'status' => TravelLogStatus::SENT,
         ]);
 
@@ -192,14 +188,6 @@ class TravelService extends BaseService
         return [$start, $end, $errors];
     }
 
-    /**
-     * @throws JsonException
-     */
-    protected function encodeJson(mixed $data): string
-    {
-        return json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
-    }
-
     protected function getAdditionalDetails(string|null $token, string $travelLogId): array
     {
         $message = '';
@@ -239,9 +227,6 @@ class TravelService extends BaseService
             ->build();
     }
 
-    /**
-     * @throws JsonException
-     */
     public function receivePSOBroadcast(array $data): JsonResponse
     {
         $travelDetails = data_get($data, 'Travel_Detail', []);
@@ -265,7 +250,7 @@ class TravelService extends BaseService
             }
 
             $travelLog->update([
-                'pso_response' => json_encode($detail, JSON_THROW_ON_ERROR),
+                'pso_response' => $detail,
                 'status' => TravelLogStatus::COMPLETED,
             ]);
             Log::info('Travel log marked COMPLETED from PSO broadcast', ['detail' => $detail]);
@@ -370,9 +355,6 @@ class TravelService extends BaseService
         return false;
     }
 
-    /**
-     * @throws JsonException
-     */
     public function getTravelResults(PSOTravelLog $travelLog): array
     {
         if ($travelLog->status === TravelLogStatus::COMPLETED) {
@@ -391,11 +373,7 @@ class TravelService extends BaseService
             ];
 
             if (!empty($travelLog->warnings)) {
-                try {
-                    $result['warnings'] = json_decode($travelLog->warnings, true, 512, JSON_THROW_ON_ERROR);
-                } catch (JsonException) {
-                    $result['warnings'] = ['Failed to parse warnings'];
-                }
+                $result['warnings'] = $travelLog->warnings;
             }
 
             return $result;
