@@ -245,6 +245,12 @@ class TravelService extends BaseService
     public function receivePSOBroadcast(array $data): JsonResponse
     {
         $travelDetails = data_get($data, 'Travel_Detail', []);
+
+        // PSO sends a single object (not a list) when the broadcast contains only one result
+        if (array_is_list($travelDetails) === false && isset($travelDetails['travel_detail_request_id'])) {
+            $travelDetails = [$travelDetails];
+        }
+
         Log::info('Travel PSO broadcast received', ['count' => count($travelDetails), 'travelDetails' => $travelDetails]);
 
         foreach ($travelDetails as $detail) {
