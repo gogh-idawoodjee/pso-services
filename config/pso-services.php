@@ -48,7 +48,7 @@ return [
         'do_in_locality_incentive' => 1,
         'timezone' => env('PSO_TIMEZONE', 'America/Toronto'),
         'travel_broadcast_api' => env('TRAVEL_BROADCAST_API', 'https://pso-services-6g6mj.kinsta.app/api/v2/travelanalyzerservice'),
-        'travel_broadcast_timeout_minutes' => env('TRAVEL_BROADCAST_TIMEOUT', 2),
+        'travel_broadcast_timeout_minutes' => (int) env('TRAVEL_BROADCAST_TIMEOUT', 2),
     ],
 
     /*
