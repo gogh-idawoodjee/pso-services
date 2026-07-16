@@ -35,6 +35,9 @@ trait PSOAssistV2
         return app(AuthenticatedPsoActionService::class)->run(
             $authDetails,
             function (array $auth) use ($request, $action) {
+                // Mutates $request in place (rather than passing a modified copy) so that
+                // $action($request) — and anything it calls, e.g. PsoContext::fromRequest() —
+                // sees the resolved token via the request's normal input() accessors.
                 $request->merge([
                     'environment' => array_merge(
                         (array) $request->input('environment', []),
