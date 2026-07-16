@@ -17,22 +17,6 @@ class ActivityController extends Controller
     use PSOAssistV2;
 
     /**
-     * Generate One or More Activities.
-     */
-    public function store()
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(string $id)
-    {
-        //
-    }
-
-    /**
      * Delete Activity or Activities.
      *
      * Deletes one or more activities.

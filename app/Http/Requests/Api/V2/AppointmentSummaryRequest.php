@@ -22,10 +22,11 @@ class AppointmentSummaryRequest extends BaseFormRequest
         $additionalRules = [
             /**
              * The ID of the appointment offer.
+             * Not required when declining (DELETE) — the offer is ignored for that operation.
              * @var int
              * @example 12345
              */
-            'data.appointmentOfferId' => 'integer|required',
+            'data.appointmentOfferId' => $this->isMethod('delete') ? 'sometimes|integer' : 'integer|required',
 
             /**
              * The ID of the appointment request.
