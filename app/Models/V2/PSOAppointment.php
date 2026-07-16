@@ -58,7 +58,6 @@ class PSOAppointment extends Model
         'accepted_offer',
         'accept_decline_input_reference_id',
         'accept_decline_datetime',
-        'user_id',
     ];
 
     protected $hidden = [
