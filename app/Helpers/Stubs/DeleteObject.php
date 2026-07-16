@@ -2,39 +2,22 @@
 
 namespace App\Helpers\Stubs;
 
-use App\Classes\V2\PSOObjectRegistry;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DeleteObject
 {
+    /**
+     * Builds an Object_Deletion payload from a registry entry already resolved by the caller.
+     * Callers own object-type validation (see DeleteService::deleteObject()) — this only
+     * validates that the primary key fields the registry expects are actually present.
+     */
     public static function make(
+        array $registry,
         array $data,
         bool  $isRotaObject = false,
     ): array
     {
-        $label = data_get($data, 'objectType');
-
-        if (!$label) {
-            Log::error('Object type is missing from request.');
-            throw new RuntimeException('Object type is missing from request.');
-        }
-
-        $key = PSOObjectRegistry::resolveKey($label);
-
-        if (!$key) {
-            Log::error("Object type '{$label}' not found in registry.");
-            throw new RuntimeException("Object type '{$label}' not found in registry.");
-        }
-
-        $registry = PSOObjectRegistry::get($key);
-
-        if (!$registry) {
-            Log::error("Registry entry for '{$label}' not found.");
-            throw new RuntimeException("Registry entry for '{$label}' not found.");
-
-        }
-
         $payload = collect($registry['attributes'] ?? [])
             ->sortBy('name')
             ->values()
@@ -64,33 +47,3 @@ class DeleteObject
     }
 
 }
-
-
-
-/* usage
-
-$primaryKeys = [
-    ['name' => 'id', 'value' => 'ACT-001'],
-    ['name' => 'activity_type_id', 'value' => 'TYPE-A'],
-    ['name' => 'region_id', 'value' => 'REG-7'],
-];
-
-$payload = PSODeleteObjectHelper::fromPkArray(
-    objectTypeId: 'Activity',
-    primaryKeys: $primaryKeys,
-    isRotaObject: true
-);
-
-// result
-[
-    'object_type_id' => 'Activity',
-    'object_pk_name' => 'id',
-    'object_pk' => 'ACT-001',
-    'object_pk_name2' => 'activity_type_id',
-    'object_pk2' => 'TYPE-A',
-    'object_pk_name3' => 'region_id',
-    'object_pk3' => 'REG-7',
-    'delete_row' => true
-]
-
-*/

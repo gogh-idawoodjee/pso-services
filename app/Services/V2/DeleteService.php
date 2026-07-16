@@ -30,9 +30,8 @@ class DeleteService extends BaseService
             }
 
             $label = $registry['label'] ?? $objectType;
-            $data['objectType'] = $label;
 
-            $delete_input = DeleteObject::make($data, $isRotaObject);
+            $delete_input = DeleteObject::make($registry, $data, $isRotaObject);
 
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload(['Object_Deletion' => $delete_input])

@@ -94,6 +94,9 @@ return [
         // Service identifier sent to PSO in Input_Reference payloads
         'service_name' => env('PSO_SERVICE_NAME', 'Ish PSO Services'),
 
+        // Organisation identifier sent to PSO in Input_Reference payloads
+        'organisation_id' => env('PSO_ORGANISATION_ID', '2'),
+
         // Use the system date format in USAGE output instead of ISO 8601
         'use_system_date_format' => false,
 

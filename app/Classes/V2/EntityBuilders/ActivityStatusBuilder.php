@@ -84,7 +84,6 @@ class ActivityStatusBuilder
         $overrideValue = config("pso-services.settings.override_commit_timestamp_value");
 
         $dateTimeStatus = $this->timestampOverride ?? ($overrideEnabled ? $overrideValue : $now);
-        $dateTimeStamp = $this->timestampOverride ?? ($overrideEnabled ? $overrideValue : $now);
 
         $durationFormatted = PSOHelper::setPSODuration($this->duration ?? "0");
 
@@ -98,7 +97,7 @@ class ActivityStatusBuilder
             'date_time_status' => $dateTimeStatus,
             'visit_id' => $visitId,
             'fixed' => $fixed,
-            'date_time_stamp' => $dateTimeStamp,
+            'date_time_stamp' => $dateTimeStatus,
             'reason' => $this->reason,
         ];
 

@@ -76,7 +76,7 @@ class InputReferenceBuilder
             'datetime' => $this->datetime ?? now()->toAtomString(),
             'id' => $this->id ?? Str::orderedUuid()->getHex()->toString(),
             'input_type' => $this->inputType->value,
-            'organisation_id' => '2',
+            'organisation_id' => config('pso-services.settings.organisation_id'),
             'dataset_id' => $this->datasetId,
             'user_id' => config('pso-services.settings.service_name'),
             'duration' => $this->dseDuration,

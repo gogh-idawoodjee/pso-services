@@ -4,6 +4,7 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
+use App\Classes\V2\PSOObjectRegistry;
 use App\DataTransferObjects\PsoContext;
 use App\Enums\ActivityStatus;
 use App\Helpers\Stubs\DeleteObject;
@@ -38,12 +39,13 @@ class ActivityService extends BaseService
     {
         try {
             $activitiesList = $context->data('activities');
+            $registry = PSOObjectRegistry::resolveEntry('activity');
 
             $payload = [
-                'Object_Deletion' => collect($activitiesList)->map(static fn($id) => DeleteObject::make([
-                    'objectType' => 'activity',
-                    'objectPk1' => $id,
-                ]))->all(),
+                'Object_Deletion' => collect($activitiesList)->map(static fn($id) => DeleteObject::make(
+                    $registry,
+                    ['objectPk1' => $id],
+                ))->all(),
             ];
 
             return $this->psoClient->sendOrSimulateBuilder()

@@ -84,7 +84,7 @@ class ShiftBuilder
             throw new InvalidArgumentException("resourceId is required");
         }
 
-        return [
+        return array_filter([
             'id' => $this->shiftId,
             'manual_scheduling_only' => $this->isManualSchedulingOnly,
             'start_datetime' => $this->startDateTime,
@@ -95,6 +95,6 @@ class ShiftBuilder
                 : []),
             $this->isArpObject ? 'ram_rota_id' : 'rota_id' => $this->rotaId,
             $this->isArpObject ? 'ram_resource_id' : 'resource_id' => $this->resourceId,
-        ];
+        ], static fn($value) => $value !== null);
     }
 }

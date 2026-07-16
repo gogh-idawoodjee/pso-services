@@ -3,14 +3,13 @@
 namespace App\Classes\V2\EntityBuilders;
 
 use App\Enums\BroadcastAllocationType;
-use App\Enums\BroadcastParameterType;
 use App\Enums\BroadcastPlanType;
-use App\Helpers\Stubs\BroadcastParameter;
 use Illuminate\Support\Str;
 
 class BroadcastBuilder
 {
     protected BroadcastAllocationType $broadcastAllocationType;
+    /** @var BroadcastParameterBuilder[] */
     protected array $broadcastParameters = [];
     protected string $broadcastType = 'REST';
     protected bool $onceOnly = false;
@@ -27,6 +26,7 @@ class BroadcastBuilder
         return $this;
     }
 
+    /** @param BroadcastParameterBuilder[] $params */
     public function parameters(array $params): static
     {
         $this->broadcastParameters = $params;
@@ -55,18 +55,10 @@ class BroadcastBuilder
     {
         $broadcast_id = Str::orderedUuid()->getHex()->toString();
 
-        $parameters = array_map(static function ($param) use ($broadcast_id) {
-            if ($param instanceof BroadcastParameterBuilder) {
-                return $param->finalize($broadcast_id);
-            }
-
-            // Raw array fallback
-            return BroadcastParameter::make(
-                $broadcast_id,
-                BroadcastParameterType::from($param['parameter_name']),
-                $param['parameter_value'],
-            );
-        }, $this->broadcastParameters);
+        $parameters = array_map(
+            static fn(BroadcastParameterBuilder $param) => $param->finalize($broadcast_id),
+            $this->broadcastParameters,
+        );
 
         return [
             'Broadcast' => [
