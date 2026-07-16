@@ -4,6 +4,7 @@ namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
+use App\Classes\V2\PsoClient;
 use App\Constants\PSOConstants;
 use App\DataTransferObjects\PsoContext;
 use App\Enums\InputMode;
@@ -16,6 +17,11 @@ use JsonException;
 
 class LoadService extends BaseService
 {
+    public function __construct(PsoClient $psoClient, protected ScheduleService $scheduleService)
+    {
+        parent::__construct($psoClient);
+    }
+
     /**
      * @throws JsonException
      */
@@ -62,7 +68,7 @@ class LoadService extends BaseService
         if ($keepPsoData) {
             if ($sendToPso) {
                 $keepPsoDataMessage = 'Keeping Existing PSO Data';
-                $scheduleData = ScheduleService::getScheduleData($this->psoClient, $baseUrl, $datasetId, $context->token);
+                $scheduleData = $this->scheduleService->getScheduleData($baseUrl, $datasetId, $context->token);
                 $payload = array_merge($payload, $scheduleData);
             } else {
                 $keepPsoDataMessage = 'Attention: Request to Keep PSO Data but not sending to PSO.';

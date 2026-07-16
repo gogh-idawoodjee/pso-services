@@ -2,22 +2,23 @@
 
 namespace App\Services\V2;
 
+use App\Classes\V2\BaseService;
 use App\Classes\V2\PsoClient;
 use App\Enums\PsoEndpointSegment;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use JsonException;
 
-class ScheduleService
+class ScheduleService extends BaseService
 {
     /**
      * Fetch full schedule data from PSO and normalize into entity collections.
      *
      * @throws JsonException
      */
-    public static function getScheduleData(PsoClient $psoClient, string $baseUrl, string $datasetId, string $token, bool $includeInput = true, bool $includeOutput = true): array|false
+    public function getScheduleData(string $baseUrl, string $datasetId, string $token, bool $includeInput = true, bool $includeOutput = true): array|false
     {
-        $response = $psoClient->getPsoData(
+        $response = $this->psoClient->getPsoData(
             $datasetId,
             $baseUrl,
             $token,
