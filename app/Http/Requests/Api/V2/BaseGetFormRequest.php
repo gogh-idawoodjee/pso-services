@@ -3,11 +3,14 @@
 namespace App\Http\Requests\Api\V2;
 
 use App\Rules\DisallowProdUrl;
+use App\Traits\V2\ValidatesTokenOrCredentials;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class BaseGetFormRequest extends FormRequest
 {
+    use ValidatesTokenOrCredentials;
+
     public function authorize(): bool
     {
         return true;
@@ -50,26 +53,6 @@ class BaseGetFormRequest extends FormRequest
 
     public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator) {
-            $data = $this->validationData();
-
-            $token = trim($data['token'] ?? '');
-            $user = trim($data['username'] ?? '');
-            $pass = trim($data['password'] ?? '');
-
-            $hasToken = $token !== '';
-            $hasUser = $user !== '';
-            $hasPass = $pass !== '';
-
-            if (!$hasToken) {
-                if (!$hasUser && !$hasPass) {
-                    $validator->errors()->add('authentication', 'Either a token or both username and password must be provided.');
-                } elseif (!$hasUser) {
-                    $validator->errors()->add('username', 'Username is required if token is not provided.');
-                } elseif (!$hasPass) {
-                    $validator->errors()->add('password', 'Password is required if token is not provided.');
-                }
-            }
-        });
+        $this->requireTokenOrCredentials($validator, fn () => $this->validationData());
     }
 }

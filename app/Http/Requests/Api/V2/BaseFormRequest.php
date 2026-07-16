@@ -3,12 +3,15 @@
 namespace App\Http\Requests\Api\V2;
 
 use App\Rules\DisallowProdUrl;
+use App\Traits\V2\ValidatesTokenOrCredentials;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class BaseFormRequest extends FormRequest
 {
+    use ValidatesTokenOrCredentials;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -120,18 +123,16 @@ class BaseFormRequest extends FormRequest
      */
     public function withValidator(Validator $validator): void
     {
-        // Simplified logic: When sendToPso is true, either token OR (username AND password) must be provided
-        $validator->sometimes(['environment.username', 'environment.password'], 'required', function ($input) {
-            // Only apply when sendToPso is true AND token is missing
-            return data_get($input, 'environment.sendToPso') === true &&
-                empty(data_get($input, 'environment.token'));
-        });
-
-        $validator->sometimes('environment.token', 'required', function ($input) {
-            // Only apply when sendToPso is true AND either username or password is missing
-            return data_get($input, 'environment.sendToPso') === true &&
-                (empty(data_get($input, 'environment.username')) ||
-                    empty(data_get($input, 'environment.password')));
-        });
+        // Only required when sendToPso is true — unlike BaseGetFormRequest, whose
+        // header-based auth is always required.
+        $this->requireTokenOrCredentials(
+            $validator,
+            fn () => [
+                'token' => $this->input('environment.token'),
+                'username' => $this->input('environment.username'),
+                'password' => $this->input('environment.password'),
+            ],
+            fn () => $this->input('environment.sendToPso') === true,
+        );
     }
 }
