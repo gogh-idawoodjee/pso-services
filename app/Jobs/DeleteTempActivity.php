@@ -7,7 +7,6 @@ use App\Classes\AuthenticatedPsoActionService;
 use App\DataTransferObjects\PsoContext;
 use App\Models\V2\PSOAppointment;
 use App\Services\V2\DeleteService;
-use App\Traits\V2\PSOAssistV2;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 class DeleteTempActivity implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, PSOAssistV2;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(public PSOAppointment $appointment)
     {
@@ -32,10 +31,11 @@ class DeleteTempActivity implements ShouldQueue
         Log::info('is in the past: ' . $this->appointment->offer_expiry_datetime->isPast());
 
         if (!$this->appointment->cleanup_datetime && $this->appointment->offer_expiry_datetime->isPast()) {
-            // Delete the activity
-            // problem bruv, we don't have creds to do deletions here
-            // we could encrypt and store them
-            // but the services API could've received a token, pwnd  I suppose that's an edge case? store the token as well and try it?
+            // This job runs outside the HTTP request lifecycle (queue worker, no Request object),
+            // so it can't reuse PSOAssistV2's request-based auth resolution. Credentials were
+            // captured at appointment-creation time and encrypted into service_api_input
+            // (see AppointmentService::encryptSensitiveEnvironmentFields) specifically so this
+            // delayed cleanup job can re-authenticate on its own later.
             $service_api_input = $this->appointment->service_api_input;
 
             $environment = [

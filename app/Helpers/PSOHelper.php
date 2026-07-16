@@ -120,18 +120,6 @@ class PSOHelper
         ], 401);
     }
 
-//    public static function checkAuth($send_to_pso, $service)
-//    {
-//        if ($send_to_pso && !$service->isAuthenticated()) {
-//            return response()->json([
-//                'status' => 401,
-//                'description' => 'did not pass auth'
-//            ], 401);
-//        }
-//        return false;
-//    }
-
-
     public static function toUrlEncodedIso8601($datetime): string
     {
         if (!$datetime instanceof Carbon) {
