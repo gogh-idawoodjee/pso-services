@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 .scribe
+api.json
 /dist
 /vendor
 .env

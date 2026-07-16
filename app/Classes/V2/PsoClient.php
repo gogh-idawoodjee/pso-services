@@ -198,7 +198,7 @@ class PsoClient
         }
 
         $psoPayload = $this->buildPayload($payload, $psoApiVersion);
-        $wrappedPayload = $this->buildPayload($payload, $psoApiVersion, true);
+        $wrappedPayload = ['payloadToPso' => $psoPayload];
 
         if ($sessionToken) {
             $psoResponse = $this->sendToPso(

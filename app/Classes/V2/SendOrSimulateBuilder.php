@@ -3,6 +3,7 @@
 namespace App\Classes\V2;
 
 use Illuminate\Http\JsonResponse;
+use LogicException;
 
 
 /**
@@ -91,6 +92,10 @@ class SendOrSimulateBuilder
      */
     public function send(): JsonResponse
     {
+        if (!isset($this->payload) || !isset($this->environmentData)) {
+            throw new LogicException('SendOrSimulateBuilder::send() requires payload() and environment() to be set first.');
+        }
+
         return $this->caller->sendOrSimulate(
             $this->payload,
             $this->environmentData,

@@ -18,7 +18,7 @@ abstract class BaseService
 
     public function __construct(protected PsoClient $psoClient) {}
 
-    public function logError(Exception|string $e, $method, $class): void
+    public function logError(Exception|string $e, string $method, string $class): void
     {
         $message = $e instanceof Exception ? $e->getMessage() : $e;
         Log::error("Unexpected error in {$method}. This method is inside {$class}: {$message}");
