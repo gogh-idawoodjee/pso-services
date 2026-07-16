@@ -96,17 +96,26 @@ class SendOrSimulateBuilder
             throw new LogicException('SendOrSimulateBuilder::send() requires payload() and environment() to be set first.');
         }
 
-        return $this->caller->sendOrSimulate(
-            $this->payload,
-            $this->environmentData,
-            $this->sessionToken,
-            $this->requiresRotaUpdate,
-            $this->rotaUpdateDescription,
-            $this->additionalDetails,
-            $this->addInputReference,
-            $this->inputReferenceDescription,
-            $this->resultsUrl,
-            $this->psoApiVersion,
-        );
+        return $this->caller->executeSendOrSimulate($this);
+    }
+
+    /**
+     * @internal Used by PsoClient::executeSendOrSimulate() to call the (protected)
+     * sendOrSimulate() method with this builder's state.
+     */
+    public function toSendOrSimulateArgs(): array
+    {
+        return [
+            'payload' => $this->payload,
+            'environmentData' => $this->environmentData,
+            'sessionToken' => $this->sessionToken,
+            'requiresRotaUpdate' => $this->requiresRotaUpdate,
+            'rotaUpdateDescription' => $this->rotaUpdateDescription,
+            'additionalDetails' => $this->additionalDetails,
+            'addInputReference' => $this->addInputReference,
+            'inputReferenceDescription' => $this->inputReferenceDescription,
+            'resultsUrl' => $this->resultsUrl,
+            'psoApiVersion' => $this->psoApiVersion,
+        ];
     }
 }

@@ -69,14 +69,13 @@ class ResourceService extends BaseService
 
             $entity = $context->data('isArpObject') ? ShiftEntity::RAMROTAITEM->value : ShiftEntity::SHIFT->value;
 
-            return $this->psoClient->sendOrSimulate(
-                [$entity => $payload],
-                $context->environment(),
-                $context->token,
-                true,
-                'Updated Rota After Shift Update',
-                psoApiVersion: $context->psoApiVersion(),
-            );
+            return $this->psoClient->sendOrSimulateBuilder()
+                ->payload([$entity => $payload])
+                ->environment($context->environment())
+                ->token($context->token)
+                ->requiresRotaUpdate(true, 'Updated Rota After Shift Update')
+                ->psoApiVersion($context->psoApiVersion())
+                ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
@@ -269,7 +268,7 @@ class ResourceService extends BaseService
         };
 
         if (!$relatedEntityKey || !$entityKey || !$entityListKey) {
-            return [];
+            return ['items' => [], 'total' => 0];
         }
 
         $entityRelations = collect(data_get($data, $relatedEntityKey, []));
@@ -281,15 +280,15 @@ class ResourceService extends BaseService
             ->unique()
             ->values();
 
-        return $entityList
+        $items = $entityList
             ->whereIn('id', $entityIds)
             ->map(static fn($entity) => [
                 'id'          => data_get($entity, 'id'),
                 'description' => data_get($entity, 'description'),
             ])
-            ->values()
-            ->tap(static fn($collection) => $collection->push(['total' => $collection->count()]))
-            ->all();
+            ->values();
+
+        return ['items' => $items->all(), 'total' => $items->count()];
     }
 
     private function getAdditionalAttributes(string $resourceId, array|null $additionalAttributes = null): array

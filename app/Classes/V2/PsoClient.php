@@ -175,7 +175,7 @@ class PsoClient
      * optionally, a rota update is dispatched afterwards.
      * Without a token the built payload is returned unsent (HTTP 202).
      */
-    public function sendOrSimulate(
+    protected function sendOrSimulate(
         array $payload,
         array $environmentData,
         string|null $sessionToken,
@@ -246,6 +246,16 @@ class PsoClient
     public function sendOrSimulateBuilder(): SendOrSimulateBuilder
     {
         return new SendOrSimulateBuilder($this);
+    }
+
+    /**
+     * Entry point used by SendOrSimulateBuilder::send() — sendOrSimulate() itself is
+     * protected so it can only be reached through the builder, not called directly
+     * with a raw positional-arg list.
+     */
+    public function executeSendOrSimulate(SendOrSimulateBuilder $builder): JsonResponse
+    {
+        return $this->sendOrSimulate(...$builder->toSendOrSimulateArgs());
     }
 
     private function handleDataResponse(Response $response): JsonResponse
