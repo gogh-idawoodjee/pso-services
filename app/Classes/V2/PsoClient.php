@@ -45,7 +45,6 @@ class PsoClient
     ): JsonResponse {
         $totalTimeout = (int) config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1));
-        $cid = (string) Str::uuid();
 
         try {
             $baseUrl = UrlHelper::normalizeBaseUrl(data_get($environmentData, 'baseUrl'));
@@ -60,7 +59,7 @@ class PsoClient
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException $e) {
-            return HttpErrorMapper::fromConnectionException($e, $url ?? null, $cid);
+            return HttpErrorMapper::fromConnectionException($e, $url ?? null, (string) Str::uuid());
         } catch (Throwable $e) {
             return $this->error([
                 'error' => 'Request could not be dispatched',
@@ -85,7 +84,6 @@ class PsoClient
     ): JsonResponse {
         $totalTimeout = (int) config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1));
-        $cid = (string) Str::uuid();
 
         try {
             $base = UrlHelper::normalizeBaseUrl($baseUrl);
@@ -119,7 +117,7 @@ class PsoClient
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException $e) {
-            return HttpErrorMapper::fromConnectionException($e, $url ?? null, $cid);
+            return HttpErrorMapper::fromConnectionException($e, $url ?? null, (string) Str::uuid());
         } catch (Throwable $e) {
             return $this->error([
                 'error' => 'Request could not be dispatched',
