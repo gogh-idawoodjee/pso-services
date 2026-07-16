@@ -60,6 +60,11 @@ class PSOAppointment extends Model
         'accept_decline_datetime',
         'user_id',
     ];
+
+    protected $hidden = [
+        'service_api_input',
+    ];
+
     protected $casts = [
         'appointed_check_complete' => 'boolean',
         'appointed_check_result' => 'boolean',

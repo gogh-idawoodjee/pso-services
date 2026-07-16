@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Uses the external krang_db connection (see config/database.php) rather than the app's
+ * default database — this table lives in a separate service's database.
+ *
  * @method static Model|static create(array $attributes = [])
  * @method static Builder|static query()
  *

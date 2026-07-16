@@ -14,6 +14,9 @@ use Override;
 
 
 /**
+ * Uses the external krang_db connection (see config/database.php) rather than the app's
+ * default database — this table lives in a separate service's database.
+ *
  * @method static Model|static create(array $attributes = [])
  * @method static Builder|static query()
  *
@@ -25,15 +28,9 @@ class Environment extends Model
 
     protected $connection = 'krang_db';
 
-
-//    /**
-//     * The attributes that should be hidden for serialization.
-//     *
-//     * @var array
-//     */
-////    protected $hidden = [
-//////        'password',
-////    ];
+    protected $hidden = [
+        'password',
+    ];
 
     /**
      * The attributes that should be cast to native types.
