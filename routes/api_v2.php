@@ -3,13 +3,15 @@
 use App\Http\Controllers\Api\V2\ActivityController;
 use App\Http\Controllers\Api\V2\ActivityStatusController;
 use App\Http\Controllers\Api\V2\AppointmentController;
-use App\Http\Controllers\Api\V2\AssistController;
+use App\Http\Controllers\Api\V2\DeleteObjectController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
+use App\Http\Controllers\Api\V2\LoadController;
 use App\Http\Controllers\Api\V2\ResourceController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\ResourceShiftController;
 use App\Http\Controllers\Api\V2\ResourceUnavailabilityController;
 use App\Http\Controllers\Api\V2\ScheduleExceptionController;
+use App\Http\Controllers\Api\V2\SystemUsageController;
 use App\Http\Controllers\Api\V2\TravelController;
 
 Route::post('/health-check', [HealthCheckController::class, 'check'])->name('v2.health-check');
@@ -24,10 +26,10 @@ Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 
 Route::delete('/activity/', [ActivityController::class, 'destroy'])->name('v2.activity.destroy');
 
 // assist routes
-Route::delete('/delete', [AssistController::class, 'destroy'])->name('v2.assist.destroy');
-Route::post('/load', [AssistController::class, 'store'])->name('v2.assist.load');
-Route::patch('/rota', [AssistController::class, 'update'])->name('v2.assist.rota');
-Route::get('/usage', [AssistController::class, 'show'])->name('v2.assist.usage');
+Route::delete('/delete', [DeleteObjectController::class, 'destroy'])->name('v2.delete.destroy');
+Route::post('/load', [LoadController::class, 'store'])->name('v2.load.store');
+Route::patch('/rota', [LoadController::class, 'updateRota'])->name('v2.rota.update');
+Route::get('/usage', [SystemUsageController::class, 'show'])->name('v2.usage.show');
 
 // appointment routes
 Route::post('/appointment', [AppointmentController::class, 'store'])->name('v2.appointment.store');
