@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 
 // TODO: decide whether the load-test feature (this job, PSOLoadTestService,
-// PSOSandboxController::runLoadTestJob) is still needed or should be removed — see issue #21.
+// PSOSandboxController::runLoadTestJob) is still needed or should be removed — see issue #36.
 class BookAppointments implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;

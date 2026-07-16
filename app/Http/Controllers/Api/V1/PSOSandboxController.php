@@ -19,7 +19,7 @@ class PSOSandboxController extends Controller
 {
 
     // TODO: decide whether the load-test feature (this method, BookAppointments job,
-    // PSOLoadTestService) is still needed or should be removed — see issue #21.
+    // PSOLoadTestService) is still needed or should be removed — see issue #36.
     public function runLoadTestJob(Request $request)
     {
         $request->validate([
