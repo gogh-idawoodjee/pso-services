@@ -88,6 +88,7 @@ class PsoClient
         try {
             $base = UrlHelper::normalizeBaseUrl($baseUrl);
             $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $segment->value;
+            $url = "{$base}{$endpoint}";
 
             $queryParams = compact('datasetId');
             if ($includeInput) {
@@ -100,20 +101,18 @@ class PsoClient
                 $queryParams['resourceId'] = $resourceId;
             }
             if ($minDate) {
-                $queryParams['minimumDateTime'] = PSOHelper::toUrlEncodedIso8601($minDate);
+                $queryParams['minimumDateTime'] = PSOHelper::toIso8601($minDate);
             }
             if ($maxDate) {
-                $queryParams['maximumDateTime'] = PSOHelper::toUrlEncodedIso8601($maxDate);
+                $queryParams['maximumDateTime'] = PSOHelper::toIso8601($maxDate);
             }
 
-            $url = "{$base}{$endpoint}?" . http_build_query($queryParams);
-
-            Log::info('PSO GET', ['url' => $url, 'segment' => $segment->value]);
+            Log::info('PSO GET', ['url' => $url, 'query' => $queryParams, 'segment' => $segment->value]);
 
             $response = Http::timeout($totalTimeout)
                 ->connectTimeout($connectTimeout)
                 ->withHeaders(['apiKey' => $sessionToken])
-                ->get($url);
+                ->get($url, $queryParams);
 
             return $this->handleDataResponse($response);
         } catch (ConnectionException $e) {

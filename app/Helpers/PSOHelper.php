@@ -120,14 +120,13 @@ class PSOHelper
         ], 401);
     }
 
-    public static function toUrlEncodedIso8601($datetime): string
+    public static function toIso8601(mixed $datetime): string
     {
         if (!$datetime instanceof Carbon) {
             $datetime = Carbon::parse($datetime);
         }
 
-        // Format to ISO 8601 (without timezone) and encode
-        return urlencode($datetime->format('Y-m-d\TH:i:s'));
+        return $datetime->format('Y-m-d\TH:i:s');
     }
 
 }
