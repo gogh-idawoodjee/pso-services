@@ -22,16 +22,10 @@ class DeleteService extends BaseService
                 return $this->error('Object type is required', 422);
             }
 
-            $key = PSOObjectRegistry::resolveKey($objectType);
+            $registry = PSOObjectRegistry::resolveEntry($objectType);
 
-            if (!$key) {
-                $this->logError("Object type '{$objectType}' not found in registry.", __METHOD__, __CLASS__);
-                return $this->error("Invalid object type '{$objectType}'", 422);
-            }
-
-            $registry = PSOObjectRegistry::get($key);
             if (!$registry) {
-                $this->logError("Registry entry for key '{$key}' not found.", __METHOD__, __CLASS__);
+                $this->logError("Object type '{$objectType}' not found in registry.", __METHOD__, __CLASS__);
                 return $this->error("Invalid object type '{$objectType}'", 422);
             }
 

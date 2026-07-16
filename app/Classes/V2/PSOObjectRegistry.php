@@ -124,4 +124,17 @@ class PSOObjectRegistry
             ->first();
     }
 
+    /**
+     * Resolve a label or entity name directly to its registry entry in one pass,
+     * instead of resolveKey() + get() doing two separate lookups.
+     */
+    public static function resolveEntry(string $labelOrEntity): array|null
+    {
+        return collect(self::all())
+            ->first(static fn($entry) =>
+                strcasecmp($entry['label'], $labelOrEntity) === 0 ||
+                strcasecmp($entry['entity'], $labelOrEntity) === 0
+            );
+    }
+
 }
