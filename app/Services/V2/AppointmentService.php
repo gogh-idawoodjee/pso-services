@@ -16,7 +16,6 @@ use App\Models\V2\PSOAppointment;
 use Carbon\Carbon;
 use DateInterval;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -559,7 +558,7 @@ class AppointmentService extends BaseService
         $summary = data_get($appointmentOffers, 'summary', '');
 
         // Find the appointment and update it
-        $appointmentRequest = PSOAppointment::where('run_id', $runId)->firstOrCreate();
+        $appointmentRequest = PSOAppointment::where('run_id', $runId)->firstOrFail();
         $appointmentRequest->update([
             'appointment_response' => $responseData,
             'valid_offers' => $validOffersJson,
@@ -648,77 +647,65 @@ class AppointmentService extends BaseService
 
     private function validateAppointmentSummary(string $appointmentRequestId, string $appointmentOfferId, bool|null $isAcceptRequest = true): array|null
     {
-        try {
-            $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
+        $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
 
-            if (!$appointmentRequest) {
-                Log::warning('Appointment request not found', compact('appointmentRequestId'));
-                return [
-                    'message' => 'Appointment Request ID was not found',
-                    'status' => 404
-                ];
-            }
-
-            $appointmentRequestStatus = AppointmentRequestStatus::from($appointmentRequest->status);
-
-            $offersCollection = collect($appointmentRequest->valid_offers);
-
-            // applies to accept, decline and check
-            if ($offersCollection->isEmpty()) {
-                Log::warning('No valid offers found for appointment request', compact('appointmentRequestId'));
-                return [
-                    'message' => 'No valid offers found for appointment request',
-                    'status' => 406
-                ];
-            }
-
-            // applies only to accept
-            if ($isAcceptRequest && !$offersCollection->contains('id', $appointmentOfferId)) {
-                Log::warning('Invalid appointment offer ID', [
-                    'appointmentOfferId' => $appointmentOfferId,
-                    'valid_ids' => $offersCollection->pluck('id')->all(),
-                ]);
-                return [
-                    'message' => 'This is not a valid appointment offer ID',
-                    'status' => 406
-                ];
-            }
-
-            // For accept requests: only allow UNACKNOWLEDGED or CHECKED status
-            // For decline/check requests: only allow UNACKNOWLEDGED status
-            $validStatuses = $isAcceptRequest
-                ? [AppointmentRequestStatus::UNACKNOWLEDGED, AppointmentRequestStatus::CHECKED]
-                : [AppointmentRequestStatus::UNACKNOWLEDGED];
-
-            if (!in_array($appointmentRequestStatus, $validStatuses, true)) {
-                Log::warning('Appointment request is no longer in a valid status', ['status' => $appointmentRequest->status]);
-                return [
-                    'message' => 'Appointment Request ID is no longer valid for ' . ($isAcceptRequest ? 'accepting' : 'check'),
-                    'status' => 406
-                ];
-            }
-
-
-            if ($appointmentRequest->offer_expiry_datetime->isPast()) {
-                Log::warning('Appointment request has expired', ['expiry' => $appointmentRequest->offer_expiry_datetime]);
-                return [
-                    'message' => 'Appointment Request has expired',
-                    'status' => 406
-                ];
-            }
-
-            // All good
-            return null;
-
-        } catch (ModelNotFoundException $e) {
-            Log::error('ModelNotFoundException in validateAppointmentSummary', [
-                'message' => $e->getMessage()
-            ]);
+        if (!$appointmentRequest) {
+            Log::warning('Appointment request not found', compact('appointmentRequestId'));
             return [
                 'message' => 'Appointment Request ID was not found',
                 'status' => 404
             ];
         }
+
+        $appointmentRequestStatus = AppointmentRequestStatus::from($appointmentRequest->status);
+
+        $offersCollection = collect($appointmentRequest->valid_offers);
+
+        // applies to accept, decline and check
+        if ($offersCollection->isEmpty()) {
+            Log::warning('No valid offers found for appointment request', compact('appointmentRequestId'));
+            return [
+                'message' => 'No valid offers found for appointment request',
+                'status' => 406
+            ];
+        }
+
+        // applies only to accept
+        if ($isAcceptRequest && !$offersCollection->contains('id', $appointmentOfferId)) {
+            Log::warning('Invalid appointment offer ID', [
+                'appointmentOfferId' => $appointmentOfferId,
+                'valid_ids' => $offersCollection->pluck('id')->all(),
+            ]);
+            return [
+                'message' => 'This is not a valid appointment offer ID',
+                'status' => 406
+            ];
+        }
+
+        // For accept requests: only allow UNACKNOWLEDGED or CHECKED status
+        // For decline/check requests: only allow UNACKNOWLEDGED status
+        $validStatuses = $isAcceptRequest
+            ? [AppointmentRequestStatus::UNACKNOWLEDGED, AppointmentRequestStatus::CHECKED]
+            : [AppointmentRequestStatus::UNACKNOWLEDGED];
+
+        if (!in_array($appointmentRequestStatus, $validStatuses, true)) {
+            Log::warning('Appointment request is no longer in a valid status', ['status' => $appointmentRequest->status]);
+            return [
+                'message' => 'Appointment Request ID is no longer valid for ' . ($isAcceptRequest ? 'accepting' : 'check'),
+                'status' => 406
+            ];
+        }
+
+        if ($appointmentRequest->offer_expiry_datetime->isPast()) {
+            Log::warning('Appointment request has expired', ['expiry' => $appointmentRequest->offer_expiry_datetime]);
+            return [
+                'message' => 'Appointment Request has expired',
+                'status' => 406
+            ];
+        }
+
+        // All good
+        return null;
     }
 
     private function scheduleCleanup(PSOAppointment $appointmentRequestLog, int|null $timeout = null): void

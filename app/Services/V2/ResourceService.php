@@ -312,7 +312,7 @@ class ResourceService extends BaseService
         return $attributeList;
     }
 
-    public function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
+    private function getResourceShiftsFormatted(array|null $shifts, array|null $routes): Collection
     {
         $shifts = $shifts ?? [];
         $routes = $routes ?? [];
@@ -402,8 +402,7 @@ class ResourceService extends BaseService
             $context->baseUrl(),
             $context->token,
             PsoEndpointSegment::DATA,
-            null,
-            true,
+            includeInput: true,
         )->getData(true);
 
         $rootKey = PsoClient::resolveScheduleDataKey($rawData);

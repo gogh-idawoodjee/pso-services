@@ -22,11 +22,8 @@ class AssistService extends BaseService
             $context->baseUrl(),
             $context->token,
             PsoEndpointSegment::USAGE,
-            null,
-            false,
-            false,
-            $minDate,
-            $maxDate,
+            minDate: $minDate,
+            maxDate: $maxDate,
         );
     }
 }
