@@ -6,6 +6,7 @@ use App\Enums\TravelLogStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -48,85 +49,105 @@ class PSOTravelLog extends Model
         'transfer_stats' => 'json',
     ];
 
-    public function getTravelDetailRequestIdAttribute(): string|null
+    protected function travelDetailRequestId(): Attribute
     {
-        return data_get($this->pso_response, 'travel_detail_request_id');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->pso_response, 'travel_detail_request_id'),
+        );
     }
 
-    public function getPsoTimeAttribute(): string|null
+    protected function psoTime(): Attribute
     {
-        return data_get($this->pso_response, 'time');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->pso_response, 'time'),
+        );
     }
 
-    public function getPsoTimeFormattedAttribute(): string|null
+    protected function psoTimeFormatted(): Attribute
     {
-        $timeString = data_get($this->pso_response, 'time');
+        return Attribute::make(
+            get: function (): string|null {
+                $timeString = data_get($this->pso_response, 'time');
 
-        if (!$timeString) {
-            return null;
-        }
+                if (!$timeString) {
+                    return null;
+                }
 
-        [$hours, $minutes, $seconds] = array_map('intval', explode(':', $timeString));
+                [$hours, $minutes, $seconds] = array_map('intval', explode(':', $timeString));
 
-        $totalSeconds = ($hours * 3600) + ($minutes * 60) + $seconds;
+                $totalSeconds = ($hours * 3600) + ($minutes * 60) + $seconds;
 
-        $days = intdiv($totalSeconds, 86400);
-        $hours = intdiv($totalSeconds % 86400, 3600);
-        $minutes = intdiv($totalSeconds % 3600, 60);
-        $seconds = $totalSeconds % 60;
+                $days = intdiv($totalSeconds, 86400);
+                $hours = intdiv($totalSeconds % 86400, 3600);
+                $minutes = intdiv($totalSeconds % 3600, 60);
+                $seconds = $totalSeconds % 60;
 
-        $parts = [];
-        if ($days > 0) {
-            $parts[] = "{$days} day" . ($days > 1 ? 's' : '');
-        }
-        if ($hours > 0) {
-            $parts[] = "{$hours} hour" . ($hours > 1 ? 's' : '');
-        }
-        if ($minutes > 0) {
-            $parts[] = "{$minutes} minute" . ($minutes > 1 ? 's' : '');
-        }
-        if ($seconds > 0 || empty($parts)) {
-            $parts[] = "{$seconds} second" . ($seconds > 1 ? 's' : '');
-        }
+                $parts = [];
+                if ($days > 0) {
+                    $parts[] = "{$days} day" . ($days > 1 ? 's' : '');
+                }
+                if ($hours > 0) {
+                    $parts[] = "{$hours} hour" . ($hours > 1 ? 's' : '');
+                }
+                if ($minutes > 0) {
+                    $parts[] = "{$minutes} minute" . ($minutes > 1 ? 's' : '');
+                }
+                if ($seconds > 0 || empty($parts)) {
+                    $parts[] = "{$seconds} second" . ($seconds > 1 ? 's' : '');
+                }
 
-        return implode(' ', $parts);
+                return implode(' ', $parts);
+            },
+        );
     }
 
-    public function getPsoDistanceAttribute(): string|null
+    protected function psoDistance(): Attribute
     {
-        return data_get($this->pso_response, 'distance');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->pso_response, 'distance'),
+        );
     }
 
-    public function getDistanceInKmAttribute(): string|null
+    protected function distanceInKm(): Attribute
     {
-        $distanceInMetres = data_get($this->pso_response, 'distance');
+        return Attribute::make(
+            get: function (): string|null {
+                $distanceInMetres = data_get($this->pso_response, 'distance');
 
-        if ($distanceInMetres === null) {
-            return null;
-        }
+                if ($distanceInMetres === null) {
+                    return null;
+                }
 
-        return number_format($distanceInMetres / 1000, 2) . ' km';
+                return number_format($distanceInMetres / 1000, 2) . ' km';
+            },
+        );
     }
 
-    public function getGoogleDistanceAttribute(): string|null
+    protected function googleDistance(): Attribute
     {
-        return data_get($this->google_response, 'distance.text');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->google_response, 'distance.text'),
+        );
     }
 
-    public function getGoogleDurationAttribute(): string|null
+    protected function googleDuration(): Attribute
     {
-        return data_get($this->google_response, 'duration.text');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->google_response, 'duration.text'),
+        );
     }
 
-    public function getAddressFromTextAttribute(): string|null
+    protected function addressFromText(): Attribute
     {
-        return data_get($this->address_from, 'address');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->address_from, 'address'),
+        );
     }
 
-    public function getAddressToTextAttribute(): string|null
+    protected function addressToText(): Attribute
     {
-        return data_get($this->address_to, 'address');
+        return Attribute::make(
+            get: fn (): string|null => data_get($this->address_to, 'address'),
+        );
     }
-
-
 }

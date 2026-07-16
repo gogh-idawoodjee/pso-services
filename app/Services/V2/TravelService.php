@@ -360,15 +360,15 @@ class TravelService extends BaseService
         if ($travelLog->status === TravelLogStatus::COMPLETED) {
             $result = [
                 'travel_detail_request_id' => $travelLog->travel_detail_request_id,
-                'start_address' => $travelLog->getAddressFromTextAttribute(),
-                'end_address' => $travelLog->getAddressToTextAttribute(),
+                'start_address' => $travelLog->address_from_text,
+                'end_address' => $travelLog->address_to_text,
                 'pso' => [
-                    'time' => $travelLog->getPsoTimeFormattedAttribute(),
-                    'distance' => $travelLog->getDistanceInKmAttribute(),
+                    'time' => $travelLog->pso_time_formatted,
+                    'distance' => $travelLog->distance_in_km,
                 ],
                 'google' => [
-                    'time' => $travelLog->getGoogleDurationAttribute(),
-                    'distance' => $travelLog->getGoogleDistanceAttribute(),
+                    'time' => $travelLog->google_duration,
+                    'distance' => $travelLog->google_distance,
                 ],
             ];
 
