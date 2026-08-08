@@ -6,11 +6,29 @@ use Illuminate\Validation\Validator;
 
 class ResourceShiftRequest extends BaseFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->route('resourceId')) {
+            $this->merge([
+                'data' => array_merge((array) $this->input('data', []), [
+                    'resourceId' => $this->route('resourceId'),
+                ]),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $commonRules = $this->commonRules();
 
         $additionalRules = [
+            /**
+             * The resource ID, taken from the route.
+             * @var string
+             * @example "RES-001"
+             */
+            'data.resourceId' => ['required', 'string'],
+
             /**
              * Unique identifier for the shift.
              *
@@ -21,22 +39,13 @@ class ResourceShiftRequest extends BaseFormRequest
             'data.shiftId' => 'required|alpha_dash',
 
             /**
-             * The dataset ID this shift belongs to.
-             *
-             * @scramble type string
-             * @scramble required true
-             * @scramble example "DEMO"
-             */
-            'data.datasetId' => 'required|string',
-
-            /**
              * The rota ID (required only for ARP shifts).
              *
              * @scramble type string
              * @scramble required_if isArpObject=true
              * @scramble example "ROTA-001"
              */
-            'data.rotaId' => 'string|required_if:isArpObject,true',
+            'data.rotaId' => 'string|required_if:data.isArpObject,true',
 
             /**
              * Indicates if this shift is using ARP format.
@@ -55,7 +64,7 @@ class ResourceShiftRequest extends BaseFormRequest
              * @scramble required_with turnManualSchedulingOn
              * @scramble example "SHT-TYPE-A"
              */
-            'data.shiftType' => 'required_with:turnManualSchedulingOn|string',
+            'data.shiftType' => 'required_with:data.turnManualSchedulingOn|string',
 
             /**
              * Start datetime of the shift (ISO 8601).

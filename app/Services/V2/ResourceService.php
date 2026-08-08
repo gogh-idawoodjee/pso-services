@@ -56,9 +56,9 @@ class ResourceService extends BaseService
                 ->shiftType($context->data('shiftType'))
                 ->startDateTime($context->data('startDateTime'))
                 ->endDateTime($context->data('endDateTime'))
-                ->arpObject($context->data('isArpObject'))
+                ->arpObject((bool) $context->data('isArpObject'))
                 ->description($context->data('description'))
-                ->manualSchedulingOnly($context->data('isManualSchedulingOnly'))
+                ->manualSchedulingOnly((bool) $context->data('turnManualSchedulingOn'))
                 ->rotaId($context->data('rotaId'))
                 ->resourceId($context->data('resourceId'))
                 ->build();
