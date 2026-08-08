@@ -16,18 +16,16 @@ class PSOHelper
 
     public static function setTimeZone($time_zone, $check_from_source = false, $source_collection = null): string|Stringable|null
     {
-        $tz = null;
         if ($time_zone) {
-            $tz = '+' . $time_zone . ':00';
-            if ($time_zone < 10 && $time_zone > -10) {
-                $tz = $time_zone < 0 ? '-0' . abs($time_zone) . ':00' : '+0' . abs($time_zone) . ':00';
-            }
-        }
-        if (!$time_zone && $check_from_source) {
-            $tz = Str::of($source_collection->first()['activity_start'])->substr(20, 6);
+            $sign = $time_zone < 0 ? '-' : '+';
+            return sprintf('%s%02d:00', $sign, abs($time_zone));
         }
 
-        return $tz;
+        if ($check_from_source && $source_collection?->first()) {
+            return Str::of($source_collection->first()['activity_start'])->substr(20, 6);
+        }
+
+        return null;
     }
 
 
