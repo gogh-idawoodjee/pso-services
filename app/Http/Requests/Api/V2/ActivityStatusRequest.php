@@ -33,6 +33,13 @@ class ActivityStatusRequest extends BaseFormRequest
 
         $additionalRules = [
             /**
+             * The activity ID, taken from the route.
+             * @var string
+             * @example "act-123"
+             */
+            'data.activityId' => ['required', 'string'],
+
+            /**
              * The fixed date and time for the activity in ISO 8601 format (Y-m-d\TH:i:s).
              * Example: "2025-04-30T14:30:00"
              * @var string

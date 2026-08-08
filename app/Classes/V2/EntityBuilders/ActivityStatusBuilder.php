@@ -128,7 +128,6 @@ class ActivityStatusBuilder
         return in_array($this->statusId, [
             ActivityStatusEnum::IGNORE,
             ActivityStatusEnum::UNALLOCATED,
-            ActivityStatusEnum::ALLOCATED,
         ], true);
     }
 }
