@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2;
 use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V2\ActivityDeleteRequest;
+use App\Http\Requests\Api\V2\ActivityStoreRequest;
 use App\Services\V2\ActivityService;
 use App\Traits\V2\PSOAssistV2;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,21 @@ use Illuminate\Http\JsonResponse;
 class ActivityController extends Controller
 {
     use PSOAssistV2;
+
+    /**
+     * Create Activity.
+     *
+     * Creates a new activity, always starting in the UNALLOCATED status.
+     *
+     * @response 200 scenario="Sent to PSO" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Activity": {"id": "act-123"}}}, "responseFromPso": {}}, "status": 200, "message": "Successful. Sent to PSO"}
+     * @response 202 scenario="Dry run" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Activity": {"id": "act-123"}}}}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
+     */
+    public function store(ActivityStoreRequest $request, ActivityService $activityService): JsonResponse
+    {
+        return $this->executeAuthenticatedAction($request, fn(ActivityStoreRequest $req) =>
+            $activityService->store(PsoContext::fromRequest($req))
+        );
+    }
 
     /**
      * Delete Activity or Activities.

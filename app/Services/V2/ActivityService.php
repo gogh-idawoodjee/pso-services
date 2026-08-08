@@ -3,6 +3,7 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\ActivityBuilder;
 use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\PSOObjectRegistry;
 use App\DataTransferObjects\PsoContext;
@@ -13,6 +14,30 @@ use Illuminate\Http\JsonResponse;
 
 class ActivityService extends BaseService
 {
+    public function store(PsoContext $context): JsonResponse
+    {
+        try {
+            $activityId = $context->data('activityId');
+
+            $payload = ActivityBuilder::make($context->validated)
+                ->withActivityStatusBuilder(
+                    ActivityStatusBuilder::make($activityId, ActivityStatus::UNALLOCATED)
+                )
+                ->build();
+
+            return $this->psoClient->sendOrSimulateBuilder()
+                ->payload($payload)
+                ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
+                ->token($context->token)
+                ->includeInputReference('Create Activity: ' . $activityId)
+                ->send();
+        } catch (Exception $e) {
+            $this->logError($e, __METHOD__, __CLASS__);
+            return $this->error('An unexpected error occurred', 500);
+        }
+    }
+
     public function updateStatus(PsoContext $context, ActivityStatus $activityStatus, string|null $resourceId = null): JsonResponse
     {
         try {

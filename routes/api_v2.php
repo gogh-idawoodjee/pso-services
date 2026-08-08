@@ -22,6 +22,7 @@ Route::post('/travelanalyzerservice', [TravelController::class, 'update'])->name
 Route::get('/travelanalyzer/{id}', [TravelController::class, 'show'])->name('v2.travel.show');
 
 // activity routes
+Route::post('/activity/', [ActivityController::class, 'store'])->name('v2.activity.store');
 Route::patch('/activity/{activityId}/status', [ActivityStatusController::class, 'update'])->name('v2.activity.status.update');
 Route::delete('/activity/', [ActivityController::class, 'destroy'])->name('v2.activity.destroy');
 

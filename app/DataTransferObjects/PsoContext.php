@@ -31,10 +31,17 @@ readonly class PsoContext
 
     /**
      * The full environment block (baseUrl, datasetId, token, sendToPso, etc.).
+     *
+     * Body-based requests (BaseFormRequest) validate these nested under 'environment'.
+     * Header-based GET requests (BaseGetFormRequest) validate them flat at the top
+     * level, since there's nowhere to nest headers. Fall back to the flat shape when
+     * there's no 'environment' key so both request styles work through this DTO.
      */
     public function environment(): array
     {
-        return data_get($this->validated, 'environment', []);
+        return array_key_exists('environment', $this->validated)
+            ? data_get($this->validated, 'environment', [])
+            : $this->validated;
     }
 
     /**
@@ -42,7 +49,7 @@ readonly class PsoContext
      */
     public function datasetId(): string|null
     {
-        return data_get($this->validated, 'environment.datasetId');
+        return data_get($this->environment(), 'datasetId');
     }
 
     /**
@@ -50,7 +57,7 @@ readonly class PsoContext
      */
     public function baseUrl(): string|null
     {
-        return data_get($this->validated, 'environment.baseUrl');
+        return data_get($this->environment(), 'baseUrl');
     }
 
     /**
@@ -58,7 +65,7 @@ readonly class PsoContext
      */
     public function psoApiVersion(): int
     {
-        return (int) data_get($this->validated, 'environment.psoApiVersion', 1);
+        return (int) data_get($this->environment(), 'psoApiVersion', 1);
     }
 
     /**

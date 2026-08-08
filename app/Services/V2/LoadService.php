@@ -40,7 +40,7 @@ class LoadService extends BaseService
         $appointmentWindow = $appointmentWindowRaw ? PSOHelper::setPSODurationDays($appointmentWindowRaw) : null;
         $includeArpData = $context->data('includeArpData', false);
         $keepPsoData = $context->data('keepPsoData', false);
-        $sendToPso = $context->data('sendToPso', false);
+        $sendToPso = data_get($environment, 'sendToPso', false);
         $rotaId = $context->data('rotaId');
 
         $inputRef = InputReferenceBuilder::make($datasetId)

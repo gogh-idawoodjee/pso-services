@@ -24,7 +24,11 @@ class SystemUsageController extends Controller
     public function show(SystemUsageRequest $request, AssistService $assistService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(SystemUsageRequest $req) =>
-            $assistService->getSystemUsage(PsoContext::fromRequest($req))
+            $assistService->getSystemUsage(
+                PsoContext::fromRequest($req),
+                $req->input('minDate'),
+                $req->input('maxDate'),
+            )
         );
     }
 }
