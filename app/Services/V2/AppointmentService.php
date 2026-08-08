@@ -574,7 +574,7 @@ class AppointmentService extends BaseService
     /**
      * @throws JsonException
      */
-    private function updateAppointmentRequestAcceptOrDeclineOffer(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, $accept = true): array|null
+    private function updateAppointmentRequestAcceptOrDeclineOffer(string $appointmentRequestId, int $appointmentOfferId, string $inputReferenceId, $accept = true): array|null
     {
         $checkResult = $this->validateAppointmentSummary($appointmentRequestId, $appointmentOfferId, $accept);
 
@@ -601,7 +601,7 @@ class AppointmentService extends BaseService
      * the next method will update the record to see if the offer was actually available
      *
      */
-    private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, string $appointmentOfferId, string $inputReferenceId, bool|null $sendToPso = null): array|null
+    private function updateAppointmentRequestCheckAppointed(string $appointmentRequestId, int $appointmentOfferId, string $inputReferenceId, bool|null $sendToPso = null): array|null
     {
         Log::info('starting updateAppointmentRequestCheckAppointed');
 
@@ -645,7 +645,7 @@ class AppointmentService extends BaseService
         ]);
     }
 
-    private function validateAppointmentSummary(string $appointmentRequestId, string $appointmentOfferId, bool|null $isAcceptRequest = true): array|null
+    private function validateAppointmentSummary(string $appointmentRequestId, int $appointmentOfferId, bool|null $isAcceptRequest = true): array|null
     {
         $appointmentRequest = PSOAppointment::where('appointment_request_id', $appointmentRequestId)->first();
 

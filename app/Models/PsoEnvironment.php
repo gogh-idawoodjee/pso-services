@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -70,12 +69,6 @@ class PsoEnvironment extends Model
         return Attribute::make(
             get: fn($value) => Crypt::decrypt($value),
             set: fn($value) => Crypt::encrypt($value),
-        );
-    }
-    protected function updatedAt(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => Carbon::make($value)->diffForHumans(),
         );
     }
 }
