@@ -50,6 +50,32 @@ class ScheduleExceptionRequest extends BaseFormRequest
         return array_merge($commonRules, $additionalRules);
     }
 
+    public function bodyParameters(): array
+    {
+        return array_merge($this->commonBodyParameters(), [
+            'data.exceptionTypeId' => [
+                'description' => 'The ID of the exception type.',
+                'example' => 1,
+            ],
+            'data.label' => [
+                'description' => 'A human-readable label for the exception.',
+                'example' => 'Sick Leave',
+            ],
+            'data.value' => [
+                'description' => 'The value of the exception (e.g., a date or duration).',
+                'example' => '2025-05-17',
+            ],
+            'data.activityId' => [
+                'description' => 'The ID of the activity affected by this exception. Required if resourceId is not provided.',
+                'example' => 'ACT123',
+            ],
+            'data.resourceId' => [
+                'description' => 'The ID of the resource affected by this exception. Required if activityId is not provided.',
+                'example' => 'RES456',
+            ],
+        ]);
+    }
+
     public function withValidator($validator): void
     {
         parent::withValidator($validator);

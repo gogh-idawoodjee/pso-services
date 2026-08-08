@@ -66,4 +66,42 @@ class UnavailabilityRequest extends BaseFormRequest
 
         return array_merge($commonRules, $additionalRules);
     }
+
+    public function bodyParameters(): array
+    {
+        return array_merge($this->commonBodyParameters(), [
+            'data.resourceId' => [
+                'description' => 'The ID of the resource the unavailability applies to.',
+                'example' => 'RESOURCE-123',
+            ],
+            'data.description' => [
+                'description' => 'A description of the unavailability (optional). Max 2000 characters.',
+                'example' => 'Technician is unavailable due to vacation',
+            ],
+            'data.categoryId' => [
+                'description' => 'The category ID for this unavailability (e.g., vacation, illness).',
+                'example' => 'VACATION',
+            ],
+            'data.duration' => [
+                'description' => 'Duration of the unavailability in minutes.',
+                'example' => 480,
+            ],
+            'data.timeZone' => [
+                'description' => 'Optional time zone offset from UTC (e.g., -5 for EST).',
+                'example' => -5,
+            ],
+            'data.baseDateTime' => [
+                'description' => 'The base start time of the unavailability (ISO 8601 format).',
+                'example' => '2025-05-10T08:00',
+            ],
+            'data.rotaId' => [
+                'description' => 'The rota ID. Required only for ARP unavailabilities.',
+                'example' => 'ROTA-001',
+            ],
+            'data.isArpObject' => [
+                'description' => 'Indicates if this unavailability is using ARP format.',
+                'example' => false,
+            ],
+        ]);
+    }
 }

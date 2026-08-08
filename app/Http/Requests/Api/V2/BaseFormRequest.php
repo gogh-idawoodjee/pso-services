@@ -116,6 +116,49 @@ class BaseFormRequest extends FormRequest
     }
 
     /**
+     * Shared Scribe example data for the environment.* body parameters, reused
+     * by bodyParameters() implementations across V2 FormRequests so the same
+     * descriptions/examples don't need to be repeated in every subclass.
+     */
+    protected function commonBodyParameters(): array
+    {
+        return [
+            'environment.sendToPso' => [
+                'description' => 'Whether to send the built payload to PSO. If false (or omitted), the payload is returned without being sent — a dry run.',
+                'example' => false,
+            ],
+            'environment.baseUrl' => [
+                'description' => 'The base URL for the PSO environment. Required if sendToPso is true.',
+                'example' => 'https://mycompany-pso-tst.ifs.cloud',
+            ],
+            'environment.token' => [
+                'description' => 'An existing PSO authentication token, if already retrieved. Alternative to username/password.',
+                'example' => null,
+            ],
+            'environment.username' => [
+                'description' => 'The username for PSO authentication. Alternative to token.',
+                'example' => null,
+            ],
+            'environment.password' => [
+                'description' => 'The password for PSO authentication. Alternative to token.',
+                'example' => null,
+            ],
+            'environment.datasetId' => [
+                'description' => 'The dataset ID to use in PSO.',
+                'example' => 'dataset_12345',
+            ],
+            'environment.accountId' => [
+                'description' => 'The account ID for PSO. Required if sendToPso is true.',
+                'example' => 'account_001',
+            ],
+            'environment.psoApiVersion' => [
+                'description' => 'The PSO JSON format version: 1 for the pre-6.15 dsScheduleData format, 2 for the 6.15+ ScheduleData format.',
+                'example' => 1,
+            ],
+        ];
+    }
+
+    /**
      * Configure the validator instance.
      *
      * @param Validator $validator

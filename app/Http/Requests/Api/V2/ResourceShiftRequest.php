@@ -97,4 +97,42 @@ class ResourceShiftRequest extends BaseFormRequest
             return data_get($this->input('environment'), 'sendToPso') === false;
         });
     }
+
+    public function bodyParameters(): array
+    {
+        return array_merge($this->commonBodyParameters(), [
+            'data.resourceId' => [
+                'description' => 'The resource ID, taken from the route.',
+                'example' => 'RES-001',
+            ],
+            'data.shiftId' => [
+                'description' => 'Unique identifier for the shift.',
+                'example' => 'SHIFT-123',
+            ],
+            'data.rotaId' => [
+                'description' => 'The rota ID. Required only for ARP shifts.',
+                'example' => 'ROTA-001',
+            ],
+            'data.isArpObject' => [
+                'description' => 'Indicates if this shift is using ARP format.',
+                'example' => false,
+            ],
+            'data.shiftType' => [
+                'description' => 'The shift type ID. Required only if manual scheduling is turned on.',
+                'example' => 'SHT-TYPE-A',
+            ],
+            'data.startDateTime' => [
+                'description' => 'Start datetime of the shift (ISO 8601). Required only if environment.sendToPso is false.',
+                'example' => '2025-05-05T08:00:00Z',
+            ],
+            'data.endDateTime' => [
+                'description' => 'End datetime of the shift (ISO 8601). Required only if environment.sendToPso is false. Must be after startDateTime.',
+                'example' => '2025-05-05T16:00:00Z',
+            ],
+            'data.turnManualSchedulingOn' => [
+                'description' => 'Whether this shift should be forced into manual scheduling mode.',
+                'example' => false,
+            ],
+        ]);
+    }
 }

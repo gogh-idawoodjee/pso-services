@@ -53,4 +53,18 @@ class UnavailabilityUpdateRequest extends UnavailabilityRequest
             ],
         ]);
     }
+
+    public function bodyParameters(): array
+    {
+        return array_merge(parent::bodyParameters(), [
+            'data.unavailabilityIds' => [
+                'description' => 'The IDs of the existing unavailabilities to update. Always includes the ID from the route; pass additional IDs to update several unavailabilities that share the same new time/resource/category in one call.',
+                'example' => ['UNAVAIL-001', 'UNAVAIL-002'],
+            ],
+            'data.isArpObject' => [
+                'description' => 'Only ARP (Automated Resource Planning) unavailabilities can be updated in place today. Non-ARP unavailabilities are represented as private schedule activities and must be deleted and recreated.',
+                'example' => true,
+            ],
+        ]);
+    }
 }
