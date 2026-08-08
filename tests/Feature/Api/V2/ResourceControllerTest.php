@@ -67,3 +67,58 @@ it('requires the datasetId header', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors('datasetId');
 });
+
+it('returns a map of resource id to display name for the whole dataset', function () {
+    Http::fake(['*' => Http::response([
+        'dsScheduleData' => [
+            'Resources' => [
+                ['id' => 'RES-001', 'first_name' => 'John', 'surname' => 'Smith'],
+                ['id' => 'RES-002', 'first_name' => 'Jane', 'surname' => 'Doe'],
+            ],
+        ],
+    ], 200)]);
+
+    $this->getJson('/api/v2/resource', resourceHeaders())
+        ->assertOk()
+        ->assertJson(['data' => ['resources' => [
+            'RES-001' => 'John Smith',
+            'RES-002' => 'Jane Doe',
+        ]]]);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'mycompany-pso-tst.ifs.cloud')
+            && str_contains($request->url(), 'datasetId=dataset_123')
+            && !str_contains($request->url(), 'resourceId=');
+    });
+});
+
+it('falls back to the resource id when a resource has no name', function () {
+    Http::fake(['*' => Http::response([
+        'dsScheduleData' => [
+            'Resources' => [
+                ['id' => 'RES-003', 'first_name' => '', 'surname' => ''],
+            ],
+        ],
+    ], 200)]);
+
+    $this->getJson('/api/v2/resource', resourceHeaders())
+        ->assertOk()
+        ->assertJson(['data' => ['resources' => ['RES-003' => 'RES-003']]]);
+});
+
+it('returns an empty map when the dataset has no resources', function () {
+    Http::fake(['*' => Http::response(['dsScheduleData' => []], 200)]);
+
+    $this->getJson('/api/v2/resource', resourceHeaders())
+        ->assertOk()
+        ->assertJson(['data' => ['resources' => []]]);
+});
+
+it('requires the datasetId header for the index route', function () {
+    $headers = resourceHeaders();
+    unset($headers['datasetId']);
+
+    $this->getJson('/api/v2/resource', $headers)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('datasetId');
+});
