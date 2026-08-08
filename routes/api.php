@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\V1\PSOResourceController;
 use App\Http\Controllers\Api\V1\PSOResourceEventController;
 use App\Http\Controllers\Api\V1\PSOResourceRelocationController;
 use App\Http\Controllers\Api\V1\PSOResourceShiftController;
-use App\Http\Controllers\Api\V1\PSOSandboxController;
 use App\Http\Controllers\Api\V1\PSOTravelLogController;
 use App\Http\Controllers\Api\V1\PSOUnavailabilityController;
 use Illuminate\Http\Request;
@@ -69,6 +68,3 @@ Route::get('/resource/{resource_id}', [PSOResourceController::class, 'show'])->n
 // unavailability
 Route::delete('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'destroy'])->name('v1.unavailability.destroy');
 Route::patch('/unavailability/{unavailability_id}', [PSOUnavailabilityController::class, 'update'])->name('v1.unavailability.update');
-
-// load test
-Route::post('/loadtest', [PSOSandboxController::class, 'runLoadTestJob'])->name('v1.loadtest');

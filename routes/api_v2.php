@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V2\ResourceController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\ResourceShiftController;
 use App\Http\Controllers\Api\V2\ResourceUnavailabilityController;
+use App\Http\Controllers\Api\V2\SandboxController;
 use App\Http\Controllers\Api\V2\ScheduleExceptionController;
 use App\Http\Controllers\Api\V2\SystemUsageController;
 use App\Http\Controllers\Api\V2\TravelController;
@@ -53,3 +54,6 @@ Route::post('/exception', [ScheduleExceptionController::class, 'store'])->name('
 
 // commit
 Route::post('/commit', [CommitController::class, 'store'])->name('v2.commit.store');
+
+// sandbox
+Route::post('/loadtest', [SandboxController::class, 'runLoadTest'])->name('v2.loadtest.store');
