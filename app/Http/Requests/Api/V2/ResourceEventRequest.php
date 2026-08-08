@@ -7,6 +7,17 @@ use Illuminate\Validation\Rules\Enum;
 
 class ResourceEventRequest extends BaseFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->route('resourceId')) {
+            $this->merge([
+                'data' => array_merge((array) $this->input('data', []), [
+                    'resourceId' => $this->route('resourceId'),
+                ]),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $commonRules = $this->commonRules();
