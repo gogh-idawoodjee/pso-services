@@ -30,10 +30,8 @@ class UnavailabilityUpdateRequest extends UnavailabilityRequest
              * the ID from the route; pass additional IDs to update several
              * unavailabilities that share the same new time/resource/category in
              * one call.
-             *
-             * @scramble type array
-             * @scramble required true
-             * @scramble example ["UNAVAIL-001", "UNAVAIL-002"]
+             * @var string[]
+             * @example ["UNAVAIL-001", "UNAVAIL-002"]
              */
             'data.unavailabilityIds' => ['required', 'array', 'min:1'],
             'data.unavailabilityIds.*' => ['string'],
@@ -42,10 +40,8 @@ class UnavailabilityUpdateRequest extends UnavailabilityRequest
              * Only ARP (Automated Resource Planning) unavailabilities can be
              * updated in place today. Non-ARP unavailabilities are represented
              * as private schedule activities and must be deleted and recreated.
-             *
-             * @scramble type boolean
-             * @scramble required true
-             * @scramble example true
+             * @var bool
+             * @example true
              */
             'data.isArpObject' => [
                 'required',

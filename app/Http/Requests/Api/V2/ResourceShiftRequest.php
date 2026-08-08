@@ -31,49 +31,38 @@ class ResourceShiftRequest extends BaseFormRequest
 
             /**
              * Unique identifier for the shift.
-             *
-             * @scramble type string
-             * @scramble required true
-             * @scramble example "SHIFT-123"
+             * @var string
+             * @example "SHIFT-123"
              */
             'data.shiftId' => 'required|alpha_dash',
 
             /**
              * The rota ID (required only for ARP shifts).
-             *
-             * @scramble type string
-             * @scramble required_if isArpObject=true
-             * @scramble example "ROTA-001"
+             * @var string|null
+             * @example "ROTA-001"
              */
             'data.rotaId' => 'string|required_if:data.isArpObject,true',
 
             /**
              * Indicates if this shift is using ARP format.
-             *
-             * @scramble type boolean
-             * @scramble required false
-             * @scramble example true
+             * @var bool|null
+             * @example true
              */
             'data.isArpObject' => 'bool',
 
             /**
              * The shift type ID.
              * Required only if manual scheduling is turned on.
-             *
-             * @scramble type string
-             * @scramble required_with turnManualSchedulingOn
-             * @scramble example "SHT-TYPE-A"
+             * @var string|null
+             * @example "SHT-TYPE-A"
              */
             'data.shiftType' => 'required_with:data.turnManualSchedulingOn|string',
 
             /**
              * Start datetime of the shift (ISO 8601).
              * Required only if `environment.sendToPso === false`.
-             *
-             * @scramble type string
-             * @scramble format date-time
-             * @scramble required false
-             * @scramble example "2025-05-05T08:00:00Z"
+             * @var string|null
+             * @example "2025-05-05T08:00:00Z"
              */
             'data.startDateTime' => 'date',
 
@@ -81,20 +70,15 @@ class ResourceShiftRequest extends BaseFormRequest
              * End datetime of the shift (ISO 8601).
              * Required only if `environment.sendToPso === false`.
              * Must be after `startDateTime`.
-             *
-             * @scramble type string
-             * @scramble format date-time
-             * @scramble required false
-             * @scramble example "2025-05-05T16:00:00Z"
+             * @var string|null
+             * @example "2025-05-05T16:00:00Z"
              */
             'data.endDateTime' => 'date|after:data.startDateTime',
 
             /**
              * Whether this shift should be forced into manual scheduling mode.
-             *
-             * @scramble type boolean
-             * @scramble required false
-             * @scramble example true
+             * @var bool|null
+             * @example true
              */
             'data.turnManualSchedulingOn' => 'boolean',
         ];
