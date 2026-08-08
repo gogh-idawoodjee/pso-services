@@ -2,26 +2,23 @@
 
 namespace App\Helpers\Stubs;
 
-
-use App\Helpers\PSOHelper;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class RamUnavailability
 {
     public static function make(
-
-        string $timePatternId,
-        string $baseDateTime,
-        int    $duration,
+        string      $resourceId,
+        string      $timePatternId,
+        string      $categoryId,
+        string|null $description = null,
     ): array
     {
-
-        return [
-            'id' => $timePatternId,
-            'base_time' => Carbon::parse($baseDateTime)->toAtomString(),
-            'duration' => PSOHelper::setPSODuration($duration)
-        ];
-
-
+        return array_filter([
+            'id' => Str::uuid()->getHex(),
+            'ram_time_pattern_id' => $timePatternId,
+            'ram_resource_id' => $resourceId,
+            'ram_unavailability_category_id' => $categoryId,
+            'description' => $description,
+        ], static fn($value) => $value !== null);
     }
 }

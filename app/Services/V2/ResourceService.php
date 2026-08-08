@@ -9,6 +9,7 @@ use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
 use App\Classes\V2\EntityBuilders\ShiftBuilder;
 use App\Classes\V2\Formatters\ResourceFormatter;
+use App\Constants\PSOConstants;
 use App\DataTransferObjects\PsoContext;
 use App\Enums\ActivityClass;
 use App\Enums\ActivityStatus;
@@ -17,6 +18,7 @@ use App\Enums\PsoEndpointSegment;
 use App\Enums\ShiftEntity;
 use App\Helpers\Stubs\RamTimePattern;
 use App\Helpers\Stubs\RamUnavailability;
+use App\Helpers\Stubs\RamUpdate;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
@@ -76,24 +78,57 @@ class ResourceService extends BaseService
         }
     }
 
-    public function updateUnavailability(PsoContext $context): JsonResponse|null
+    public function updateUnavailability(PsoContext $context): JsonResponse
     {
         try {
-            // TODO: implement unavailability update
-            $unavailabilities = $context->data('unavailability_id');
+            $data = $context->data();
+            $unavailabilityIds = (array) data_get($data, 'unavailabilityIds', []);
+            $isMassUpdate = count($unavailabilityIds) > 1;
+
+            $timePatternId = Str::uuid()->getHex();
+
+            $ramTimePattern = RamTimePattern::make(
+                $timePatternId,
+                data_get($data, 'baseDateTime'),
+                data_get($data, 'duration'),
+            );
+
+            $ramUnavailabilities = collect($unavailabilityIds)
+                ->map(static fn() => RamUnavailability::make(
+                    data_get($data, 'resourceId'),
+                    $timePatternId,
+                    data_get($data, 'categoryId'),
+                    data_get($data, 'description'),
+                ))
+                ->all();
+
+            $description = ($isMassUpdate ? 'Mass ' : '') . 'Update Unavailability via ' . PSOConstants::APP_INSTANCE_ID;
+
+            $payload = [
+                'RAM_Update' => RamUpdate::make($context->datasetId(), $description),
+                'RAM_Unavailability' => $isMassUpdate ? $ramUnavailabilities : $ramUnavailabilities[0],
+                'RAM_Time_Pattern' => $ramTimePattern,
+            ];
+
+            return $this->psoClient->sendOrSimulateBuilder()
+                ->payload($payload)
+                ->environment($context->environment())
+                ->psoApiVersion($context->psoApiVersion())
+                ->token($context->token)
+                ->includeInputReference($description)
+                ->requiresRotaUpdate(true, 'Updated Rota After Unavailability Update')
+                ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
             return $this->error('An unexpected error occurred', 500);
         }
-
-        return null;
     }
 
     public function createUnavailability(PsoContext $context): JsonResponse
     {
         try {
             if ($context->data('isArpObject')) {
-                $payload = $this->buildArpUnavailability($context->data());
+                $payload = $this->buildArpUnavailability($context);
 
                 return $this->psoClient->sendOrSimulateBuilder()
                     ->payload($payload)
@@ -135,22 +170,28 @@ class ResourceService extends BaseService
         }
     }
 
-    private function buildArpUnavailability(array $data): array
+    private function buildArpUnavailability(PsoContext $context): array
     {
+        $data = $context->data();
         $timePatternId = Str::uuid()->getHex();
 
-        $timepattern = RamTimePattern::make(
-            data_get($data, 'resourceId'),
-            $timePatternId,
-            data_get($data, 'categoryId'),
-        );
-        $unavailability = RamUnavailability::make(
+        $ramTimePattern = RamTimePattern::make(
             $timePatternId,
             data_get($data, 'baseDateTime'),
             data_get($data, 'duration'),
         );
+        $ramUnavailability = RamUnavailability::make(
+            data_get($data, 'resourceId'),
+            $timePatternId,
+            data_get($data, 'categoryId'),
+            data_get($data, 'description'),
+        );
 
-        return ['Ram_Time_Pattern' => $timepattern, 'RAM_Unavailability' => $unavailability];
+        return [
+            'RAM_Update' => RamUpdate::make($context->datasetId(), 'Create Unavailability via ' . PSOConstants::APP_INSTANCE_ID),
+            'RAM_Unavailability' => $ramUnavailability,
+            'RAM_Time_Pattern' => $ramTimePattern,
+        ];
     }
 
     public function getResource(PsoContext $context, string $resourceId): JsonResponse

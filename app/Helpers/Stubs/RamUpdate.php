@@ -9,6 +9,7 @@ class RamUpdate
 {
     public static function make(
         string $datasetId,
+        string $description,
     ): array
     {
         return [
@@ -17,7 +18,7 @@ class RamUpdate
             'user_id' => PSOConstants::ARP_SOURCE_DATATYPE,
             'ram_update_type_id' => InputMode::CHANGE->value,
             'is_master_data' => true,
-            'description' => 'Updating Shift from Ish Services',
+            'description' => $description,
             'requesting_app_instance_id' => PSOConstants::APP_INSTANCE_ID
         ];
     }

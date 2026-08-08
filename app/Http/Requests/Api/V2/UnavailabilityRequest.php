@@ -74,7 +74,7 @@ class UnavailabilityRequest extends BaseFormRequest
              * @scramble required_if isArpObject=true
              * @scramble example "ROTA-001"
              */
-            'data.rotaId' => 'string|required_if:isArpObject,true',
+            'data.rotaId' => 'string|required_if:data.isArpObject,true',
             /**
              * Indicates if this shift is using ARP format.
              *
