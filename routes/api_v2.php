@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V2\ActivityController;
 use App\Http\Controllers\Api\V2\ActivityStatusController;
 use App\Http\Controllers\Api\V2\AppointmentController;
+use App\Http\Controllers\Api\V2\CommitController;
 use App\Http\Controllers\Api\V2\DeleteObjectController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\LoadController;
@@ -49,3 +50,6 @@ Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabil
 
 // exception
 Route::post('/exception', [ScheduleExceptionController::class, 'store'])->name('v2.exception.store');
+
+// commit
+Route::post('/commit', [CommitController::class, 'store'])->name('v2.commit.store');
