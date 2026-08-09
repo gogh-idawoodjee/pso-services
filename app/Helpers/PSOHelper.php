@@ -3,13 +3,8 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class PSOHelper
 {
@@ -60,43 +55,6 @@ class PSOHelper
         return 'P' . $duration . 'D';
     }
 
-    /**
-     * @throws ValidationException
-     */
-    public static function ValidateSendToPSO(Request $request)// replaced with inline validation see BaseFormRequest
-    : void
-    {
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf($request->send_to_pso === true && !$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf($request->send_to_pso === true && !$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf($request->send_to_pso === true && !$request->token)
-        ])->validate();
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    public static function ValidateCredentials(Request $request): void
-    {
-        Validator::make($request->all(), [
-            'token' => Rule::requiredIf(!$request->username && !$request->password)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'username' => Rule::requiredIf(!$request->token)
-        ])->validate();
-
-        Validator::make($request->all(), [
-            'password' => Rule::requiredIf(!$request->token)
-        ])->validate();
-    }
-
     public static function RotaID($dataset_id, $rota_id)
     {
         return $rota_id ?: $dataset_id;
@@ -108,14 +66,6 @@ class PSOHelper
             return config('pso-services.debug.debug_timeout');
         }
         return config('pso-services.defaults.timeout');
-    }
-
-    public static function notAuth(): JsonResponse
-    {
-        return response()->json([
-            'status' => 401,
-            'description' => 'did not pass auth'
-        ], 401);
     }
 
     public static function toIso8601(mixed $datetime): string
