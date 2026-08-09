@@ -23,10 +23,6 @@ use Illuminate\Database\Eloquent\Builder;
  * @property string $password
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PsoDataset> $datasets
- * @property-read int|null $datasets_count
- * @property-read \App\Models\PsoDataset|null $defaultdataset
- * @property-read \App\Models\PsoToken|null $token
  * @method static Builder<static>|PsoEnvironment newModelQuery()
  * @method static Builder<static>|PsoEnvironment newQuery()
  * @method static Builder<static>|PsoEnvironment query()
@@ -51,19 +47,6 @@ class PsoEnvironment extends Model
 
     protected $guarded = ['password'];
 
-    public function token()
-    {
-        return $this->hasOne(PsoToken::class);
-    }
-
-    public function datasets()
-    {
-        return $this->hasMany(PsoDataset::class);
-    }
-    public function defaultdataset()
-    {
-        return $this->hasOne(PsoDataset::class)->oldest();
-    }
     protected function password(): Attribute
     {
         return Attribute::make(
