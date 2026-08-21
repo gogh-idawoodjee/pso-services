@@ -41,7 +41,7 @@ class PSOObjectRegistry
             ],
             'resource' => [
                 'label' => 'Resource',
-                'entity' => 'Resource',
+                'entity' => 'Resources', // wire entity is plural - avoids a naming conflict per schema guide
                 'attributes' => [
                     ['name' => 'id', 'type' => 'string']
                 ],
@@ -53,9 +53,16 @@ class PSOObjectRegistry
                     ['name' => 'id', 'type' => 'string'],
                 ],
             ],
+            // No 'Unavailability' entity exists on the wire (checked full entity index, p.1-233
+            // of Scheduling Schema guide - zero hits). Unavailability is expressed as an
+            // Availability row with available=false. Renamed to match; if this key is used
+            // anywhere for Object_Deletion or payload construction, that call site needs a look -
+            // deleting/loading an Availability row isn't a drop-in swap for a dedicated
+            // "Unavailability" object, since Availability is a normal Input entity with its own
+            // required attribute set (activity_id/resource_id/location_id + start/end + available).
             'unavailability' => [
                 'label' => 'Unavailability',
-                'entity' => 'Unavailability',
+                'entity' => 'Availability',
                 'attributes' => [
                     ['name' => 'id', 'type' => 'string'],
                 ],
@@ -64,7 +71,8 @@ class PSOObjectRegistry
                 'label' => 'Location Region',
                 'entity' => 'Location_Region',
                 'attributes' => [
-                    ['name' => 'id', 'type' => 'string'],
+                    ['name' => 'location_id', 'type' => 'string'],
+                    ['name' => 'region_id', 'type' => 'string'],
                 ],
             ],
             'schedule_event' => [
