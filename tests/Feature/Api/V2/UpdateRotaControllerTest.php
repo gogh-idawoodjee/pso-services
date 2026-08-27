@@ -1,6 +1,6 @@
 <?php
 
-function validLoadPayload(array $overrides = []): array
+function validUpdateRotaPayload(array $overrides = []): array
 {
     return array_replace_recursive([
         'environment' => [
@@ -8,14 +8,13 @@ function validLoadPayload(array $overrides = []): array
             'datasetId' => 'dataset_123',
         ],
         'data' => [
-            'dseDuration' => 120,
-            'processType' => 'DYNAMIC',
+            'datetime' => '2026-01-01T00:00:00Z',
         ],
     ], $overrides);
 }
 
 it('returns a dry-run payload without contacting PSO when sendToPso is false', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload());
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload());
 
     $response->assertStatus(202)
         ->assertJson([
@@ -29,48 +28,23 @@ it('returns a dry-run payload without contacting PSO when sendToPso is false', f
                         'Input_Reference' => [
                             'input_type',
                             'dataset_id',
-                            'process_type',
-                            'duration',
                         ],
                     ],
                 ],
             ],
         ]);
-
-    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.dataset_id'))
-        ->toBe('dataset_123');
-});
-
-it('requires dseDuration', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['dseDuration' => null]]));
-
-    $response->assertStatus(422)->assertJsonValidationErrors('data.dseDuration');
-});
-
-it('requires a valid processType', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['processType' => 'NOT_REAL']]));
-
-    $response->assertStatus(422)->assertJsonValidationErrors('data.processType');
 });
 
 it('requires a token or credentials when sendToPso is true', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'environment' => ['sendToPso' => true],
     ]));
 
     $response->assertStatus(422)->assertJsonValidationErrors('authentication');
 });
 
-it('rejects a production baseUrl', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
-        'environment' => ['baseUrl' => 'https://enercare-pso-prod.ifs.cloud'],
-    ]));
-
-    $response->assertStatus(422)->assertJsonValidationErrors('environment.baseUrl');
-});
-
 it('rejects a REST broadcast missing its required mediatype/url parameters', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'data' => [
             'broadcasts' => [
                 [
@@ -88,7 +62,7 @@ it('rejects a REST broadcast missing its required mediatype/url parameters', fun
 });
 
 it('rejects an ADMIN plan_type broadcast missing application_type_id/check_in_expired_time', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'data' => [
             'broadcasts' => [
                 [
@@ -107,7 +81,7 @@ it('rejects an ADMIN plan_type broadcast missing application_type_id/check_in_ex
 });
 
 it('includes a single Broadcast object in the dry-run payload', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'data' => [
             'broadcasts' => [
                 [
@@ -126,14 +100,13 @@ it('includes a single Broadcast object in the dry-run payload', function () {
 
     $broadcast = $response->json('data.payloadToPso.dsScheduleData.Broadcast');
     expect($broadcast)->toBeArray()
-        ->and($broadcast['broadcast_type_id'])->toBe('REST')
-        ->and($broadcast['plan_type'])->toBe('COMPLETE');
+        ->and($broadcast['broadcast_type_id'])->toBe('REST');
 
     expect($response->json('data.payloadToPso.dsScheduleData.Broadcast_Parameter'))->toHaveCount(2);
 });
 
 it('includes a list of Broadcast objects in the dry-run payload for multiple broadcasts', function () {
-    $response = $this->postJson('/api/v2/load', validLoadPayload([
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'data' => [
             'broadcasts' => [
                 [

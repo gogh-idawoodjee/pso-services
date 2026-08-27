@@ -3,10 +3,15 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
+use App\Classes\V2\EntityBuilders\BroadcastBuilder;
+use App\Classes\V2\EntityBuilders\BroadcastParameterBuilder;
 use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Classes\V2\PsoClient;
 use App\Constants\PSOConstants;
 use App\DataTransferObjects\PsoContext;
+use App\Enums\BroadcastAllocationType;
+use App\Enums\BroadcastPlanType;
+use App\Enums\BroadcastType;
 use App\Enums\InputMode;
 use App\Enums\ProcessType;
 use App\Helpers\PSOHelper;
@@ -63,6 +68,8 @@ class LoadService extends BaseService
             );
         }
 
+        $payload = array_merge($payload, $this->buildBroadcastsPayload($context->data('broadcasts', [])));
+
         $keepPsoDataMessage = null;
 
         if ($keepPsoData) {
@@ -107,11 +114,71 @@ class LoadService extends BaseService
             ),
         ];
 
+        $payload = array_merge($payload, $this->buildBroadcastsPayload($context->data('broadcasts', [])));
+
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
             ->environment($context->environment())
             ->psoApiVersion($context->psoApiVersion())
             ->token($context->token)
             ->send();
+    }
+
+    /**
+     * Build Broadcast + Broadcast_Parameter entities from validated data.broadcasts[].
+     *
+     * Returns an empty array when there are no broadcasts. Broadcast is a
+     * single object when there's exactly one broadcast (matching PSO's JSON
+     * convention of a bare object for single rows) or a list when there are
+     * several; Broadcast_Parameter is always a flattened list across all of them.
+     */
+    protected function buildBroadcastsPayload(array $broadcasts): array
+    {
+        if (empty($broadcasts)) {
+            return [];
+        }
+
+        $built = array_map(function (array $broadcast) {
+            $parameters = array_map(
+                static fn (array $param) => BroadcastParameterBuilder::make()
+                    ->name($param['name'])
+                    ->value($param['value']),
+                $broadcast['parameters'] ?? [],
+            );
+
+            $builder = BroadcastBuilder::make()
+                ->id($broadcast['id'] ?? null)
+                ->active($broadcast['active'] ?? true)
+                ->type(BroadcastType::from($broadcast['broadcastTypeId'])->value)
+                ->planType(BroadcastPlanType::from($broadcast['planType']))
+                ->description($broadcast['description'] ?? null)
+                ->onceOnly($broadcast['onceOnly'] ?? false)
+                ->minimumPlanQuality($broadcast['minimumPlanQuality'] ?? null)
+                ->minimumStepInterval($broadcast['minimumStepInterval'] ?? null)
+                ->expiryDatetime($broadcast['expiryDatetime'] ?? null)
+                ->inputReferenceId($broadcast['inputReferenceId'] ?? null)
+                ->maximumFrequency($broadcast['maximumFrequency'] ?? null)
+                ->maximumWait($broadcast['maximumWait'] ?? null)
+                ->minimumVisitStatus($broadcast['minimumVisitStatus'] ?? null)
+                ->timeFilterStart($broadcast['timeFilterStart'] ?? null)
+                ->timeFilterEnd($broadcast['timeFilterEnd'] ?? null)
+                ->parameters($parameters);
+
+            if (! empty($broadcast['allocationType'])) {
+                $builder->allocationType(array_map(
+                    static fn (int $value) => BroadcastAllocationType::from($value),
+                    $broadcast['allocationType'],
+                ));
+            }
+
+            return $builder->build();
+        }, $broadcasts);
+
+        return [
+            'Broadcast' => count($built) === 1
+                ? $built[0]['Broadcast']
+                : array_column($built, 'Broadcast'),
+            'Broadcast_Parameter' => array_merge(...array_column($built, 'Broadcast_Parameter')),
+        ];
     }
 }

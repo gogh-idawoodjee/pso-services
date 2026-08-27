@@ -7,23 +7,26 @@ use App\Helpers\Stubs\BroadcastParameter;
 
 class BroadcastParameterBuilder
 {
-    protected BroadcastParameterType|null $name = null;
-    protected string|null $value = null;
+    protected string|BroadcastParameterType|null $name = null;
+
+    protected ?string $value = null;
 
     public static function make(): static
     {
-        return new static();
+        return new static;
     }
 
-    public function name(BroadcastParameterType $name): static
+    public function name(string|BroadcastParameterType $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
     public function value(string $value): static
     {
         $this->value = $value;
+
         return $this;
     }
 
@@ -31,7 +34,7 @@ class BroadcastParameterBuilder
     {
         return BroadcastParameter::make(
             $broadcastId,
-            $this->name,
+            $this->name instanceof BroadcastParameterType ? $this->name->value : $this->name,
             $this->value,
         );
     }

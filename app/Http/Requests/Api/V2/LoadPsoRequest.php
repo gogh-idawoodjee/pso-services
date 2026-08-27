@@ -3,17 +3,22 @@
 namespace App\Http\Requests\Api\V2;
 
 use App\Enums\ProcessType;
+use App\Traits\V2\ValidatesBroadcasts;
 use Illuminate\Validation\Rules\Enum;
 
 class LoadPsoRequest extends BaseFormRequest
 {
+    use ValidatesBroadcasts;
+
     public function rules(): array
     {
         $commonRules = $this->commonRules();
 
         /**
          * The dataset ID to use in PSO.
+         *
          * @var string
+         *
          * @example "dataset_123"
          */
         $commonRules['environment.datasetId'] = ['required', 'string']; // note that datasetID is always required for Load
@@ -22,21 +27,27 @@ class LoadPsoRequest extends BaseFormRequest
             /**
              * The rota ID associated with the load.
              * Defaults to dataset ID if not provided.
+             *
              * @var string
+             *
              * @example "rota-001"
              */
             'data.rotaId' => ['string'],
 
             /**
              * Duration of the Dynamic Scheduling Engine run, in minutes.
+             *
              * @var int
+             *
              * @example 120
              */
             'data.dseDuration' => 'integer|required',
 
             /**
              * Appointment window duration, in minutes.
+             *
              * @var int
+             *
              * @example 30
              */
             'data.appointmentWindow' => 'integer',
@@ -44,7 +55,9 @@ class LoadPsoRequest extends BaseFormRequest
             /**
              * The type of processing to perform.
              * Must be one of: "DYNAMIC", "APPOINTMENT", "REACTIVE", "STATIC".
+             *
              * @var string
+             *
              * @example "DYNAMIC"
              */
             'data.processType' => [
@@ -54,51 +67,36 @@ class LoadPsoRequest extends BaseFormRequest
 
             /**
              * Description of the PSO load.
+             *
              * @var string
+             *
              * @example "PSO load for daily operations"
              */
             'data.description' => 'string',
 
             /**
              * Datetime associated with the load.
+             *
              * @var string
+             *
              * @example "2025-04-30T14:30:00"
              */
             'data.datetime' => 'date',
 
             /**
-             * Whether to include broadcast in the PSO load.
-             * @var boolean
-             * @example true
-             */
-            'data.includeBroadcast' => 'boolean',
-
-            /**
              * Whether to keep existing PSO data during the load.
-             * @var boolean
+             *
+             * @var bool
+             *
              * @example false
              */
             'data.keepPsoData' => 'boolean',
 
             /**
-             * Broadcast type.
-             * Required if includeBroadcast is true.
-             * @var int
-             * @example 1
-             */
-            'data.broadcastType' => 'integer|required_if:data.includeBroadcast,true',
-
-            /**
-             * Broadcast URL.
-             * Required if includeBroadcast is true.
-             * @var string
-             * @example "https://example.com/broadcast.trl"
-             */
-            'data.broadcastUrl' => 'url|required_if:data.includeBroadcast,true',
-
-            /**
              * The ID associated with the PSO load.
+             *
              * @var string
+             *
              * @example "load-123"
              */
             'data.id' => 'string',
@@ -106,13 +104,15 @@ class LoadPsoRequest extends BaseFormRequest
             /**
              * Whether to include ARP data in the PSO load.
              * If true, rotaId is required. Source Data and Source Data Params will be included.
-             * @var boolean
+             *
+             * @var bool
+             *
              * @example true
              */
             'data.includeArpData' => 'boolean',
         ];
 
-        return array_merge($commonRules, $additionalRules);
+        return array_merge($commonRules, $additionalRules, $this->broadcastRules());
     }
 
     public function withValidator($validator): void
@@ -120,7 +120,9 @@ class LoadPsoRequest extends BaseFormRequest
         parent::withValidator($validator);
 
         $validator->sometimes('data.rotaId', 'required|string', static function ($input) {
-            return (bool)data_get($input, 'data.includeArpData') === true;
+            return (bool) data_get($input, 'data.includeArpData') === true;
         });
+
+        $this->requireBroadcastParameters($validator);
     }
 }
