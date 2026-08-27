@@ -35,6 +35,13 @@ it('returns a dry-run payload without contacting PSO when sendToPso is false', f
         ]);
 });
 
+it('uses the client-supplied data.id as the Input_Reference id', function () {
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload(['data' => ['id' => 'rota-123']]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.id'))->toBe('rota-123');
+});
+
 it('requires a token or credentials when sendToPso is true', function () {
     $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload([
         'environment' => ['sendToPso' => true],

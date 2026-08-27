@@ -41,6 +41,13 @@ it('returns a dry-run payload without contacting PSO when sendToPso is false', f
         ->toBe('dataset_123');
 });
 
+it('uses the client-supplied data.id as the Input_Reference id', function () {
+    $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['id' => 'load-123']]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.id'))->toBe('load-123');
+});
+
 it('requires dseDuration', function () {
     $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['dseDuration' => null]]));
 

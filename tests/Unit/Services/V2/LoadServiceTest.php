@@ -150,7 +150,7 @@ it('defaults a broadcast inputReferenceId to the payload own Input_Reference id'
     $loadService = new LoadService($psoClient, $scheduleService);
     $loadService->loadPSO(loadContext(['sendToPso' => false], [
         'keepPsoData' => false,
-        'Id' => 'load-123',
+        'id' => 'load-123',
         'broadcasts' => [
             [
                 'broadcastTypeId' => 'REST',
@@ -175,7 +175,7 @@ it('lets an explicit broadcast inputReferenceId override the payload default', f
     $loadService = new LoadService($psoClient, $scheduleService);
     $loadService->loadPSO(loadContext(['sendToPso' => false], [
         'keepPsoData' => false,
-        'Id' => 'load-123',
+        'id' => 'load-123',
         'broadcasts' => [
             [
                 'broadcastTypeId' => 'REST',
