@@ -2,10 +2,10 @@
 
 namespace App\Classes\V2;
 
+use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Constants\PSOConstants;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
-use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Helpers\HttpErrorMapper;
 use App\Helpers\PSOHelper;
 use App\Helpers\Stubs\SourceData;
@@ -76,18 +76,18 @@ class PsoClient
         string $baseUrl,
         #[SensitiveParameter] string $sessionToken,
         PsoEndpointSegment $segment,
-        string|null $resourceId = null,
+        ?string $resourceId = null,
         bool $includeInput = false,
         bool $includeOutput = false,
-        string|null $minDate = null,
-        string|null $maxDate = null,
+        ?string $minDate = null,
+        ?string $maxDate = null,
     ): JsonResponse {
         $totalTimeout = (int) config('pso-services.defaults.timeout', 10);
         $connectTimeout = min(3, max(1, $totalTimeout - 1));
 
         try {
             $base = UrlHelper::normalizeBaseUrl($baseUrl);
-            $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/' . $segment->value;
+            $endpoint = '/IFSSchedulingRESTfulGateway/api/v1/scheduling/'.$segment->value;
             $url = "{$base}{$endpoint}";
 
             $queryParams = compact('datasetId');
@@ -168,6 +168,30 @@ class PsoClient
     }
 
     /**
+     * Wrap payload items in the DsModelling XML namespace structure — a
+     * separate schema from dsScheduleData/ScheduleData, used for RAM_* (ARP
+     * modelling) entities like RAM_Division. Posted to the same 'data'
+     * endpoint segment as scheduling payloads.
+     *
+     * When $useWrapper is true, the payload is additionally wrapped in
+     * a 'payloadToPso' envelope used for response echoing.
+     */
+    public function buildModellingPayload(array $payloadItems, bool $useWrapper = false): array
+    {
+        $data = ['@xmlns' => 'http://360Scheduling.com/Schema/DsModelling.xsd'] + $payloadItems;
+
+        if ($useWrapper) {
+            return [
+                'payloadToPso' => ['DsModelling' => $data],
+            ];
+        }
+
+        return [
+            'DsModelling' => $data,
+        ];
+    }
+
+    /**
      * Conditionally send a payload to PSO or return a dry-run response.
      *
      * If a session token is present the payload is sent to PSO and,
@@ -177,13 +201,13 @@ class PsoClient
     protected function sendOrSimulate(
         array $payload,
         array $environmentData,
-        string|null $sessionToken,
-        bool|null $requiresRotaUpdate = null,
-        string|null $rotaUpdateDescription = null,
-        string|null $additionalDetails = null,
-        bool|null $addInputReference = null,
-        string|null $inputReferenceDescription = null,
-        string|null $resultsUrl = null,
+        ?string $sessionToken,
+        ?bool $requiresRotaUpdate = null,
+        ?string $rotaUpdateDescription = null,
+        ?string $additionalDetails = null,
+        ?bool $addInputReference = null,
+        ?string $inputReferenceDescription = null,
+        ?string $resultsUrl = null,
         int $psoApiVersion = 1,
     ): JsonResponse {
         if ($addInputReference) {
@@ -288,7 +312,7 @@ class PsoClient
         };
     }
 
-    private function parseResponseBody(string|null $body): mixed
+    private function parseResponseBody(?string $body): mixed
     {
         if (empty($body)) {
             return null;
@@ -308,7 +332,7 @@ class PsoClient
     {
         $statusCode = $response->status();
 
-        if ($statusCode === 400 && !empty($response->body())) {
+        if ($statusCode === 400 && ! empty($response->body())) {
             try {
                 $errorDetails = json_decode($response->body(), false, 512, JSON_THROW_ON_ERROR);
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V2\CommitController;
 use App\Http\Controllers\Api\V2\DeleteObjectController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
 use App\Http\Controllers\Api\V2\LoadController;
+use App\Http\Controllers\Api\V2\RegionController;
 use App\Http\Controllers\Api\V2\ResourceController;
 use App\Http\Controllers\Api\V2\ResourceEventController;
 use App\Http\Controllers\Api\V2\ResourceShiftController;
@@ -50,6 +51,9 @@ Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'st
 Route::patch('/resource/{resourceId}/shift', [ResourceShiftController::class, 'update'])->name('v2.resource.shift.update');
 Route::post('/resource/unavailability', [ResourceUnavailabilityController::class, 'store'])->name('v2.resource.unavailability.store');
 Route::patch('/resource/unavailability/{unavailabilityId}', [ResourceUnavailabilityController::class, 'update'])->name('v2.resource.unavailability.update');
+
+// region routes (ARP modelling data)
+Route::post('/region', [RegionController::class, 'store'])->name('v2.region.store');
 
 // exception
 Route::post('/exception', [ScheduleExceptionController::class, 'store'])->name('v2.exception.store');
