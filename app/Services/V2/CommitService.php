@@ -9,11 +9,11 @@ use App\Classes\V2\EntityBuilders\InputReferenceBuilder;
 use App\Enums\ActivityStatus;
 use App\Enums\InputMode;
 use App\Enums\PsoEndpointSegment;
+use App\Models\V2\Environment;
 use App\Models\V2\PSOCommitLog;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
@@ -22,12 +22,13 @@ use Illuminate\Support\Str;
  *
  * Unlike every other V2 service, this is invoked by PSO calling us — not the
  * other way around — so there's no per-request environment block to read
- * credentials from. Authentication always uses the pre-configured server
- * credentials in pso-services.debug.*.
+ * credentials from. The Environment is instead resolved from the commit_token
+ * in the URL (see CommitController), and its own base_url/accountId/username/
+ * password are used to authenticate back to PSO.
  */
 class CommitService extends BaseService
 {
-    public function commit(array $broadcast): JsonResponse
+    public function commit(Environment $environment, array $broadcast): JsonResponse
     {
         try {
             $suggestions = $this->normalizeSuggestions(data_get($broadcast, 'Suggested_Dispatch'));
@@ -40,18 +41,19 @@ class CommitService extends BaseService
 
             $authDetails = [
                 'sendToPso' => true,
-                'baseUrl' => config('pso-services.debug.base_url'),
-                'accountId' => config('pso-services.debug.account_id'),
-                'username' => config('pso-services.debug.username'),
-                'password' => config('pso-services.debug.password'),
+                'baseUrl' => $environment->base_url,
+                'accountId' => $environment->account_id,
+                'username' => $environment->username,
+                'password' => $environment->password,
             ];
 
             return app(AuthenticatedPsoActionService::class)->run(
                 $authDetails,
-                fn(array $auth) => $this->sendCommit($auth, $datasetId, $suggestions)
+                fn (array $auth) => $this->sendCommit($auth, $datasetId, $suggestions)
             );
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -59,16 +61,16 @@ class CommitService extends BaseService
     private function sendCommit(array $auth, string $datasetId, array $suggestions): JsonResponse
     {
         $activityStatuses = collect($suggestions)
-            ->map(fn(array $suggestion) => $this->buildActivityStatus($suggestion))
+            ->map(fn (array $suggestion) => $this->buildActivityStatus($suggestion))
             ->all();
 
         $inputReference = InputReferenceBuilder::make($datasetId)
             ->inputType(InputMode::CHANGE)
             ->datetime(data_get($suggestions[0], 'date_time_status'))
             ->description(
-                'Committing ' . count($activityStatuses)
-                . (count($activityStatuses) > 1 ? ' Activities' : ' activity')
-                . ' based on the SDS'
+                'Committing '.count($activityStatuses)
+                .(count($activityStatuses) > 1 ? ' Activities' : ' activity')
+                .' based on the SDS'
             )
             ->build();
 
@@ -89,10 +91,6 @@ class CommitService extends BaseService
             ]);
         }
 
-        if (config('pso-services.settings.enable_debug')) {
-            Http::patch('https://webhook.site/' . config('pso-services.debug.webhook_uuid'), $payload);
-        }
-
         if ($response->status() >= 400) {
             return $response;
         }
@@ -110,7 +108,7 @@ class CommitService extends BaseService
             ->fixed(data_get($suggestion, 'fixed_resource'))
             ->visitId(data_get($suggestion, 'visit_id'))
             ->duration((string) abs($start->diffInMinutes($end)))
-            ->reason('From the Commit Service via ' . config('pso-services.settings.service_name'))
+            ->reason('From the Commit Service via '.config('pso-services.settings.service_name'))
             ->dateTimeFixed(
                 config('pso-services.settings.fix_committed_activities')
                     ? data_get($suggestion, 'expected_start_datetime')

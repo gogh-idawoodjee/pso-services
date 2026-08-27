@@ -60,7 +60,7 @@ Route::post('/region', [RegionController::class, 'store'])->name('v2.region.stor
 Route::post('/exception', [ScheduleExceptionController::class, 'store'])->name('v2.exception.store');
 
 // commit
-Route::post('/commit', [CommitController::class, 'store'])->name('v2.commit.store');
+Route::post('/commit/{environment:commit_token}', [CommitController::class, 'store'])->name('v2.commit.store');
 
 // sandbox
 Route::post('/loadtest', [SandboxController::class, 'runLoadTest'])->name('v2.loadtest.store');

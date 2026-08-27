@@ -56,19 +56,15 @@ return [
     | Debug / Development
     |--------------------------------------------------------------------------
     |
-    | Credentials and settings used by the scheduled rota task and for local
-    | testing. These should NEVER be used in production request handling.
-    | See issue #8 for planned migration to proper auth middleware.
+    | The scheduled rota task and commit's debug-credential fallback that used
+    | to read from this block are both gone now (commit resolves per-Environment
+    | credentials via commit_token instead — see CommitService). debug_mode_on/
+    | debug_timeout remain only because PSOHelper::GetTimeOut() still reads them,
+    | though that method itself has no remaining callers.
     |
     */
 
     'debug' => [
-        'webhook_uuid' => env('DEBUG_WEBHOOK_UUID', '55a3b912-bdfb-4dd9-ad84-c1bcb55e92c3'),
-        'base_url' => env('BASE_URL', 'https://pso.thetechnodro.me'),
-        'username' => env('PSO_USERNAME'),
-        'password' => env('PSO_PASSWORD'),
-        'dataset_id' => env('DATASET_ID', 'NORTH'),
-        'account_id' => env('ACCOUNT_ID', 'Default'),
         'debug_mode_on' => env('PSO_DEBUG_MODE', true),
         'debug_timeout' => env('PSO_DEBUG_TIMEOUT', 5),
     ],
@@ -106,8 +102,6 @@ return [
         // Override commit timestamps — useful when input_datetime is in the past
         'override_commit_timestamps' => false,
         'override_commit_timestamp_value' => env('OVERRIDE_COMMIT_TIMESTAMP'),
-
-        'enable_debug' => env('PSO_ENABLE_DEBUG', false),
 
         // Require appointed check before accepting appointments
         'force_appointed_check' => false,

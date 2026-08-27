@@ -1,17 +1,17 @@
 <?php
 
 namespace App\Models\V2;
-use App\Models\V2\Scopes\UserOwnedModel;
+
 use App\Models\User;
-use Eloquent;
+use App\Models\V2\Scopes\UserOwnedModel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Override;
-
 
 /**
  * Uses the external krang_db connection (see config/database.php) rather than the app's
@@ -30,6 +30,7 @@ class Environment extends Model
 
     protected $hidden = [
         'password',
+        'commit_token',
     ];
 
     /**
@@ -50,21 +51,37 @@ class Environment extends Model
         'description',
         'username',
         'password',
+        'commit_token',
         'user_id',
     ];
 
     /**
      * Route-model binding will use slug instead of id
      */
-    #[Override] public function getRouteKeyName(): string
+    #[Override]
+    public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    #[Override] protected static function booted(): void
+    /**
+     * pso-test-tools encrypts this with Laravel's standard Crypt facade
+     * (Crypt::encryptString()) before saving — decryption works here as long
+     * as both apps' APP_KEY match.
+     */
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? Crypt::decryptString($value) : null,
+            set: fn (?string $value) => $value ? Crypt::encryptString($value) : null,
+        );
+    }
+
+    #[Override]
+    protected static function booted(): void
     {
 
-        static::addGlobalScope(new UserOwnedModel());
+        static::addGlobalScope(new UserOwnedModel);
         static::creating(static function (self $env) {
             if (empty($env->slug)) {
                 $base = Str::slug($env->name);
@@ -78,10 +95,9 @@ class Environment extends Model
             }
         });
     }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-
-
 }
