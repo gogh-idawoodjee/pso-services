@@ -116,6 +116,32 @@ it('builds a single Broadcast object (not a list) when one broadcast is given', 
         ->and($capturedPayload['Broadcast_Parameter'])->toHaveCount(2);
 });
 
+it('converts maximumFrequency/maximumWait from minutes to an ISO 8601 duration', function () {
+    $capturedPayload = [];
+    $psoClient = mockedPsoClientCapturingPayload($capturedPayload);
+    $scheduleService = Mockery::mock(ScheduleService::class);
+
+    $loadService = new LoadService($psoClient, $scheduleService);
+    $loadService->loadPSO(loadContext(['sendToPso' => false], [
+        'keepPsoData' => false,
+        'broadcasts' => [
+            [
+                'broadcastTypeId' => 'REST',
+                'planType' => 'COMPLETE',
+                'maximumFrequency' => 5,
+                'maximumWait' => 90,
+                'parameters' => [
+                    ['name' => 'mediatype', 'value' => 'application/json'],
+                    ['name' => 'url', 'value' => 'https://example.com/callback'],
+                ],
+            ],
+        ],
+    ]));
+
+    expect($capturedPayload['Broadcast']['maximum_frequency'])->toBe('PT5M');
+    expect($capturedPayload['Broadcast']['maximum_wait'])->toBe('PT1H30M');
+});
+
 it('builds a list of Broadcast objects when multiple broadcasts are given', function () {
     $capturedPayload = [];
     $psoClient = mockedPsoClientCapturingPayload($capturedPayload);

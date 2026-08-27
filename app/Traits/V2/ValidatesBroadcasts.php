@@ -140,22 +140,24 @@ trait ValidatesBroadcasts
             'data.broadcasts.*.inputReferenceId' => ['nullable', 'string', 'max:100'],
 
             /**
-             * Minimum time span (ISO 8601 duration) since the previous broadcast before sending an updated one.
+             * Minimum time, in minutes, since the previous broadcast before sending an updated one.
+             * Converted to an ISO 8601 duration internally.
              *
-             * @var string|null
+             * @var int|null
              *
-             * @example "PT5M"
+             * @example 5
              */
-            'data.broadcasts.*.maximumFrequency' => ['nullable', 'string'],
+            'data.broadcasts.*.maximumFrequency' => ['nullable', 'integer', 'min:0'],
 
             /**
-             * Maximum time span (ISO 8601 duration) to wait before broadcasting, even if plan quality isn't met.
+             * Maximum time, in minutes, to wait before broadcasting, even if plan quality isn't met.
+             * Converted to an ISO 8601 duration internally.
              *
-             * @var string|null
+             * @var int|null
              *
-             * @example "PT30M"
+             * @example 30
              */
-            'data.broadcasts.*.maximumWait' => ['nullable', 'string'],
+            'data.broadcasts.*.maximumWait' => ['nullable', 'integer', 'min:0'],
 
             /**
              * Allocation rows with a visit_status below this value are excluded from the broadcast.
