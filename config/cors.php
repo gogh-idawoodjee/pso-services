@@ -19,6 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
+    // Intentionally wide open: this is an API middleware service with no
+    // browser-based session/cookie auth (see supports_credentials below),
+    // consumed by arbitrary server-side clients rather than a fixed set of
+    // known frontend origins.
     'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],

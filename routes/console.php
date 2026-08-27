@@ -3,6 +3,7 @@
 use App\Services\V1\IFSPSOAssistService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -10,8 +11,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Artisan::command('logs:clear', function () {
-    exec('rm -f ' . storage_path('logs/*.log'));
-    exec('rm -f ' . base_path('*.log'));
+    File::delete(File::glob(storage_path('logs/*.log')));
+    File::delete(File::glob(base_path('*.log')));
     $this->comment('Logs have been cleared!');
 })->describe('Clear log files');
 
@@ -34,6 +35,6 @@ Schedule::call(function () {
         null,
         null,
         null,
-        "Scheduled Rota to DSE for " . config('pso-services.debug.dataset_id') . " dataset"
+        'Scheduled Rota to DSE for '.config('pso-services.debug.dataset_id').' dataset'
     );
 })->everyFiveMinutes();
