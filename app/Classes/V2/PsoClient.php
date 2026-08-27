@@ -209,8 +209,9 @@ class PsoClient
         ?string $inputReferenceDescription = null,
         ?string $resultsUrl = null,
         int $psoApiVersion = 1,
+        bool $useModellingSchema = false,
     ): JsonResponse {
-        if ($addInputReference) {
+        if ($addInputReference && !$useModellingSchema) {
             $payload['Input_Reference'] =
                 InputReferenceBuilder::make(data_get($environmentData, 'datasetId'))
                     ->inputType(InputMode::CHANGE)
@@ -218,7 +219,9 @@ class PsoClient
                     ->build();
         }
 
-        $psoPayload = $this->buildPayload($payload, $psoApiVersion);
+        $psoPayload = $useModellingSchema
+            ? $this->buildModellingPayload($payload)
+            : $this->buildPayload($payload, $psoApiVersion);
         $wrappedPayload = ['payloadToPso' => $psoPayload];
 
         if ($sessionToken) {

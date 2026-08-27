@@ -1,11 +1,11 @@
 <?php
 
 use App\Classes\V2\PsoClient;
+use App\Classes\V2\SendOrSimulateBuilder;
 use App\DataTransferObjects\PsoContext;
 use App\Services\V2\RegionService;
-use Illuminate\Http\JsonResponse;
 
-function regionContext(array $dataOverrides = [], ?string $token = null): PsoContext
+function regionContext(array $dataOverrides = [], string|null $token = null): PsoContext
 {
     return new PsoContext($token, [
         'environment' => [
@@ -20,96 +20,80 @@ function regionContext(array $dataOverrides = [], ?string $token = null): PsoCon
     ]);
 }
 
-it('returns a dry-run payload without a token', function () {
+function mockedRegionPsoClient(array &$capturedArgs = []): PsoClient
+{
     $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')
-        ->once()
-        ->with(Mockery::any(), true)
-        ->andReturnUsing(fn ($payload) => ['payloadToPso' => ['DsModelling' => $payload]]);
-    $psoClient->shouldNotReceive('sendToPso');
 
-    $response = (new RegionService($psoClient))->createDivisions(regionContext());
+    $psoClient->shouldReceive('sendOrSimulateBuilder')
+        ->andReturnUsing(fn() => new SendOrSimulateBuilder($psoClient));
 
-    expect($response->status())->toBe(202);
+    $psoClient->shouldReceive('executeSendOrSimulate')
+        ->andReturnUsing(function ($builder) use (&$capturedArgs) {
+            $capturedArgs = $builder->toSendOrSimulateArgs();
+            return response()->json(['data' => [], 'status' => 200]);
+        });
+
+    return $psoClient;
+}
+
+it('uses the DsModelling schema wrapper (not dsScheduleData)', function () {
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
+
+    (new RegionService($psoClient))->createDivisions(regionContext());
+
+    expect($captured['useModellingSchema'])->toBeTrue();
 });
 
 it('builds a single RAM_Division object (not a list) for one region', function () {
-    $captured = null;
-    $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')
-        ->andReturnUsing(function ($payload) use (&$captured) {
-            $captured = $payload;
-
-            return ['DsModelling' => $payload];
-        });
-    $psoClient->shouldNotReceive('sendToPso');
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
 
     (new RegionService($psoClient))->createDivisions(regionContext(['regions' => ['NORTH']]));
 
-    expect($captured['RAM_Division'])->toBe(['id' => 'NORTH', 'description' => 'north', 'send' => true]);
+    expect($captured['payload']['RAM_Division'])->toBe(['id' => 'NORTH', 'description' => 'north', 'send' => true]);
 });
 
 it('builds a list of RAM_Division rows for multiple regions', function () {
-    $captured = null;
-    $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')
-        ->andReturnUsing(function ($payload) use (&$captured) {
-            $captured = $payload;
-
-            return ['DsModelling' => $payload];
-        });
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
 
     (new RegionService($psoClient))->createDivisions(regionContext(['regions' => ['NORTH', 'SOUTH']]));
 
-    expect($captured['RAM_Division'])->toHaveCount(2);
-    expect(collect($captured['RAM_Division'])->pluck('id')->all())->toBe(['NORTH', 'SOUTH']);
+    expect($captured['payload']['RAM_Division'])->toHaveCount(2);
+    expect(collect($captured['payload']['RAM_Division'])->pluck('id')->all())->toBe(['NORTH', 'SOUTH']);
 });
 
 it('uses per-region descriptions only when the count matches', function () {
-    $captured = null;
-    $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')
-        ->andReturnUsing(function ($payload) use (&$captured) {
-            $captured = $payload;
-
-            return ['DsModelling' => $payload];
-        });
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
 
     (new RegionService($psoClient))->createDivisions(regionContext([
         'regions' => ['NORTH', 'SOUTH'],
         'descriptions' => ['Northern territory'],
     ]));
 
-    expect(collect($captured['RAM_Division'])->pluck('description')->all())->toBe(['north', 'south']);
+    expect(collect($captured['payload']['RAM_Division'])->pluck('description')->all())->toBe(['north', 'south']);
 });
 
 it('includes RAM_Division_Type when regionCategory is set', function () {
-    $captured = null;
-    $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')
-        ->andReturnUsing(function ($payload) use (&$captured) {
-            $captured = $payload;
-
-            return ['DsModelling' => $payload];
-        });
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
 
     (new RegionService($psoClient))->createDivisions(regionContext([
         'regions' => ['NORTH'],
         'regionCategory' => 'PROVINCE',
     ]));
 
-    expect($captured['RAM_Division_Type'])->toBe(['id' => 'PROVINCE', 'description' => 'province']);
-    expect($captured['RAM_Division']['ram_division_type_id'])->toBe('PROVINCE');
+    expect($captured['payload']['RAM_Division_Type'])->toBe(['id' => 'PROVINCE', 'description' => 'province']);
+    expect($captured['payload']['RAM_Division']['ram_division_type_id'])->toBe('PROVINCE');
 });
 
-it('commits to PSO when a token is present', function () {
-    $psoClient = Mockery::mock(PsoClient::class);
-    $psoClient->shouldReceive('buildModellingPayload')->andReturnUsing(fn ($payload, $wrap = false) => ['DsModelling' => $payload]);
-    $psoClient->shouldReceive('sendToPso')
-        ->once()
-        ->andReturn(new JsonResponse(['DsModelling' => []], 200));
+it('includes a RAM_Update header sourced from the dataset id', function () {
+    $captured = [];
+    $psoClient = mockedRegionPsoClient($captured);
 
-    $response = (new RegionService($psoClient))->createDivisions(regionContext(['regions' => ['NORTH']], 'tok-123'));
+    (new RegionService($psoClient))->createDivisions(regionContext(['regions' => ['NORTH']]));
 
-    expect($response->status())->toBe(200);
+    expect($captured['payload']['RAM_Update']['dataset_id'])->toBe('dataset_123');
 });

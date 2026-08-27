@@ -113,9 +113,8 @@ class ResourceService extends BaseService
             return $this->psoClient->sendOrSimulateBuilder()
                 ->payload($payload)
                 ->environment($context->environment())
-                ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference($description)
+                ->modellingSchema()
                 ->requiresRotaUpdate(true, 'Updated Rota After Unavailability Update')
                 ->send();
         } catch (Exception $e) {
@@ -133,9 +132,8 @@ class ResourceService extends BaseService
                 return $this->psoClient->sendOrSimulateBuilder()
                     ->payload($payload)
                     ->environment($context->environment())
-                    ->psoApiVersion($context->psoApiVersion())
                     ->token($context->token)
-                    ->includeInputReference('send unavailability to ARP')
+                    ->modellingSchema()
                     ->requiresRotaUpdate(true)
                     ->send();
             }

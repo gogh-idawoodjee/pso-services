@@ -44,7 +44,7 @@ it('creates a RAM unavailability for an ARP unavailability', function () {
         ->assertJsonStructure([
             'data' => [
                 'payloadToPso' => [
-                    'dsScheduleData' => [
+                    'DsModelling' => [
                         'RAM_Update' => ['dataset_id', 'description'],
                         'RAM_Unavailability' => ['ram_resource_id', 'ram_unavailability_category_id', 'ram_time_pattern_id'],
                         'RAM_Time_Pattern' => ['id', 'base_time', 'duration'],
@@ -53,7 +53,7 @@ it('creates a RAM unavailability for an ARP unavailability', function () {
             ],
         ]);
 
-    $ram = $response->json('data.payloadToPso.dsScheduleData');
+    $ram = $response->json('data.payloadToPso.DsModelling');
     expect($ram['RAM_Unavailability']['ram_resource_id'])->toBe('RES-001')
         ->and($ram['RAM_Time_Pattern']['duration'])->toBe('PT8H')
         ->and($ram['RAM_Unavailability']['ram_time_pattern_id'])->toBe($ram['RAM_Time_Pattern']['id']);
@@ -76,7 +76,7 @@ it('updates a single ARP unavailability using the route id', function () {
         ->assertJsonStructure([
             'data' => [
                 'payloadToPso' => [
-                    'dsScheduleData' => [
+                    'DsModelling' => [
                         'RAM_Update' => ['dataset_id', 'description'],
                         'RAM_Unavailability' => ['ram_resource_id', 'ram_unavailability_category_id', 'ram_time_pattern_id'],
                         'RAM_Time_Pattern' => ['id', 'base_time', 'duration'],
@@ -85,7 +85,7 @@ it('updates a single ARP unavailability using the route id', function () {
             ],
         ]);
 
-    $ram = $response->json('data.payloadToPso.dsScheduleData');
+    $ram = $response->json('data.payloadToPso.DsModelling');
     expect($ram['RAM_Update']['description'])->toBe('Update Unavailability via Ish Services');
 });
 
@@ -100,7 +100,7 @@ it('mass-updates several ARP unavailabilities sharing one time pattern', functio
 
     $response->assertStatus(202);
 
-    $ram = $response->json('data.payloadToPso.dsScheduleData');
+    $ram = $response->json('data.payloadToPso.DsModelling');
     expect($ram['RAM_Update']['description'])->toBe('Mass Update Unavailability via Ish Services')
         ->and($ram['RAM_Unavailability'])->toHaveCount(3)
         ->and(collect($ram['RAM_Unavailability'])->pluck('ram_time_pattern_id')->unique())->toHaveCount(1);

@@ -29,6 +29,7 @@ class SendOrSimulateBuilder
     protected string|null $inputReferenceDescription = null;
     protected string|null $resultsUrl = null;
     protected int $psoApiVersion = 1;
+    protected bool $useModellingSchema = false;
 
     public function __construct(
         protected PsoClient $caller
@@ -88,6 +89,18 @@ class SendOrSimulateBuilder
     }
 
     /**
+     * Wrap the payload under the DsModelling schema (RAM_* entities) instead
+     * of dsScheduleData/ScheduleData. Ignores includeInputReference() since
+     * Modelling payloads carry their own RAM_Update header instead of a
+     * scheduling Input_Reference — build that into payload() yourself.
+     */
+    public function modellingSchema(bool $flag = true): static
+    {
+        $this->useModellingSchema = $flag;
+        return $this;
+    }
+
+    /**
      * Execute the built request via PsoClient::sendOrSimulate().
      */
     public function send(): JsonResponse
@@ -116,6 +129,7 @@ class SendOrSimulateBuilder
             'inputReferenceDescription' => $this->inputReferenceDescription,
             'resultsUrl' => $this->resultsUrl,
             'psoApiVersion' => $this->psoApiVersion,
+            'useModellingSchema' => $this->useModellingSchema,
         ];
     }
 }
