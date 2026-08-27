@@ -132,6 +132,8 @@ trait ValidatesBroadcasts
 
             /**
              * Input reference id that must be processed before this broadcast is issued.
+             * Defaults to this request's own Input_Reference id if omitted, so the
+             * broadcast waits for this load/rota update itself before firing.
              *
              * @var string|null
              *

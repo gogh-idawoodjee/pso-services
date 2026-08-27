@@ -142,6 +142,56 @@ it('converts maximumFrequency/maximumWait from minutes to an ISO 8601 duration',
     expect($capturedPayload['Broadcast']['maximum_wait'])->toBe('PT1H30M');
 });
 
+it('defaults a broadcast inputReferenceId to the payload own Input_Reference id', function () {
+    $capturedPayload = [];
+    $psoClient = mockedPsoClientCapturingPayload($capturedPayload);
+    $scheduleService = Mockery::mock(ScheduleService::class);
+
+    $loadService = new LoadService($psoClient, $scheduleService);
+    $loadService->loadPSO(loadContext(['sendToPso' => false], [
+        'keepPsoData' => false,
+        'Id' => 'load-123',
+        'broadcasts' => [
+            [
+                'broadcastTypeId' => 'REST',
+                'planType' => 'COMPLETE',
+                'parameters' => [
+                    ['name' => 'mediatype', 'value' => 'application/json'],
+                    ['name' => 'url', 'value' => 'https://example.com/callback'],
+                ],
+            ],
+        ],
+    ]));
+
+    expect($capturedPayload['Input_Reference']['id'])->toBe('load-123');
+    expect($capturedPayload['Broadcast']['input_reference_id'])->toBe('load-123');
+});
+
+it('lets an explicit broadcast inputReferenceId override the payload default', function () {
+    $capturedPayload = [];
+    $psoClient = mockedPsoClientCapturingPayload($capturedPayload);
+    $scheduleService = Mockery::mock(ScheduleService::class);
+
+    $loadService = new LoadService($psoClient, $scheduleService);
+    $loadService->loadPSO(loadContext(['sendToPso' => false], [
+        'keepPsoData' => false,
+        'Id' => 'load-123',
+        'broadcasts' => [
+            [
+                'broadcastTypeId' => 'REST',
+                'planType' => 'COMPLETE',
+                'inputReferenceId' => 'some-other-input',
+                'parameters' => [
+                    ['name' => 'mediatype', 'value' => 'application/json'],
+                    ['name' => 'url', 'value' => 'https://example.com/callback'],
+                ],
+            ],
+        ],
+    ]));
+
+    expect($capturedPayload['Broadcast']['input_reference_id'])->toBe('some-other-input');
+});
+
 it('builds a list of Broadcast objects when multiple broadcasts are given', function () {
     $capturedPayload = [];
     $psoClient = mockedPsoClientCapturingPayload($capturedPayload);

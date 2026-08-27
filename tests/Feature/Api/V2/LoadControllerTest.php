@@ -132,6 +132,29 @@ it('includes a single Broadcast object in the dry-run payload', function () {
     expect($response->json('data.payloadToPso.dsScheduleData.Broadcast_Parameter'))->toHaveCount(2);
 });
 
+it('defaults a broadcast inputReferenceId to the payload own Input_Reference id', function () {
+    $response = $this->postJson('/api/v2/load', validLoadPayload([
+        'data' => [
+            'broadcasts' => [
+                [
+                    'broadcastTypeId' => 'REST',
+                    'planType' => 'COMPLETE',
+                    'parameters' => [
+                        ['name' => 'mediatype', 'value' => 'application/json'],
+                        ['name' => 'url', 'value' => 'https://example.com/callback'],
+                    ],
+                ],
+            ],
+        ],
+    ]));
+
+    $response->assertStatus(202);
+
+    $inputReferenceId = $response->json('data.payloadToPso.dsScheduleData.Input_Reference.id');
+    expect($inputReferenceId)->not->toBeEmpty();
+    expect($response->json('data.payloadToPso.dsScheduleData.Broadcast.input_reference_id'))->toBe($inputReferenceId);
+});
+
 it('includes a list of Broadcast objects in the dry-run payload for multiple broadcasts', function () {
     $response = $this->postJson('/api/v2/load', validLoadPayload([
         'data' => [

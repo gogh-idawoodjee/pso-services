@@ -68,7 +68,10 @@ class LoadService extends BaseService
             );
         }
 
-        $payload = array_merge($payload, $this->buildBroadcastsPayload($context->data('broadcasts', [])));
+        $payload = array_merge(
+            $payload,
+            $this->buildBroadcastsPayload($context->data('broadcasts', []), data_get($inputRef, 'id')),
+        );
 
         $keepPsoDataMessage = null;
 
@@ -98,13 +101,15 @@ class LoadService extends BaseService
         $id = $context->data('Id');
         $description = $context->data('description') ?? PSOConstants::UPDATE_ROTA_DESCRIPTION;
 
+        $inputRef = InputReferenceBuilder::make($datasetId)
+            ->inputType(InputMode::CHANGE)
+            ->dateTime($datetime)
+            ->id($id)
+            ->description($description)
+            ->build();
+
         $payload = [
-            'Input_Reference' => InputReferenceBuilder::make($datasetId)
-                ->inputType(InputMode::CHANGE)
-                ->dateTime($datetime)
-                ->id($id)
-                ->description($description)
-                ->build(),
+            'Input_Reference' => $inputRef,
 
             'Source_Data' => SourceData::make(),
 
@@ -114,7 +119,10 @@ class LoadService extends BaseService
             ),
         ];
 
-        $payload = array_merge($payload, $this->buildBroadcastsPayload($context->data('broadcasts', [])));
+        $payload = array_merge(
+            $payload,
+            $this->buildBroadcastsPayload($context->data('broadcasts', []), data_get($inputRef, 'id')),
+        );
 
         return $this->psoClient->sendOrSimulateBuilder()
             ->payload($payload)
@@ -131,14 +139,19 @@ class LoadService extends BaseService
      * single object when there's exactly one broadcast (matching PSO's JSON
      * convention of a bare object for single rows) or a list when there are
      * several; Broadcast_Parameter is always a flattened list across all of them.
+     *
+     * A broadcast without an explicit inputReferenceId defaults to the payload's
+     * own Input_Reference id — "most commonly the input reference id of the
+     * current input" per the IFS docs — so the broadcast waits for this load/rota
+     * update itself to be processed before firing, unless the caller overrides it.
      */
-    protected function buildBroadcastsPayload(array $broadcasts): array
+    protected function buildBroadcastsPayload(array $broadcasts, ?string $defaultInputReferenceId = null): array
     {
         if (empty($broadcasts)) {
             return [];
         }
 
-        $built = array_map(function (array $broadcast) {
+        $built = array_map(function (array $broadcast) use ($defaultInputReferenceId) {
             $parameters = array_map(
                 static fn (array $param) => BroadcastParameterBuilder::make()
                     ->name($param['name'])
@@ -156,7 +169,7 @@ class LoadService extends BaseService
                 ->minimumPlanQuality($broadcast['minimumPlanQuality'] ?? null)
                 ->minimumStepInterval($broadcast['minimumStepInterval'] ?? null)
                 ->expiryDatetime($broadcast['expiryDatetime'] ?? null)
-                ->inputReferenceId($broadcast['inputReferenceId'] ?? null)
+                ->inputReferenceId($broadcast['inputReferenceId'] ?? $defaultInputReferenceId)
                 ->maximumFrequency(isset($broadcast['maximumFrequency']) ? PSOHelper::setPSODuration($broadcast['maximumFrequency']) : null)
                 ->maximumWait(isset($broadcast['maximumWait']) ? PSOHelper::setPSODuration($broadcast['maximumWait']) : null)
                 ->minimumVisitStatus($broadcast['minimumVisitStatus'] ?? null)
