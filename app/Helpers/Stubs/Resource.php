@@ -2,7 +2,6 @@
 
 namespace App\Helpers\Stubs;
 
-
 use Illuminate\Support\Str;
 
 class Resource
@@ -10,7 +9,7 @@ class Resource
     public static function make(array $resourceData, float $lat, float $long): array
     {
         $resourceId = data_get($resourceData, 'resource_id')
-            ?? Str::upper($resourceData['first_name'] . $resourceData['surname']);
+            ?? Str::upper($resourceData['first_name'].$resourceData['surname']);
 
         $resource = [
             'id' => $resourceId,
@@ -23,20 +22,20 @@ class Resource
         ];
 
         $resourceSkills = collect($resourceData['skill'] ?? [])
-            ->map(static fn($skill) => Skill::make($skill, 'resource', $resourceId))
+            ->map(static fn ($skill) => Skill::make($skill, $resourceId, 'resource'))
             ->values()
             ->toArray();
 
         $resourceRegions = collect($resourceData['region'] ?? [])
-            ->map(static fn($region) => Region::make($region, 'resource', $resourceId))
+            ->map(static fn ($region) => Region::make($region, $resourceId, 'resource'))
             ->values()
             ->toArray();
 
         $location = Location::make($resourceId, $lat, $long);
 
         return [
-            'RAM_resource' => $resource,
-            'Location' => $location,
+            'RAM_Resource' => $resource,
+            'RAM_Location' => $location,
             'RAM_Resource_Division' => $resourceRegions,
             'RAM_Resource_Skill' => $resourceSkills,
         ];

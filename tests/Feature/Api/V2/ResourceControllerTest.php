@@ -2,6 +2,133 @@
 
 use Illuminate\Support\Facades\Http;
 
+function validResourceStorePayload(array $overrides = []): array
+{
+    return array_replace_recursive([
+        'environment' => [
+            'sendToPso' => false,
+            'datasetId' => 'dataset_123',
+        ],
+        'data' => [
+            'resourceTypeId' => 'FIELD_TECH',
+            'lat' => [43.65107],
+            'long' => [-79.347015],
+            'names' => ['John Smith'],
+        ],
+    ], $overrides);
+}
+
+it('returns a dry-run DsModelling payload for a single named resource', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload());
+
+    $response->assertStatus(202)
+        ->assertJson([
+            'status' => 202,
+            'message' => 'Successful. Not sent to PSO by Request',
+        ]);
+
+    $resource = $response->json('data.payloadToPso.DsModelling.RAM_Resource');
+    expect($resource)->toBeArray()
+        ->and($resource['id'])->toBe('JOHNSMITH')
+        ->and($resource['first_name'])->toBe('John')
+        ->and($resource['surname'])->toBe('Smith')
+        ->and($resource['ram_resource_type_id'])->toBe('FIELD_TECH');
+
+    $location = $response->json('data.payloadToPso.DsModelling.RAM_Location');
+    expect($location['id'])->toBe('JOHNSMITH')
+        ->and($location['latitude'])->toBe(43.65107);
+});
+
+it('builds a list of RAM_Resource/RAM_Location rows for multiple resources', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'data' => [
+            'lat' => [43.65107, 43.70011],
+            'long' => [-79.347015, -79.4163],
+            'names' => ['John Smith', 'Jane Doe'],
+        ],
+    ]));
+
+    $response->assertStatus(202);
+
+    expect($response->json('data.payloadToPso.DsModelling.RAM_Resource'))->toHaveCount(2);
+    expect($response->json('data.payloadToPso.DsModelling.RAM_Location'))->toHaveCount(2);
+});
+
+it('uses an explicit resource id when given', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'data' => ['ids' => ['RES-001']],
+    ]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.DsModelling.RAM_Resource.id'))->toBe('RES-001');
+});
+
+it('includes RAM_Resource_Skill and RAM_Resource_Division when skills/regions are given', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'data' => ['skills' => ['ELECTRICAL'], 'regions' => ['NORTH']],
+    ]));
+
+    $response->assertStatus(202);
+
+    $skill = $response->json('data.payloadToPso.DsModelling.RAM_Resource_Skill');
+    expect($skill)->toBe(['ram_skill_id' => 'ELECTRICAL', 'ram_resource_id' => 'JOHNSMITH']);
+
+    $division = $response->json('data.payloadToPso.DsModelling.RAM_Resource_Division');
+    expect($division)->toBe(['ram_resource_id' => 'JOHNSMITH', 'ram_division_id' => 'NORTH']);
+});
+
+it('omits RAM_Resource_Skill and RAM_Resource_Division when none are given', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload());
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.DsModelling'))
+        ->not->toHaveKeys(['RAM_Resource_Skill', 'RAM_Resource_Division']);
+});
+
+it('generates a random name for resources beyond the given names', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'data' => [
+            'lat' => [43.65107, 43.70011],
+            'long' => [-79.347015, -79.4163],
+            'resourcesToCreate' => 2,
+            'names' => ['John Smith'],
+        ],
+    ]));
+
+    $response->assertStatus(202);
+
+    $resources = $response->json('data.payloadToPso.DsModelling.RAM_Resource');
+    expect($resources)->toHaveCount(2);
+    expect($resources[0]['first_name'])->toBe('John');
+    expect($resources[1]['first_name'])->not->toBeEmpty()->not->toBe('John');
+});
+
+it('requires resourceTypeId, lat, and long', function () {
+    $response = $this->postJson('/api/v2/resource', [
+        'environment' => ['sendToPso' => false, 'datasetId' => 'dataset_123'],
+        'data' => [],
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['data.resourceTypeId', 'data.lat', 'data.long']);
+});
+
+it('rejects mismatched lat/long array lengths', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'data' => ['lat' => [1.0, 2.0], 'long' => [3.0]],
+    ]));
+
+    $response->assertStatus(422)->assertJsonValidationErrors('data.long');
+});
+
+it('requires a token or credentials when sendToPso is true', function () {
+    $response = $this->postJson('/api/v2/resource', validResourceStorePayload([
+        'environment' => ['sendToPso' => true],
+    ]));
+
+    $response->assertStatus(422)->assertJsonValidationErrors('authentication');
+});
+
 function resourceHeaders(array $overrides = []): array
 {
     return array_replace([
@@ -88,7 +215,7 @@ it('returns a map of resource id to display name for the whole dataset', functio
     Http::assertSent(function ($request) {
         return str_contains($request->url(), 'mycompany-pso-tst.ifs.cloud')
             && str_contains($request->url(), 'datasetId=dataset_123')
-            && !str_contains($request->url(), 'resourceId=');
+            && ! str_contains($request->url(), 'resourceId=');
     });
 });
 

@@ -45,6 +45,7 @@ Route::delete('/appointment/{appointmentRequestId}', [AppointmentController::cla
 Route::get('/appointment/{appointmentRequestId}', [AppointmentController::class, 'show'])->name('v2.appointment.show');
 
 // resource routes
+Route::post('/resource', [ResourceController::class, 'store'])->name('v2.resource.store');
 Route::get('/resource', [ResourceController::class, 'index'])->name('v2.resource.index');
 Route::get('/resource/{resourceId}', [ResourceController::class, 'show'])->name('v2.resource.show');
 Route::post('/resource/{resourceId}/event', [ResourceEventController::class, 'store'])->name('v2.resource.event.store');

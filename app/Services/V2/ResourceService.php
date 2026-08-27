@@ -3,12 +3,12 @@
 namespace App\Services\V2;
 
 use App\Classes\V2\BaseService;
-use App\Classes\V2\PsoClient;
 use App\Classes\V2\EntityBuilders\ActivityBuilder;
 use App\Classes\V2\EntityBuilders\ActivityStatusBuilder;
 use App\Classes\V2\EntityBuilders\ResourceEventBuilder;
 use App\Classes\V2\EntityBuilders\ShiftBuilder;
 use App\Classes\V2\Formatters\ResourceFormatter;
+use App\Classes\V2\PsoClient;
 use App\Constants\PSOConstants;
 use App\DataTransferObjects\PsoContext;
 use App\Enums\ActivityClass;
@@ -19,7 +19,9 @@ use App\Enums\ShiftEntity;
 use App\Helpers\Stubs\RamTimePattern;
 use App\Helpers\Stubs\RamUnavailability;
 use App\Helpers\Stubs\RamUpdate;
+use App\Helpers\Stubs\Resource;
 use Exception;
+use Faker\Factory as FakerFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
@@ -44,6 +46,7 @@ class ResourceService extends BaseService
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -74,6 +77,7 @@ class ResourceService extends BaseService
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -94,7 +98,7 @@ class ResourceService extends BaseService
             );
 
             $ramUnavailabilities = collect($unavailabilityIds)
-                ->map(static fn() => RamUnavailability::make(
+                ->map(static fn () => RamUnavailability::make(
                     data_get($data, 'resourceId'),
                     $timePatternId,
                     data_get($data, 'categoryId'),
@@ -102,7 +106,7 @@ class ResourceService extends BaseService
                 ))
                 ->all();
 
-            $description = ($isMassUpdate ? 'Mass ' : '') . 'Update Unavailability via ' . PSOConstants::APP_INSTANCE_ID;
+            $description = ($isMassUpdate ? 'Mass ' : '').'Update Unavailability via '.PSOConstants::APP_INSTANCE_ID;
 
             $payload = [
                 'RAM_Update' => RamUpdate::make($context->datasetId(), $description),
@@ -119,6 +123,7 @@ class ResourceService extends BaseService
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -164,6 +169,7 @@ class ResourceService extends BaseService
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -186,10 +192,101 @@ class ResourceService extends BaseService
         );
 
         return [
-            'RAM_Update' => RamUpdate::make($context->datasetId(), 'Create Unavailability via ' . PSOConstants::APP_INSTANCE_ID),
+            'RAM_Update' => RamUpdate::make($context->datasetId(), 'Create Unavailability via '.PSOConstants::APP_INSTANCE_ID),
             'RAM_Unavailability' => $ramUnavailability,
             'RAM_Time_Pattern' => $ramTimePattern,
         ];
+    }
+
+    public function createResource(PsoContext $context): JsonResponse
+    {
+        try {
+            $datasetId = $context->datasetId();
+            $resourceTypeId = $context->data('resourceTypeId');
+            $lats = $context->data('lat', []);
+            $longs = $context->data('long', []);
+            $ids = $context->data('ids');
+            $names = $context->data('names');
+            $skills = $context->data('skills', []);
+            $regions = $context->data('regions', []);
+
+            $count = $this->resolveResourceCount($context, $lats, $longs);
+
+            $faker = FakerFactory::create();
+
+            $bundles = [];
+
+            for ($n = 0; $n < $count; $n++) {
+                if ($names && isset($names[$n])) {
+                    $parts = explode(' ', $names[$n], 2);
+                    $firstName = $parts[0];
+                    $surname = $parts[1] ?? '';
+                } else {
+                    $firstName = $faker->firstName();
+                    $surname = $faker->lastName();
+                }
+
+                $resourceData = [
+                    'first_name' => $firstName,
+                    'surname' => $surname,
+                    'resource_type_id' => $resourceTypeId,
+                    'skill' => $skills,
+                    'region' => $regions,
+                ];
+
+                if ($ids && isset($ids[$n])) {
+                    $resourceData['resource_id'] = $ids[$n];
+                }
+
+                $bundles[] = Resource::make($resourceData, (float) $lats[$n], (float) $longs[$n]);
+            }
+
+            $ramResources = array_column($bundles, 'RAM_Resource');
+            $ramLocations = array_column($bundles, 'RAM_Location');
+            $ramSkills = array_merge(...array_column($bundles, 'RAM_Resource_Skill'));
+            $ramDivisions = array_merge(...array_column($bundles, 'RAM_Resource_Division'));
+
+            $payload = [
+                'RAM_Update' => RamUpdate::make($datasetId, 'Add '.$count.' resource(s).'),
+                'RAM_Resource' => $count === 1 ? $ramResources[0] : $ramResources,
+                'RAM_Location' => $count === 1 ? $ramLocations[0] : $ramLocations,
+            ];
+
+            if (! empty($ramSkills)) {
+                $payload['RAM_Resource_Skill'] = count($ramSkills) === 1 ? $ramSkills[0] : $ramSkills;
+            }
+
+            if (! empty($ramDivisions)) {
+                $payload['RAM_Resource_Division'] = count($ramDivisions) === 1 ? $ramDivisions[0] : $ramDivisions;
+            }
+
+            return $this->psoClient->sendOrSimulateBuilder()
+                ->payload($payload)
+                ->environment($context->environment())
+                ->token($context->token)
+                ->modellingSchema()
+                ->send();
+        } catch (Exception $e) {
+            $this->logError($e, __METHOD__, __CLASS__);
+
+            return $this->error('An unexpected error occurred', 500);
+        }
+    }
+
+    /**
+     * Resources to create is bounded by how many lat/long pairs were given
+     * (every resource needs a starting location, and there's no sensible
+     * fallback for a missing one). ids/names are intentionally excluded here —
+     * a shorter ids/names list falls back to generated values per-resource
+     * in the loop above rather than shrinking the batch.
+     */
+    private function resolveResourceCount(PsoContext $context, array $lats, array $longs): int
+    {
+        return (int) min(
+            $context->data('resourcesToCreate') ?? count($lats),
+            count($lats),
+            count($longs),
+        );
     }
 
     public function getResource(PsoContext $context, string $resourceId): JsonResponse
@@ -227,7 +324,7 @@ class ResourceService extends BaseService
         $selectOptions = [];
         foreach ($resources as $resource) {
             $id = data_get($resource, 'id');
-            $displayName = trim(data_get($resource, 'first_name', '') . ' ' . data_get($resource, 'surname', ''));
+            $displayName = trim(data_get($resource, 'first_name', '').' '.data_get($resource, 'surname', ''));
 
             if (empty($displayName)) {
                 $displayName = $id ?? 'Unknown Resource';
