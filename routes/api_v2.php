@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V2\ActivityController;
 use App\Http\Controllers\Api\V2\ActivityStatusController;
 use App\Http\Controllers\Api\V2\AppointmentController;
+use App\Http\Controllers\Api\V2\CleanupController;
 use App\Http\Controllers\Api\V2\CommitController;
 use App\Http\Controllers\Api\V2\DeleteObjectController;
 use App\Http\Controllers\Api\V2\HealthCheckController;
@@ -30,6 +31,7 @@ Route::delete('/activity/', [ActivityController::class, 'destroy'])->name('v2.ac
 
 // assist routes
 Route::delete('/delete', [DeleteObjectController::class, 'destroy'])->name('v2.delete.destroy');
+Route::delete('/cleanup', [CleanupController::class, 'destroy'])->name('v2.cleanup.destroy');
 Route::post('/load', [LoadController::class, 'store'])->name('v2.load.store');
 Route::patch('/rota', [LoadController::class, 'updateRota'])->name('v2.rota.update');
 Route::get('/usage', [SystemUsageController::class, 'show'])->name('v2.usage.show');
