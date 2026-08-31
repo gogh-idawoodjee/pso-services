@@ -22,7 +22,7 @@ class AppointmentResource extends JsonResource
                 'environment' => $this->getEnvironmentData(),
                 'appointmentRequest' => $this->getAppointmentRequestData(),
                 'offers' => $this->getOfferData(),
-            ]
+            ],
         ];
     }
 
@@ -75,32 +75,29 @@ class AppointmentResource extends JsonResource
             'validOffers' => $this->total_valid_offers_returned,
             'invalidOffers' => $this->total_invalid_offers_returned,
             'percentValid' => $this->total_offers_returned > 0
-                ? number_format(($this->total_valid_offers_returned / $this->total_offers_returned) * 100, 2) . '%'
+                ? number_format(($this->total_valid_offers_returned / $this->total_offers_returned) * 100, 2).'%'
                 : 'N/A',
             'appointedCheck' => $this->getAppointedCheck(),
             $expiryKey => $expiryValue,
         ];
 
-        $responseArray = [
-            'status' => $statusEnum->label(),
-            'inputReferenceId' => $this->accept_decline_input_reference_id,
-        ];
-
-        if ($statusEnum === AppointmentRequestStatus::ACCEPTED) {
-            $responseArray['acceptedOfferId'] = $this->accepted_offer_id;
-
-            $responseArray[$acceptDeclineKeyPrefix . 'DateTime'] = $this->formatDateTimeWithHumanDiff($this->accept_decline_datetime);
-
-            // Add acceptedDelay — how long after createdAt
-            $responseArray['acceptedDelay'] = $this->formatDelayFromCreatedAt($this->accept_decline_datetime, 'after appointment check');
-        } else {
-            $responseArray[$acceptDeclineKeyPrefix . 'DateTime'] = $this->formatDateTimeWithHumanDiff($this->accept_decline_datetime);
-            $responseArray['declinedDelay'] = $this->formatDelayFromCreatedAt($this->accept_decline_datetime, 'after appointment check');
-        }
-
         if ($acceptedOrDeclined) {
+            $responseArray = [
+                'status' => $statusEnum->label(),
+                'inputReferenceId' => $this->accept_decline_input_reference_id,
+                $acceptDeclineKeyPrefix.'DateTime' => $this->formatDateTimeWithHumanDiff($this->accept_decline_datetime),
+            ];
+
+            if ($statusEnum === AppointmentRequestStatus::ACCEPTED) {
+                $responseArray['acceptedOfferId'] = $this->accepted_offer_id;
+                $responseArray['acceptedDelay'] = $this->formatDelayFromCreatedAt($this->accept_decline_datetime, 'after appointment check');
+            } else {
+                $responseArray['declinedDelay'] = $this->formatDelayFromCreatedAt($this->accept_decline_datetime, 'after appointment check');
+            }
+
             return array_merge($baseOffersArray, ['response' => $responseArray]);
         }
+
         return $baseOffersArray;
     }
 
@@ -120,11 +117,12 @@ class AppointmentResource extends JsonResource
         ];
     }
 
-    private function formatDateTimeWithHumanDiff(Carbon|null $dateTime): string
+    private function formatDateTimeWithHumanDiff(?Carbon $dateTime): string
     {
         if ($dateTime) {
-            return $dateTime->toDateTimeString() . ' - ' . $dateTime->diffForHumans();
+            return $dateTime->toDateTimeString().' - '.$dateTime->diffForHumans();
         }
+
         return 'N/A';
     }
 
@@ -140,7 +138,7 @@ class AppointmentResource extends JsonResource
     private function formatDelayFromCreatedAt(?Carbon $dateTime, string $suffix): string
     {
         return ($this->created_at && $dateTime)
-            ? $this->created_at->diffForHumans($dateTime, ['parts' => 2, 'short' => true, 'syntax' => CarbonInterface::DIFF_ABSOLUTE]) . " $suffix"
+            ? $this->created_at->diffForHumans($dateTime, ['parts' => 2, 'short' => true, 'syntax' => CarbonInterface::DIFF_ABSOLUTE])." $suffix"
             : 'N/A';
     }
 }
