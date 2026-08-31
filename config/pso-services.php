@@ -58,24 +58,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Debug / Development
-    |--------------------------------------------------------------------------
-    |
-    | The scheduled rota task and commit's debug-credential fallback that used
-    | to read from this block are both gone now (commit resolves per-Environment
-    | credentials via commit_token instead — see CommitService). debug_mode_on/
-    | debug_timeout remain only because PSOHelper::GetTimeOut() still reads them,
-    | though that method itself has no remaining callers.
-    |
-    */
-
-    'debug' => [
-        'debug_mode_on' => env('PSO_DEBUG_MODE', true),
-        'debug_timeout' => env('PSO_DEBUG_TIMEOUT', 5),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Settings
     |--------------------------------------------------------------------------
     |
