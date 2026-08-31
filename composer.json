@@ -16,7 +16,6 @@
         "ext-bcmath": "*",
         "ext-openssl": "*",
         "ext-pdo": "*",
-        "alexpechkarev/google-maps": "^12.14",
         "dedoc/scramble": "^0.13",
         "fakerphp/faker": "^1.23",
         "gogh-idawoodjee/shortcode": "^1.0",

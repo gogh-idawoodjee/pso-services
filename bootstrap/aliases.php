@@ -1,6 +1,7 @@
 <?php
 
+use App\Helpers\PSOHelper;
+
 return [
-    'Helper' => App\Helpers\PSOHelper::class,
-    'GoogleMaps' => GoogleMaps\Facade\GoogleMapsFacade::class,
+    'Helper' => PSOHelper::class,
 ];

@@ -1,6 +1,5 @@
 <?php
 
-
 return [
 
     /*
@@ -40,7 +39,7 @@ return [
     |
     */
 
-    'debug' => (bool)env('APP_DEBUG', false),
+    'debug' => (bool) env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -166,11 +165,10 @@ return [
     |
     */
 
-//    'aliases' => Facade::defaultAliases()->merge([
-//        // 'ExampleClass' => App\Example\ExampleClass::class,
-//        'Helper' => App\Helpers\PSOHelper::class,
-//        'GoogleMaps' => GoogleMaps\Facade\GoogleMapsFacade::class,
-//    ])->toArray(),
+    //    'aliases' => Facade::defaultAliases()->merge([
+    //        // 'ExampleClass' => App\Example\ExampleClass::class,
+    //        'Helper' => App\Helpers\PSOHelper::class,
+    //    ])->toArray(),
 
     // managed in bootstrap/aliases.php
 
