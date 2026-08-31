@@ -211,8 +211,6 @@ class AppointmentService extends BaseService
             $invalidOffers = data_get($appointmentRequestLog, 'total_invalid_offers_returned');
             $activityId = data_get($appointmentRequestLog, 'activity_id');
 
-            // TODO: delete the old activity
-            // Once deleted, set cleanup_datetime to now and required_manual_cleanup to false
             $this->scheduleCleanup($appointmentRequestLog, 3);
 
             if ($context->token) {
@@ -227,6 +225,7 @@ class AppointmentService extends BaseService
 
                 if ($psoResponse->status() < 400) {
                     $this->deleteActivity($activityId, $environmentData, $context->token);
+                    $appointmentRequestLog->update(['cleanup_datetime' => Carbon::now(), 'required_manual_cleanup' => false]);
 
                     $summary = [
                         'activityId' => $activityId,
