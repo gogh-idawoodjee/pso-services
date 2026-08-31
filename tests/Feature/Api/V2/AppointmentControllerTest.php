@@ -99,3 +99,82 @@ it('marks cleanup_datetime after declining, so the delayed cleanup job will not 
     $appointment->refresh();
     expect($appointment->cleanup_datetime)->not->toBeNull();
 });
+
+it('raises base_value by the default multiplier when accepting an offer', function () {
+    Http::fake(['*' => Http::response(['dsScheduleData' => []], 200)]);
+
+    $appointment = declinableAppointmentRecord([
+        'activity' => [
+            'Activity' => ['id' => 'ACT-001_AB', 'base_value' => 2000],
+            'Activity_Status' => ['activity_id' => 'ACT-001_AB'],
+        ],
+        'valid_offers' => [[
+            'id' => 1,
+            'windowStartDatetime' => '2026-05-01T08:00:00-04:00',
+            'windowEndDatetime' => '2026-05-01T10:00:00-04:00',
+            'prospectiveAllocationStart' => '2026-05-01T08:15:00-04:00',
+            'prospectiveResourceId' => 'RES-001',
+        ]],
+    ]);
+
+    $response = $this->patchJson("/api/v2/appointment/{$appointment->appointment_request_id}", [
+        'data' => ['appointmentOfferId' => 1],
+        'environment' => [
+            'sendToPso' => true,
+            'token' => 'tok-123',
+            'datasetId' => 'dataset_123',
+            'baseUrl' => 'https://mycompany-pso-tst.ifs.cloud',
+            'accountId' => 'Default',
+        ],
+    ]);
+
+    $response->assertOk();
+    expect($response->json('data.payloadToPso.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
+});
+
+it('raises base_value by a caller-supplied multiplier when accepting an offer', function () {
+    Http::fake(['*' => Http::response(['dsScheduleData' => []], 200)]);
+
+    $appointment = declinableAppointmentRecord([
+        'activity' => [
+            'Activity' => ['id' => 'ACT-001_AB', 'base_value' => 1000],
+            'Activity_Status' => ['activity_id' => 'ACT-001_AB'],
+        ],
+        'valid_offers' => [[
+            'id' => 1,
+            'windowStartDatetime' => '2026-05-01T08:00:00-04:00',
+            'windowEndDatetime' => '2026-05-01T10:00:00-04:00',
+            'prospectiveAllocationStart' => '2026-05-01T08:15:00-04:00',
+            'prospectiveResourceId' => 'RES-001',
+        ]],
+    ]);
+
+    $response = $this->patchJson("/api/v2/appointment/{$appointment->appointment_request_id}", [
+        'data' => ['appointmentOfferId' => 1, 'acceptedValueMultiplier' => 3],
+        'environment' => [
+            'sendToPso' => true,
+            'token' => 'tok-123',
+            'datasetId' => 'dataset_123',
+            'baseUrl' => 'https://mycompany-pso-tst.ifs.cloud',
+            'accountId' => 'Default',
+        ],
+    ]);
+
+    $response->assertOk();
+    expect($response->json('data.payloadToPso.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
+});
+
+it('rejects an acceptedValueMultiplier of 1 or less', function () {
+    $appointment = declinableAppointmentRecord();
+
+    $this->patchJson("/api/v2/appointment/{$appointment->appointment_request_id}", [
+        'data' => ['appointmentOfferId' => 1, 'acceptedValueMultiplier' => 1],
+        'environment' => [
+            'sendToPso' => true,
+            'token' => 'tok-123',
+            'datasetId' => 'dataset_123',
+            'baseUrl' => 'https://mycompany-pso-tst.ifs.cloud',
+            'accountId' => 'Default',
+        ],
+    ])->assertStatus(422)->assertJsonValidationErrors('data.acceptedValueMultiplier');
+});

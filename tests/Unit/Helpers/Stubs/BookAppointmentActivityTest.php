@@ -75,3 +75,27 @@ it('leaves absent optional entities untouched (PRIVATE activity class, no locati
 
     expect($result)->not->toHaveKeys(['Location', 'Location_Region', 'Activity_SLA', 'Activity_Skill']);
 });
+
+it('raises base_value by the default 1.5x multiplier when none is given', function () {
+    $result = BookAppointmentActivity::finalize([
+        'Activity' => ['id' => 'ACT-001_AB', 'base_value' => 2000],
+    ], 'ACT-001', '2026-05-01T08:00:00', '2026-05-01T12:00:00');
+
+    expect($result['Activity']['base_value'])->toBe(3000);
+});
+
+it('raises base_value by a given multiplier, rounded to the nearest integer', function () {
+    $result = BookAppointmentActivity::finalize([
+        'Activity' => ['id' => 'ACT-001_AB', 'base_value' => 999],
+    ], 'ACT-001', '2026-05-01T08:00:00', '2026-05-01T12:00:00', 2.0);
+
+    expect($result['Activity']['base_value'])->toBe(1998);
+});
+
+it('leaves base_value untouched when not present on the activity', function () {
+    $result = BookAppointmentActivity::finalize([
+        'Activity' => ['id' => 'ACT-001_AB'],
+    ], 'ACT-001', '2026-05-01T08:00:00', '2026-05-01T12:00:00');
+
+    expect($result['Activity'])->not->toHaveKey('base_value');
+});

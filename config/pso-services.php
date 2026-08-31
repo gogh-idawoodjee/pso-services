@@ -38,6 +38,11 @@ return [
             'class_id' => 'CALL',
             'split_allowed' => false,
             'appointment_booking_suffix' => '',
+
+            // Multiplier applied to an accepted appointment's base_value so it resists
+            // displacement by newly-arriving activities. Overridable per-request via
+            // data.acceptedValueMultiplier on the accept call.
+            'accepted_value_multiplier' => (float) env('APPOINTMENT_ACCEPTED_VALUE_MULTIPLIER', 1.5),
         ],
         'resource' => [
             'class_id' => 'PERSON',

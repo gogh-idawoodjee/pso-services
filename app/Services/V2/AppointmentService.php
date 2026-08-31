@@ -102,11 +102,14 @@ class AppointmentService extends BaseService
             // TODO: delete the old activity? Or rely on the background job?
             // Once deleted, set cleanup_datetime to now and required_manual_cleanup to false
 
+            $valueMultiplier = (float) ($context->data('acceptedValueMultiplier') ?? config('pso-services.defaults.activity.accepted_value_multiplier', 1.5));
+
             $bookAppointmentPayload = BookAppointmentActivity::finalize(
                 $activity,
                 $activityId,
                 data_get($selectedOffer, 'windowStartDatetime'),
-                data_get($selectedOffer, 'windowEndDatetime')
+                data_get($selectedOffer, 'windowEndDatetime'),
+                $valueMultiplier
             );
 
             $duration = data_get($activity, 'Activity_Status.duration');

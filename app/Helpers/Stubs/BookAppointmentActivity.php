@@ -6,7 +6,11 @@ namespace App\Helpers\Stubs;
  * Rewrites an appointment-request activity payload (built by ActivityBuilder::asAbRequest())
  * for real booking: the temporary AB-request activity is created with the suffixed
  * activity id (see ActivityBuilder::build()), and this strips that suffix from every
- * entity that referenced it, and overrides the SLA window with the accepted offer's times.
+ * entity that referenced it, overrides the SLA window with the accepted offer's times,
+ * and raises base_value so newly-arriving activities don't displace this appointment
+ * (PSO's own recommendation is to switch Activity Type to a higher-value one, but that
+ * requires a second Activity Type configured in the customer's PSO dataset, which we
+ * can't assume exists — multiplying base_value achieves the same effect without it).
  *
  * The set of fields touched here is exhaustive against ActivityBuilder::build()'s output —
  * Activity.id/location_id, Activity_Status.activity_id, Location.id,
@@ -15,7 +19,7 @@ namespace App\Helpers\Stubs;
  */
 class BookAppointmentActivity
 {
-    public static function finalize(array $activity, string $activityId, string $slaStart, string $slaEnd): array
+    public static function finalize(array $activity, string $activityId, string $slaStart, string $slaEnd, float $valueMultiplier = 1.5): array
     {
         if (isset($activity['Activity']['id'])) {
             $activity['Activity']['id'] = $activityId;
@@ -23,6 +27,10 @@ class BookAppointmentActivity
 
         if (isset($activity['Activity']['location_id'])) {
             $activity['Activity']['location_id'] = $activityId;
+        }
+
+        if (isset($activity['Activity']['base_value'])) {
+            $activity['Activity']['base_value'] = (int) round($activity['Activity']['base_value'] * $valueMultiplier);
         }
 
         if (isset($activity['Activity_Status']['activity_id'])) {
