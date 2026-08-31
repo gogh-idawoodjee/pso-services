@@ -156,10 +156,10 @@ class AppointmentService extends BaseService
                         'selectedWindow' => data_get($selectedOffer, 'windowStartTime').' - '.data_get($selectedOffer, 'windowEndTime'),
                     ];
 
-                    return $this->sentToPso([
-                        'acceptedAppointmentSummary' => $summary,
-                        'payloadToPso' => $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
-                    ]);
+                    return $this->sentToPso(array_merge(
+                        ['acceptedAppointmentSummary' => $summary],
+                        $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
+                    ));
                 }
 
                 return $psoResponse;
@@ -237,10 +237,10 @@ class AppointmentService extends BaseService
                         'totalAppointmentsOffered' => $validOffers + $invalidOffers,
                     ];
 
-                    return $this->sentToPso([
-                        'declineAppointmentSummary' => $summary,
-                        'payloadToPso' => $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
-                    ]);
+                    return $this->sentToPso(array_merge(
+                        ['declineAppointmentSummary' => $summary],
+                        $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
+                    ));
                 }
 
                 return $psoResponse;
@@ -315,9 +315,10 @@ class AppointmentService extends BaseService
 
                     Log::info('checkAppointed successful', compact('appointmentRequestId'));
 
-                    return $this->sentToPso(array_merge($data, [
-                        'payloadToPso' => $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
-                    ]));
+                    return $this->sentToPso(array_merge(
+                        $data,
+                        $this->psoClient->buildPayload($payload, $context->psoApiVersion(), true),
+                    ));
                 }
 
                 Log::warning('checkAppointed: PSO responded with an error', ['status' => $psoResponse->status()]);

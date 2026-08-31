@@ -129,7 +129,7 @@ it('raises base_value by the default multiplier when accepting an offer', functi
     ]);
 
     $response->assertOk();
-    expect($response->json('data.payloadToPso.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
+    expect($response->json('data.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
 });
 
 it('raises base_value by a caller-supplied multiplier when accepting an offer', function () {
@@ -161,7 +161,7 @@ it('raises base_value by a caller-supplied multiplier when accepting an offer', 
     ]);
 
     $response->assertOk();
-    expect($response->json('data.payloadToPso.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
+    expect($response->json('data.payloadToPso.dsScheduleData.Activity.base_value'))->toBe(3000);
 });
 
 it('rejects an acceptedValueMultiplier of 1 or less', function () {
