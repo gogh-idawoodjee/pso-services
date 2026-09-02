@@ -47,6 +47,7 @@ class PSOTravelLog extends Model
         'output_payload' => 'json',
         'pso_response' => 'json',
         'transfer_stats' => 'json',
+        'warnings' => 'json',
     ];
 
     protected function travelDetailRequestId(): Attribute
