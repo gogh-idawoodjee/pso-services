@@ -8,8 +8,8 @@ use App\Http\Requests\Api\V2\TravelRequest;
 use App\Models\V2\PSOTravelLog;
 use App\Services\V2\TravelService;
 use App\Traits\V2\PSOAssistV2;
-use Illuminate\Http\JsonResponse;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -23,7 +23,6 @@ use Illuminate\Http\Request;
  *
  * Optionally provide `data.callbackUrl` in the POST — results will be POSTed
  * to that URL automatically when PSO responds, eliminating the need to poll.
- *
  */
 class TravelController extends Controller
 {
@@ -41,8 +40,7 @@ class TravelController extends Controller
      */
     public function store(TravelRequest $request, TravelService $travelService): JsonResponse
     {
-        return $this->executeAuthenticatedAction($request, fn(TravelRequest $req) =>
-            $travelService->process(PsoContext::fromRequest($req))
+        return $this->executeAuthenticatedAction($request, fn (TravelRequest $req) => $travelService->process(PsoContext::fromRequest($req))
         );
     }
 
@@ -64,7 +62,7 @@ class TravelController extends Controller
      * broadcasts back (typically seconds to a minute).
      *
      * @response 200 scenario="Completed" {"data": {"travel_detail_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "start_address": "123 Queen St W, Toronto, ON", "end_address": "456 King St E, Toronto, ON", "pso": {"time": "00:25:00", "distance": "12.5 km"}, "google": {"time": "22 mins", "distance": "11.8 km"}}, "status": 200, "message": "Completed"}
-     * @response 200 scenario="Pending" {"data": [], "status": 200, "message": "Sent"}
+     * @response 200 scenario="Pending" {"data": [], "status": 200, "message": "The travel log has been sent but is awaiting a response from PSO."}
      * @response 404 scenario="Not Found" {"message": "Travel Log not found", "status": 404}
      */
     public function show(string $id, TravelService $travelService): JsonResponse
