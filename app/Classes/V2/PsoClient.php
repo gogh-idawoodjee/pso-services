@@ -207,15 +207,17 @@ class PsoClient
         ?string $additionalDetails = null,
         ?bool $addInputReference = null,
         ?string $inputReferenceDescription = null,
+        ?string $inputReferenceDatetime = null,
         ?string $resultsUrl = null,
         int $psoApiVersion = 1,
         bool $useModellingSchema = false,
     ): JsonResponse {
-        if ($addInputReference && !$useModellingSchema) {
+        if ($addInputReference && ! $useModellingSchema) {
             $payload['Input_Reference'] =
                 InputReferenceBuilder::make(data_get($environmentData, 'datasetId'))
                     ->inputType(InputMode::CHANGE)
                     ->description($inputReferenceDescription)
+                    ->datetime($inputReferenceDatetime)
                     ->build();
         }
 

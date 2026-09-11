@@ -11,21 +11,27 @@ class ScheduleExceptionRequest extends BaseFormRequest
         $additionalRules = [
             /**
              * The ID of the exception type.
+             *
              * @var int
+             *
              * @example 1
              */
             'data.exceptionTypeId' => 'required|integer',
 
             /**
              * A human-readable label for the exception.
+             *
              * @var string
+             *
              * @example "Sick Leave"
              */
             'data.label' => 'required|string',
 
             /**
              * The value of the exception (e.g., a date or duration).
+             *
              * @var string
+             *
              * @example "2025-05-17"
              */
             'data.value' => 'required|string',
@@ -33,7 +39,9 @@ class ScheduleExceptionRequest extends BaseFormRequest
             /**
              * The ID of the activity affected by this exception.
              * Required if resourceId is not provided.
+             *
              * @var string|null
+             *
              * @example "ACT123"
              */
             'data.activityId' => 'required_without:data.resourceId|nullable|string',
@@ -41,10 +49,22 @@ class ScheduleExceptionRequest extends BaseFormRequest
             /**
              * The ID of the resource affected by this exception.
              * Required if activityId is not provided.
+             *
              * @var string|null
+             *
              * @example "RES456"
              */
             'data.resourceId' => 'required_without:data.activityId|nullable|string',
+
+            /**
+             * Reference datetime for this write, used as "now" by PSO instead of
+             * the actual current time when supplied. Defaults to now when omitted.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.inputDatetime' => 'nullable|date',
         ];
 
         return array_merge($commonRules, $additionalRules);

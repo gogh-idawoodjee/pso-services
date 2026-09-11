@@ -19,7 +19,7 @@ class UpdateRotaRequest extends BaseFormRequest
         $additionalRules = [
             'data.rotaId' => 'string', // if not included, assume same as dataset ID
             'data.description' => 'string',
-            'data.datetime' => 'date',
+            'data.inputDatetime' => 'date',
             'data.id' => 'string',
         ];
 

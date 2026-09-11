@@ -72,3 +72,13 @@ it('requires exceptionTypeId, label, and value', function () {
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['data.exceptionTypeId', 'data.label', 'data.value']);
 });
+
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime', function () {
+    $response = $this->postJson('/api/v2/exception', validExceptionPayload([
+        'data' => ['inputDatetime' => '2026-01-01T00:00:00Z'],
+    ]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00Z');
+});

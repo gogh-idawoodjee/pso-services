@@ -43,6 +43,7 @@ class ResourceService extends BaseService
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference('Created Event')
+                ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);

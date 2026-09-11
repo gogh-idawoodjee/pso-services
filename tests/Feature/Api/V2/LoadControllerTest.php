@@ -48,6 +48,14 @@ it('uses the client-supplied data.id as the Input_Reference id', function () {
     expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.id'))->toBe('load-123');
 });
 
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime', function () {
+    $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['inputDatetime' => '2026-01-01T00:00:00Z']]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00Z');
+});
+
 it('requires dseDuration', function () {
     $response = $this->postJson('/api/v2/load', validLoadPayload(['data' => ['dseDuration' => null]]));
 

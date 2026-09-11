@@ -35,7 +35,9 @@ class ResourceEventRequest extends BaseFormRequest
              * - FIX: GPS Fix
              * - RO: Logged On
              * - RF: Logged Off
+             *
              * @var string
+             *
              * @example "AO"
              */
             'data.eventType' => ['required', new Enum(EventType::class)],
@@ -43,7 +45,9 @@ class ResourceEventRequest extends BaseFormRequest
             /**
              * The latitude of the resource location.
              * Required when eventType is FIX.
+             *
              * @var float|null
+             *
              * @example 43.65107
              */
             'data.lat' => 'numeric|between:-90,90|required_with:data.long|required_if:data.eventType,FIX',
@@ -51,7 +55,9 @@ class ResourceEventRequest extends BaseFormRequest
             /**
              * The longitude of the resource location.
              * Required when eventType is FIX.
+             *
              * @var float|null
+             *
              * @example -79.347015
              */
             'data.long' => 'numeric|between:-180,180|required_with:data.lat|required_if:data.eventType,FIX',
@@ -59,11 +65,23 @@ class ResourceEventRequest extends BaseFormRequest
             /**
              * The timestamp when the event occurred.
              * ISO 8601 format is recommended.
+             *
              * @var string|null
+             *
              * @example "2024-12-01T14:30:00Z"
              */
             'data.eventDateTime' => 'date',
-            'data.resourceId' => 'string|required'
+            'data.resourceId' => 'string|required',
+
+            /**
+             * Reference datetime for this write, used as "now" by PSO instead of
+             * the actual current time when supplied. Defaults to now when omitted.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.inputDatetime' => 'nullable|date',
         ];
 
         return array_merge($commonRules, $additionalRules);

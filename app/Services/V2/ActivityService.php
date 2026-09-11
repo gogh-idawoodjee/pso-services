@@ -30,15 +30,17 @@ class ActivityService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference('Create Activity: ' . $activityId)
+                ->includeInputReference('Create Activity: '.$activityId)
+                ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
 
-    public function updateStatus(PsoContext $context, ActivityStatus $activityStatus, string|null $resourceId = null): JsonResponse
+    public function updateStatus(PsoContext $context, ActivityStatus $activityStatus, ?string $resourceId = null): JsonResponse
     {
         try {
             $payload = ActivityStatusBuilder::make($context->data('activityId'), $activityStatus)
@@ -53,9 +55,11 @@ class ActivityService extends BaseService
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference()
+                ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }
@@ -67,7 +71,7 @@ class ActivityService extends BaseService
             $registry = PSOObjectRegistry::resolveEntry('activity');
 
             $payload = [
-                'Object_Deletion' => collect($activitiesList)->map(static fn($id) => DeleteObject::make(
+                'Object_Deletion' => collect($activitiesList)->map(static fn ($id) => DeleteObject::make(
                     $registry,
                     ['objectPk1' => $id],
                 ))->all(),
@@ -78,10 +82,11 @@ class ActivityService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference('Delete Activities: ' . implode(', ', $activitiesList))
+                ->includeInputReference('Delete Activities: '.implode(', ', $activitiesList))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
+
             return $this->error('An unexpected error occurred', 500);
         }
     }

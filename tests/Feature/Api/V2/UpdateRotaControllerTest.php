@@ -8,7 +8,7 @@ function validUpdateRotaPayload(array $overrides = []): array
             'datasetId' => 'dataset_123',
         ],
         'data' => [
-            'datetime' => '2026-01-01T00:00:00Z',
+            'inputDatetime' => '2026-01-01T00:00:00Z',
         ],
     ], $overrides);
 }
@@ -40,6 +40,14 @@ it('uses the client-supplied data.id as the Input_Reference id', function () {
 
     $response->assertStatus(202);
     expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.id'))->toBe('rota-123');
+});
+
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime', function () {
+    $response = $this->patchJson('/api/v2/rota', validUpdateRotaPayload());
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00Z');
 });
 
 it('requires a token or credentials when sendToPso is true', function () {

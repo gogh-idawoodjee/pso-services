@@ -75,13 +75,14 @@ class LoadPsoRequest extends BaseFormRequest
             'data.description' => 'string',
 
             /**
-             * Datetime associated with the load.
+             * Reference datetime for this load, used as "now" by PSO instead of the
+             * actual current time when supplied. Defaults to now when omitted.
              *
              * @var string
              *
              * @example "2025-04-30T14:30:00"
              */
-            'data.datetime' => 'date',
+            'data.inputDatetime' => 'date',
 
             /**
              * Whether to keep existing PSO data during the load.

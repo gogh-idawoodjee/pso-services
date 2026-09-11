@@ -36,7 +36,7 @@ class LoadService extends BaseService
         $datasetId = data_get($environment, 'datasetId');
         $baseUrl = data_get($environment, 'baseUrl');
 
-        $datetime = $context->data('datetime');
+        $datetime = $context->data('inputDatetime');
         $id = $context->data('id');
         $description = $context->data('description');
         $dseDuration = PSOHelper::setPSODurationDays($context->data('dseDuration'));
@@ -97,7 +97,7 @@ class LoadService extends BaseService
     public function updateRota(PsoContext $context): JsonResponse
     {
         $datasetId = $context->datasetId();
-        $datetime = $context->data('datetime');
+        $datetime = $context->data('inputDatetime');
         $id = $context->data('id');
         $description = $context->data('description') ?? PSOConstants::UPDATE_ROTA_DESCRIPTION;
 

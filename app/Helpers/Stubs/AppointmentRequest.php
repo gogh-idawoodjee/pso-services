@@ -25,7 +25,7 @@ class AppointmentRequest
             }
         }
 
-        $requestDateTime = data_get($appointmentData, 'data.inputDateTime') ?: Carbon::now()->startOfDay()->setTimezone(config('pso-services.defaults.timezone', 'America/Toronto'))->toAtomString();
+        $requestDateTime = data_get($appointmentData, 'data.inputDatetime') ?: Carbon::now()->startOfDay()->setTimezone(config('pso-services.defaults.timezone', 'America/Toronto'))->toAtomString();
         $appointmentRequest = [
             'id' => Str::orderedUuid()->getHex()->toString(),
             'appointment_template_id' => data_get($appointmentData, 'data.appointmentTemplateId'),

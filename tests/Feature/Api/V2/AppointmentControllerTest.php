@@ -44,6 +44,16 @@ it('uses the ScheduleData wrapper when psoApiVersion is 2', function () {
     expect($response->json('data.payloadToPso.dsScheduleData'))->toBeNull();
 });
 
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime', function () {
+    $response = $this->postJson('/api/v2/appointment', validAppointmentPayload([
+        'data' => ['inputDatetime' => '2026-01-01T00:00:00'],
+    ]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00');
+});
+
 it('sends the slot usage rule to PSO as slot_usage_rule_set_id, not slot_usage_rule_id', function () {
     $response = $this->postJson('/api/v2/appointment', validAppointmentPayload([
         'data' => ['slotUsageRuleId' => 'usage-rule-01'],
