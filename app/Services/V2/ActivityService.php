@@ -83,6 +83,7 @@ class ActivityService extends BaseService
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
                 ->includeInputReference('Delete Activities: '.implode(', ', $activitiesList))
+                ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);

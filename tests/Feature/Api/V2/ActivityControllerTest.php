@@ -100,3 +100,14 @@ it('uses the client-supplied data.inputDatetime as the Input_Reference datetime'
     expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
         ->toBe('2026-01-01T00:00:00Z');
 });
+
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime when deleting activities', function () {
+    $response = $this->deleteJson('/api/v2/activity', [
+        'environment' => ['sendToPso' => false, 'datasetId' => 'dataset_123'],
+        'data' => ['activities' => ['act-123'], 'inputDatetime' => '2026-01-01T00:00:00Z'],
+    ]);
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00Z');
+});

@@ -22,6 +22,16 @@ class ActivityDeleteRequest extends BaseFormRequest
              * @example "act-123"
              */
             'data.activities.*' => 'required|string',
+
+            /**
+             * Reference datetime for this write, used as "now" by PSO instead of
+             * the actual current time when supplied. Defaults to now when omitted.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.inputDatetime' => ['nullable', 'date'],
         ];
 
         return array_merge($commonRules, $additionalRules);

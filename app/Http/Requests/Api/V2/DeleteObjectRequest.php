@@ -50,6 +50,8 @@ class DeleteObjectRequest extends BaseFormRequest
             }
         }
 
+        $rules['data.inputDatetime'] = ['nullable', 'date'];
+
         return array_merge($commonRules, $rules);
     }
 

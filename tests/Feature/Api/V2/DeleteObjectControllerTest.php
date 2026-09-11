@@ -56,3 +56,13 @@ it('requires different primary key attributes for a composite-key object type', 
 
     $response->assertStatus(422)->assertJsonValidationErrors(['data.objectPk1', 'data.objectPk2']);
 });
+
+it('uses the client-supplied data.inputDatetime as the Input_Reference datetime', function () {
+    $response = $this->deleteJson('/api/v2/delete', validDeletePayload([
+        'data' => ['inputDatetime' => '2026-01-01T00:00:00Z'],
+    ]));
+
+    $response->assertStatus(202);
+    expect($response->json('data.payloadToPso.dsScheduleData.Input_Reference.datetime'))
+        ->toBe('2026-01-01T00:00:00Z');
+});
