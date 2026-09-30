@@ -44,7 +44,12 @@ class ScheduleExceptionService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference()
+                ->includeInputReference(sprintf(
+                    'Create Schedule Exception of type %s for %s %s',
+                    $context->data('exceptionTypeId'),
+                    $entityIsActivity ? 'Activity ID' : 'Resource ID',
+                    $entityId,
+                ))
                 ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {

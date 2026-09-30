@@ -42,7 +42,11 @@ class ResourceService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference('Created Event')
+                ->includeInputReference(sprintf(
+                    'Create Schedule Event %s for Resource ID %s',
+                    $context->data('eventType'),
+                    $context->data('resourceId'),
+                ))
                 ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {
@@ -166,7 +170,11 @@ class ResourceService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference('Created Unavailability')
+                ->includeInputReference(sprintf(
+                    'Create Unavailability for Resource ID %s (Activity ID %s)',
+                    $context->data('resourceId'),
+                    $activityId,
+                ))
                 ->send();
         } catch (Exception $e) {
             $this->logError($e, __METHOD__, __CLASS__);
