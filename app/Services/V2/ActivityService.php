@@ -54,7 +54,11 @@ class ActivityService extends BaseService
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
                 ->token($context->token)
-                ->includeInputReference()
+                ->includeInputReference(sprintf(
+                    'Update Activity Status for Activity ID %s to Status %s',
+                    $context->data('activityId'),
+                    $activityStatus->label(),
+                ))
                 ->datetime($context->data('inputDatetime'))
                 ->send();
         } catch (Exception $e) {

@@ -197,7 +197,10 @@ class AppointmentService extends BaseService
 
             $offerResponsePayload = AppointmentOfferResponse::make($appointmentRequestId);
 
-            $inputReference = InputReferenceBuilder::make($context->datasetId())->inputType(InputMode::CHANGE)->build();
+            $inputReference = InputReferenceBuilder::make($context->datasetId())
+                ->inputType(InputMode::CHANGE)
+                ->description('Decline Appointment Offers for appointment request ID '.$appointmentRequestId)
+                ->build();
             // TODO: input reference is created here, not fetched — review naming/flow
             $inputReferenceId = data_get($inputReference, 'id');
 
@@ -267,6 +270,7 @@ class AppointmentService extends BaseService
 
             $inputReference = InputReferenceBuilder::make($context->datasetId())
                 ->inputType(InputMode::CHANGE)
+                ->description('Check Appointed for appointment request ID '.$appointmentRequestId.' with appointment offer ID '.$appointmentOfferId)
                 ->build();
             $inputReferenceId = data_get($inputReference, 'id');
 

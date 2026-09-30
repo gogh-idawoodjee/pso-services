@@ -37,7 +37,7 @@ class DeleteService extends BaseService
                 ->payload(['Object_Deletion' => $delete_input])
                 ->environment($context->environment())
                 ->psoApiVersion($context->psoApiVersion())
-                ->includeInputReference('Delete Object: ' . $label)
+                ->includeInputReference('Delete '.$label.' '.data_get($data, 'objectPk1'))
                 ->datetime($context->data('inputDatetime'))
                 ->token($context->token)
                 ->send();
