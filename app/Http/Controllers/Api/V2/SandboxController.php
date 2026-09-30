@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
+use App\Http\OpenApi\ErrorResponse;
 use App\Http\Requests\Api\V2\LoadTestRequest;
 use App\Services\V2\LoadTestService;
 use App\Traits\V2\PSOAssistV2;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\IgnoreResponse;
 use Illuminate\Http\JsonResponse;
 
-/**
- * @group System
- */
+#[Group('System')]
 class SandboxController extends Controller
 {
     use PSOAssistV2;
@@ -22,9 +23,9 @@ class SandboxController extends Controller
      * Stub for the V2 load-test feature. The V1 version has been removed;
      * this endpoint is a placeholder until the feature is redesigned
      * against V2's request shape. See issue #36.
-     *
-     * @response 501 scenario="Not implemented" {"message": "V2 load test is not yet implemented", "status": 501}
      */
+    #[IgnoreResponse(200)]
+    #[ErrorResponse(501, 'V2 load test is not yet implemented')]
     public function runLoadTest(LoadTestRequest $request, LoadTestService $loadTestService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(LoadTestRequest $req) =>

@@ -54,22 +54,4 @@ class AppointmentSummaryRequest extends BaseFormRequest
 
         return array_merge($commonRules, $additionalRules);
     }
-
-    public function bodyParameters(): array
-    {
-        return array_merge($this->commonBodyParameters(), [
-            'data.appointmentOfferId' => [
-                'description' => 'The ID of the appointment offer. Not required when declining (DELETE) — the offer is ignored for that operation.',
-                'example' => 12345,
-            ],
-            'data.appointmentRequestId' => [
-                'description' => 'The ID of the appointment request.',
-                'example' => 'req-67890',
-            ],
-            'data.acceptedValueMultiplier' => [
-                'description' => 'Multiplier applied to base_value when accepting an offer, so the accepted appointment resists displacement. Only used on accept (PATCH); must be > 1. Defaults to the configured value when omitted.',
-                'example' => 1.5,
-            ],
-        ]);
-    }
 }

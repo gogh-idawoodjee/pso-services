@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Http\OpenApi\PsoCommonParameters;
+use App\Http\OpenApi\SharedErrorResponses;
 use App\Models\V2\ExternalSanctumToken;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
@@ -27,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(ExternalSanctumToken::class);
+
+        Scramble::configure()->withOperationTransformers([
+            app(PsoCommonParameters::class),
+            app(SharedErrorResponses::class),
+        ]);
 
         Gate::define('viewApiDocs', static function ($user = null) {
             return true;

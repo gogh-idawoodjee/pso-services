@@ -4,27 +4,31 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
+use App\Http\OpenApi\NotSentToPso;
+use App\Http\OpenApi\OkResponse;
+use App\Http\OpenApi\SentToPso;
 use App\Http\Requests\Api\V2\AppointmentRequest;
+use App\Http\Requests\Api\V2\AppointmentSummaryRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\V2\PSOAppointment;
 use App\Services\V2\AppointmentService;
 use App\Traits\V2\PSOAssistV2;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 
-/**
- * @group Appointments
- */
+#[Group('Appointments')]
 class AppointmentController extends Controller
 {
     use PSOAssistV2;
 
     /**
      * Check Appointed.
-     *
-     * @response 200 scenario="Sent to PSO" {"data": {}, "status": 200, "message": "Successful. Sent to PSO"}
-     * @response 202 scenario="Dry run" {"data": {}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
      */
+    #[SentToPso(data: 'array{appointment_summary: array{appointmentRequestId: string, isSlotAvailable: bool|null, responseFromPso: array<string, mixed>}, payloadToPso: object}', examples: [[
+        'appointment_summary' => ['appointmentRequestId' => 'abc123', 'isSlotAvailable' => true, 'responseFromPso' => ['appointed' => true]],
+        'payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1']]],
+    ]])]
+    #[NotSentToPso(examples: [['payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1']]]]])]
     public function check(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>
@@ -34,12 +38,18 @@ class AppointmentController extends Controller
 
     /**
      * Get Appointments
-     *
-     * @bodyParam data.slaStart string required SLA start datetime. Example: 2025-06-01T08:00:00
-     * @bodyParam data.slaEnd string required SLA end datetime. Example: 2025-06-01T17:00:00
-     * @response 200 scenario="Sent to PSO" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Appointment_Request": {"id": "abc123", "activity_id": "ACT-001_AB"}, "Activity": {"id": "ACT-001_AB"}, "Activity_Status": {"activity_id": "ACT-001_AB"}}}, "responseFromPso": {}}, "status": 200, "message": "Successful. Sent to PSO"}
-     * @response 202 scenario="Dry run" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Appointment_Request": {"id": "abc123", "activity_id": "ACT-001_AB"}, "Activity": {"id": "ACT-001_AB"}}}}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
      */
+    #[SentToPso(data: 'array{appointmentOffers: array{appointmentRequestId: string, summary: string, bestOffer: array<string, mixed>|string, validOffers: list<array<string, mixed>>, invalidOffers: list<array<string, mixed>>, allOfferValues: list<array<string, mixed>>}}', examples: [[
+        'appointmentOffers' => [
+            'appointmentRequestId' => 'abc123',
+            'summary' => '1 valid offers out of 2 returned.',
+            'bestOffer' => ['id' => '1', 'windowStartDatetime' => '2025-05-29T08:00:00', 'windowEndDatetime' => '2025-05-29T12:00:00', 'offerValue' => '100', 'prospectiveResourceId' => 'RES-001', 'windowDayEnglish' => 'Thu, May 29, 2025', 'windowStartTime' => '8:00 AM', 'windowEndTime' => '12:00 PM'],
+            'validOffers' => [['id' => '1', 'offerValue' => '100', 'prospectiveResourceId' => 'RES-001', 'isBestOffer' => true]],
+            'invalidOffers' => [['id' => '2', 'offerValue' => '0']],
+            'allOfferValues' => [['id' => '1', 'offerValue' => '100'], ['id' => '2', 'offerValue' => '0']],
+        ],
+    ]])]
+    #[NotSentToPso(examples: [['payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Request' => ['id' => 'abc123', 'activity_id' => 'ACT-001_AB'], 'Activity' => ['id' => 'ACT-001_AB']]]]])]
     public function store(AppointmentRequest $request, AppointmentService $appointmentService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(AppointmentRequest $req) =>
@@ -49,9 +59,24 @@ class AppointmentController extends Controller
 
     /**
      * Get Appointment Details
-     *
-     * @response 200 scenario="Found" {"data": {"id": "abc123", "status": "completed"}, "status": 200}
      */
+    #[OkResponse(data: 'AppointmentResource', examples: [[
+        'data' => [
+            'meta' => ['logId' => 42, 'status' => 'Offers Returned', 'createdAt' => '2025-05-29 12:00:00', 'updatedAt' => '2025-05-29 12:00:04', 'updateDelay' => '4 seconds after creation'],
+            'summary' => [
+                'environment' => ['baseUrl' => 'https://mycompany-pso-tst.ifs.cloud', 'datasetId' => 'dataset_123'],
+                'appointmentRequest' => ['id' => 'abc123', 'activityId' => 'ACT-001_AB', 'appointmentTemplateId' => 'apptemplate-001', 'appointmentTemplateDuration' => '21 days', 'appointmentTemplateDateTime' => '2025-05-29 08:00:00', 'slotUsageRule' => 'slot-rule-001'],
+                'offers' => [
+                    'offersReturned' => 2,
+                    'validOffers' => 1,
+                    'invalidOffers' => 1,
+                    'percentValid' => '50.00%',
+                    'appointedCheck' => ['status' => 'NOT COMPLETED', 'offerId' => 'N/A', 'checkResult' => 'N/A', 'inputReferenceId' => 'N/A', 'checkDateTime' => 'N/A', 'checkDelay' => 'N/A'],
+                    'expiresAt' => '2025-05-29 12:10:00 - 10 minutes from now',
+                ],
+            ],
+        ],
+    ]])]
     public function show(PSOAppointment $appointmentRequestId): JsonResponse
     {
         return $this->ok(new AppointmentResource($appointmentRequestId));
@@ -59,10 +84,12 @@ class AppointmentController extends Controller
 
     /**
      * Accept Appointment
-     *
-     * @response 200 scenario="Sent to PSO" {"data": {}, "status": 200, "message": "Successful. Sent to PSO"}
-     * @response 202 scenario="Dry run" {"data": {}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
      */
+    #[SentToPso(data: 'array{acceptedAppointmentSummary: array{appointmentRequestId: string, activityId: string, resourceId: string, assignmentStart: string, assignmentFinish: string, pso_allocation: string, selectedDate: string, selectedWindow: string}, payloadToPso: object}', examples: [[
+        'acceptedAppointmentSummary' => ['appointmentRequestId' => 'abc123', 'activityId' => 'ACT-001_AB', 'resourceId' => 'RES-001', 'assignmentStart' => '2025-05-29T08:00:00-04:00', 'assignmentFinish' => '2025-05-29T09:00:00-04:00', 'pso_allocation' => 'psoAllocation', 'selectedDate' => 'Thu, May 29, 2025', 'selectedWindow' => '8:00 AM - 12:00 PM'],
+        'payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1', 'accept' => true]]],
+    ]])]
+    #[NotSentToPso(examples: [['payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1', 'accept' => true]]]]])]
     public function update(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>
@@ -72,10 +99,12 @@ class AppointmentController extends Controller
 
     /**
      * Decline Appointment
-     *
-     * @response 200 scenario="Sent to PSO" {"data": {}, "status": 200, "message": "Successful. Sent to PSO"}
-     * @response 202 scenario="Dry run" {"data": {}, "status": 202, "message": "Successful. Not sent to PSO by Request"}
      */
+    #[SentToPso(data: 'array{declineAppointmentSummary: array{activityId: string, appointmentRequestId: string, declinedOffers: int, totalAppointmentsOffered: int}, payloadToPso: object}', examples: [[
+        'declineAppointmentSummary' => ['activityId' => 'ACT-001_AB', 'appointmentRequestId' => 'abc123', 'declinedOffers' => 1, 'totalAppointmentsOffered' => 2],
+        'payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1']]],
+    ]])]
+    #[NotSentToPso(examples: [['payloadToPso' => ['dsScheduleData' => ['@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd', 'Appointment_Offer_Response' => ['appointment_request_id' => 'abc123', 'appointment_offer_id' => '1']]]]])]
     public function destroy(AppointmentSummaryRequest $request, AppointmentService $appointmentService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(AppointmentSummaryRequest $req) =>

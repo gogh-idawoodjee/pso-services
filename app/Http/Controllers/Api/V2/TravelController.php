@@ -4,16 +4,20 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\DataTransferObjects\PsoContext;
 use App\Http\Controllers\Controller;
+use App\Http\OpenApi\ErrorResponse;
+use App\Http\OpenApi\NotSentToPso;
+use App\Http\OpenApi\OkResponse;
+use App\Http\OpenApi\SentToPso;
 use App\Http\Requests\Api\V2\TravelRequest;
 use App\Models\V2\PSOTravelLog;
 use App\Services\V2\TravelService;
 use App\Traits\V2\PSOAssistV2;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * @group Travel Analyzer
  *
  * Asynchronous travel analysis via PSO.
  *
@@ -24,6 +28,7 @@ use Illuminate\Http\Request;
  * Optionally provide `data.callbackUrl` in the POST — results will be POSTed
  * to that URL automatically when PSO responds, eliminating the need to poll.
  */
+#[Group('Travel Analyzer')]
 class TravelController extends Controller
 {
     use PSOAssistV2;
@@ -34,10 +39,40 @@ class TravelController extends Controller
      * Sends travel coordinates to PSO. PSO processes asynchronously and broadcasts results
      * back to the service. Use the `resultsUrl` in the response to poll for results, or
      * provide `data.callbackUrl` to receive results via webhook.
-     *
-     * @response 200 scenario="Sent to PSO" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Travel_Detail_Request": [{"id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "latitude_from": 43.6511, "longitude_from": -79.3470, "latitude_to": 43.7001, "longitude_to": -79.4000}]}}, "responseFromPso": {}}, "status": 200, "message": "Successful. Sent to PSO", "additionalDetails": "To review results, please send a GET request to /api/v2/travelanalyzer/a1b2c3d4-e5f6-7890-abcd-ef1234567890", "resultsUrl": "/api/v2/travelanalyzer/a1b2c3d4-e5f6-7890-abcd-ef1234567890"}
-     * @response 202 scenario="Dry run" {"data": {"payloadToPso": {"dsScheduleData": {"@xmlns": "http://360Scheduling.com/Schema/dsScheduleData.xsd", "Travel_Detail_Request": [{"id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "latitude_from": 43.6511, "longitude_from": -79.3470, "latitude_to": 43.7001, "longitude_to": -79.4000}]}}}, "status": 202, "message": "Successful. Not sent to PSO by Request", "additionalDetails": "Please ensure environment.sendToPso is set to true to use the analyzer correctly"}
      */
+    #[SentToPso(examples: [[
+                    'payloadToPso' => [
+                        'dsScheduleData' => [
+                            '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                            'Travel_Detail_Request' => [
+                                [
+                                    'id' => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                                    'latitude_from' => 43.6511,
+                                    'longitude_from' => -79.347,
+                                    'latitude_to' => 43.7001,
+                                    'longitude_to' => -79.4,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'responseFromPso' => new \stdClass,
+                ]])]
+    #[NotSentToPso(examples: [[
+                    'payloadToPso' => [
+                        'dsScheduleData' => [
+                            '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+                            'Travel_Detail_Request' => [
+                                [
+                                    'id' => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                                    'latitude_from' => 43.6511,
+                                    'longitude_from' => -79.347,
+                                    'latitude_to' => 43.7001,
+                                    'longitude_to' => -79.4,
+                                ],
+                            ],
+                        ],
+                    ],
+                ]])]
     public function store(TravelRequest $request, TravelService $travelService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn (TravelRequest $req) => $travelService->process(PsoContext::fromRequest($req))
@@ -60,11 +95,12 @@ class TravelController extends Controller
      *
      * Poll this endpoint after initiating a travel analysis. Results appear once PSO
      * broadcasts back (typically seconds to a minute).
-     *
-     * @response 200 scenario="Completed" {"data": {"travel_detail_request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "start_address": "123 Queen St W, Toronto, ON", "end_address": "456 King St E, Toronto, ON", "pso": {"time": "00:25:00", "distance": "12.5 km"}, "google": {"time": "22 mins", "distance": "11.8 km"}}, "status": 200, "message": "Completed"}
-     * @response 200 scenario="Pending" {"data": [], "status": 200, "message": "The travel log has been sent but is awaiting a response from PSO."}
-     * @response 404 scenario="Not Found" {"message": "Travel Log not found", "status": 404}
      */
+    #[OkResponse(data: 'array{travel_detail_request_id: string, start_address: string|null, end_address: string|null, pso: array{time: string|null, distance: string|null}, google: array{time: string|null, distance: string|null}, warnings?: list<string>}|list<mixed>', description: 'Travel results, or an empty list while PSO has not responded yet', examples: [
+        ['data' => ['travel_detail_request_id' => 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'start_address' => '123 Queen St W, Toronto, ON', 'end_address' => '456 King St E, Toronto, ON', 'pso' => ['time' => '00:25:00', 'distance' => '12.5 km'], 'google' => ['time' => '22 mins', 'distance' => '11.8 km']], 'message' => 'Completed'],
+        ['data' => [], 'message' => 'The travel log has been sent but is awaiting a response from PSO.'],
+    ])]
+    #[ErrorResponse(404, 'Travel Log not found')]
     public function show(string $id, TravelService $travelService): JsonResponse
     {
         $travelLog = PSOTravelLog::find($id);

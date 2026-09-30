@@ -71,6 +71,14 @@ class ResourceEventRequest extends BaseFormRequest
              * @example "2024-12-01T14:30:00Z"
              */
             'data.eventDateTime' => 'date',
+
+            /**
+             * The resource the event applies to, taken from the route.
+             *
+             * @var string
+             *
+             * @example "RES-001"
+             */
             'data.resourceId' => 'string|required',
 
             /**
@@ -85,31 +93,5 @@ class ResourceEventRequest extends BaseFormRequest
         ];
 
         return array_merge($commonRules, $additionalRules);
-    }
-
-    public function bodyParameters(): array
-    {
-        return array_merge($this->commonBodyParameters(), [
-            'data.eventType' => [
-                'description' => 'The type of resource event being reported (AO: Attention On, AF: Attention Off, BO: Break On, BF: Break Off, CE: CE Mode, FIX: GPS Fix, RO: Logged On, RF: Logged Off).',
-                'example' => 'AO',
-            ],
-            'data.lat' => [
-                'description' => 'The latitude of the resource location. Required when eventType is FIX.',
-                'example' => 43.65107,
-            ],
-            'data.long' => [
-                'description' => 'The longitude of the resource location. Required when eventType is FIX.',
-                'example' => -79.347015,
-            ],
-            'data.eventDateTime' => [
-                'description' => 'The timestamp when the event occurred. ISO 8601 format is recommended.',
-                'example' => '2024-12-01T14:30:00Z',
-            ],
-            'data.resourceId' => [
-                'description' => 'The resource ID, taken from the route.',
-                'example' => 'RES-001',
-            ],
-        ]);
     }
 }
