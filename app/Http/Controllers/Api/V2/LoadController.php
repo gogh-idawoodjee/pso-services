@@ -58,8 +58,22 @@ class LoadController extends Controller
     /**
      * Send Rota to DSE
      */
-    #[SentToPso]
-    #[NotSentToPso]
+    #[SentToPso(examples: [['payloadToPso' => [
+        'dsScheduleData' => [
+            '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+            'Input_Reference' => ['datetime' => '2025-05-05T08:00:00Z', 'id' => 'a2df0c9da1a440a7b7b452d88eb8fcd3', 'input_type' => 'CHANGE', 'organisation_id' => '2', 'dataset_id' => 'dataset_123', 'user_id' => 'Ish PSO Services', 'description' => 'Update Rota from PSO Services'],
+            'Source_Data' => ['source_data_type_id' => 'RAM'],
+            'Source_Data_Parameter' => ['source_data_type_id' => 'RAM', 'parameter_name' => 'rota_id', 'parameter_value' => 'master'],
+        ],
+    ], 'responseFromPso' => new \stdClass]])]
+    #[NotSentToPso(examples: [['payloadToPso' => [
+        'dsScheduleData' => [
+            '@xmlns' => 'http://360Scheduling.com/Schema/dsScheduleData.xsd',
+            'Input_Reference' => ['datetime' => '2025-05-05T08:00:00Z', 'id' => 'a2df0c9da1a440a7b7b452d88eb8fcd3', 'input_type' => 'CHANGE', 'organisation_id' => '2', 'dataset_id' => 'dataset_123', 'user_id' => 'Ish PSO Services', 'description' => 'Update Rota from PSO Services'],
+            'Source_Data' => ['source_data_type_id' => 'RAM'],
+            'Source_Data_Parameter' => ['source_data_type_id' => 'RAM', 'parameter_name' => 'rota_id', 'parameter_value' => 'master'],
+        ],
+    ]]])]
     public function updateRota(UpdateRotaRequest $request, LoadService $loadService): JsonResponse
     {
         return $this->executeAuthenticatedAction($request, fn(UpdateRotaRequest $req) =>

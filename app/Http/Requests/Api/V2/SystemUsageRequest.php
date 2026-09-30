@@ -12,7 +12,22 @@ class SystemUsageRequest extends BaseGetFormRequest
         $commonRules = $this->commonRules();
 
         $rules = [
+            /**
+             * Start of the usage reporting period. Must be sent together with maxDate.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-01"
+             */
             'minDate' => ['nullable', 'date'],
+
+            /**
+             * End of the usage reporting period. Must be sent together with minDate.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-30"
+             */
             'maxDate' => ['nullable', 'date'],
         ];
 

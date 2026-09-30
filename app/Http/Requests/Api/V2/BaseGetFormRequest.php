@@ -30,12 +30,38 @@ class BaseGetFormRequest extends FormRequest
 
     public function commonRules(): array
     {
+        // These are read from request headers, not the query string, so they are
+        // hidden from Scramble's query parameters and documented as headers on the
+        // actions by App\Http\OpenApi\PsoCommonParameters.
         return [
+            /**
+             * @ignoreParam
+             */
             'datasetId' => ['required', 'string'],
+
+            /**
+             * @ignoreParam
+             */
             'baseUrl' => ['required', 'url', new DisallowProdUrl],
+
+            /**
+             * @ignoreParam
+             */
             'accountId' => ['required', 'string'],
+
+            /**
+             * @ignoreParam
+             */
             'username' => ['string', 'nullable'],
+
+            /**
+             * @ignoreParam
+             */
             'password' => ['string', 'nullable'],
+
+            /**
+             * @ignoreParam
+             */
             'token' => ['string', 'nullable'],
         ];
     }

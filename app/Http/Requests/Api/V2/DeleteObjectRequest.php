@@ -11,9 +11,20 @@ class DeleteObjectRequest extends BaseFormRequest
 
     public function rules(): array
     {
+        // Keep this method free of method calls and assignments beyond this literal:
+        // Scramble drops every docblock below if it can't statically read the rules.
+        // The objectPkN rules are placeholders for documentation; withValidator()
+        // makes as many of them required as the selected object type has keys.
         $commonRules = $this->commonRules();
 
-        $rules = [
+        $additionalRules = [
+            /**
+             * The type of object to delete, by label or entity name, e.g. "Activity", "Resource", "Shift".
+             *
+             * @var string
+             *
+             * @example "Activity"
+             */
             'data.objectType' => [
                 'required',
                 'string',
@@ -24,9 +35,67 @@ class DeleteObjectRequest extends BaseFormRequest
                     )
                 ),
             ],
+
+            /**
+             * First primary key of the object. Required; the number of keys (objectPk1 to objectPk4)
+             * depends on the object type, e.g. an Activity needs only objectPk1 (the activity ID).
+             *
+             * @var string
+             *
+             * @example "ACT-001"
+             */
+            'data.objectPk1' => ['nullable'],
+
+            /**
+             * Second primary key of the object, for object types with a composite key.
+             *
+             * @var string
+             *
+             * @example "RES-001"
+             */
+            'data.objectPk2' => ['nullable'],
+
+            /**
+             * Third primary key of the object, for object types with a composite key.
+             *
+             * @var string
+             *
+             * @example "2025-05-05T08:00:00"
+             */
+            'data.objectPk3' => ['nullable'],
+
+            /**
+             * Fourth primary key of the object, for object types with a composite key.
+             *
+             * @var string
+             *
+             * @example "2025-05-05T16:00:00"
+             */
+            'data.objectPk4' => ['nullable'],
+
+            /**
+             * Reference datetime for this write, used as "now" by PSO instead of
+             * the actual current time when supplied. Defaults to now when omitted.
+             *
+             * @var string|null
+             *
+             * @example "2025-04-30T14:30:00"
+             */
+            'data.inputDatetime' => ['nullable', 'date'],
         ];
 
-        // Dynamically add objectPkX rules based on objectType, if provided
+        return array_merge($commonRules, $additionalRules);
+    }
+
+    /**
+     * Dynamically add objectPkX rules based on objectType, if provided.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function requiredObjectKeyRules(): array
+    {
+        $rules = [];
+
         $objectTypeLabel = data_get($this->input('data'), 'objectType');
 
         if ($objectTypeLabel) {
@@ -50,9 +119,7 @@ class DeleteObjectRequest extends BaseFormRequest
             }
         }
 
-        $rules['data.inputDatetime'] = ['nullable', 'date'];
-
-        return array_merge($commonRules, $rules);
+        return $rules;
     }
 
     public function setGroupErrors(bool $shouldGroupErrors): static
@@ -63,6 +130,8 @@ class DeleteObjectRequest extends BaseFormRequest
 
     public function withValidator($validator): void
     {
+        $validator->addRules($this->requiredObjectKeyRules());
+
         $validator->after(function ($validator) {
             $data = $this->get('data', []);
             $rawObjectType = $data['objectType'] ?? null;

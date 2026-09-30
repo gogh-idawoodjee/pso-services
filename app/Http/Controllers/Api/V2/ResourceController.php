@@ -56,7 +56,24 @@ class ResourceController extends Controller
     /**
      * Display the specified resource.
      */
-    #[OkResponse(data: 'array{resource: array{personal: array{full_name: string, first_name: string|null, surname: string|null}, additional_attributes: mixed, resource_id: string, resource_type: array{type_id: string|null, description: string|null}, note: string|null, max_travel: array{value: string|null, source: string|null, formatted: string|null}, max_travel_outside_shift_to_first_activity: array{value: string|null, source: string|null, formatted: string|null}, max_travel_outside_shift_to_home: array{value: string|null, source: string|null, formatted: string|null}, location: array<string, mixed>, regions: array{items: list<mixed>, total: int}, skills: array{items: list<mixed>, total: int}, shifts: mixed}}')]
+    #[OkResponse(data: 'array{resource: array{personal: array{full_name: string, first_name: string|null, surname: string|null}, additional_attributes: mixed, resource_id: string, resource_type: array{type_id: string|null, description: string|null}, note: string|null, max_travel: array{value: string|null, source: string|null, formatted: string|null}, max_travel_outside_shift_to_first_activity: array{value: string|null, source: string|null, formatted: string|null}, max_travel_outside_shift_to_home: array{value: string|null, source: string|null, formatted: string|null}, location: array<string, mixed>, regions: array{items: list<mixed>, total: int}, skills: array{items: list<mixed>, total: int}, shifts: mixed}}', examples: [[
+        'data' => [
+            'resource' => [
+                'personal' => ['full_name' => 'Jane Smith', 'first_name' => 'Jane', 'surname' => 'Smith'],
+                'additional_attributes' => null,
+                'resource_id' => 'RES-001',
+                'resource_type' => ['type_id' => 'TECH', 'description' => 'Technician'],
+                'note' => null,
+                'max_travel' => ['value' => 'PT1H', 'source' => 'resource', 'formatted' => '1 hour'],
+                'max_travel_outside_shift_to_first_activity' => ['value' => 'PT30M', 'source' => 'resource', 'formatted' => '30 minutes'],
+                'max_travel_outside_shift_to_home' => ['value' => 'PT30M', 'source' => 'resource', 'formatted' => '30 minutes'],
+                'location' => ['same_start_and_end' => true, 'google_reverse_geocode_lookup' => ['start' => '100 King St W, Toronto, ON M5X 1A9, Canada', 'end' => '100 King St W, Toronto, ON M5X 1A9, Canada'], 'pso' => ['start' => ['id' => 'LOC-001', 'name' => 'Home', 'latitude' => 43.6532, 'longitude' => -79.3832, 'address_line1' => '100 King St W', 'city' => 'Toronto', 'province' => 'ON', 'postal_code' => 'M5X 1A9'], 'end' => ['id' => 'LOC-001', 'name' => 'Home', 'latitude' => 43.6532, 'longitude' => -79.3832, 'address_line1' => '100 King St W', 'city' => 'Toronto', 'province' => 'ON', 'postal_code' => 'M5X 1A9']]],
+                'regions' => ['items' => [['id' => 'NORTH', 'description' => 'North Region']], 'total' => 1],
+                'skills' => ['items' => [['id' => 'ELECTRICAL', 'description' => 'Electrical']], 'total' => 1],
+                'shifts' => [],
+            ],
+        ],
+    ]])]
     #[ErrorResponse(404, 'Resource not found')]
     public function show(ResourceRequest $request, string $resourceId, ResourceService $resourceService): JsonResponse
     {

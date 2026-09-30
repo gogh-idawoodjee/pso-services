@@ -71,6 +71,14 @@ class ResourceEventRequest extends BaseFormRequest
              * @example "2024-12-01T14:30:00Z"
              */
             'data.eventDateTime' => 'date',
+
+            /**
+             * The resource the event applies to, taken from the route.
+             *
+             * @var string
+             *
+             * @example "RES-001"
+             */
             'data.resourceId' => 'string|required',
 
             /**

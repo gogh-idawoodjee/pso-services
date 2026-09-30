@@ -81,6 +81,14 @@ class ActivityStatusRequest extends BaseFormRequest
              * @example "resource-123"
              */
             'data.resourceId' => ['nullable', 'string'],
+
+            /**
+             * Duration of the activity, in minutes, sent on the Activity_Status.
+             *
+             * @var int|null
+             *
+             * @example 60
+             */
             'data.duration' => ['nullable', 'integer', 'gt:0'],
 
             /**
